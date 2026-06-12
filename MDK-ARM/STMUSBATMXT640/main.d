@@ -27,9 +27,13 @@ stmusbatmxt640\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash_e
 stmusbatmxt640\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_i2c.h
 stmusbatmxt640\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h
 stmusbatmxt640\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_spi.h
+stmusbatmxt640\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
+stmusbatmxt640\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 stmusbatmxt640\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd.h
 stmusbatmxt640\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h
 stmusbatmxt640\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h
+stmusbatmxt640\main.o: ../Core/Inc/dma.h
+stmusbatmxt640\main.o: ../Core/Inc/tim.h
 stmusbatmxt640\main.o: ../Core/Inc/i2c.h
 stmusbatmxt640\main.o: ../Core/Inc/spi.h
 stmusbatmxt640\main.o: ../USB_DEVICE/App/usb_device.h
@@ -48,3 +52,4 @@ stmusbatmxt640\main.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_
 stmusbatmxt640\main.o: ../USB_DEVICE/App/mxt/mxt_spi_stream.h
 stmusbatmxt640\main.o: ../USB_DEVICE/App/mxt/mxt_state.h
 stmusbatmxt640\main.o: ../USB_DEVICE/App/mxt/mxt_config.h
+stmusbatmxt640\main.o: ../USB_DEVICE/App/mxt/mxt_usb_io.h

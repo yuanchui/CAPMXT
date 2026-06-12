@@ -20,6 +20,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "gpio.h"
+#include "core_cm3.h"
+#include "tim.h"
 #include "spi.h"
 #include "mxt/mxt_spi_stream.h"
 #include "mxt/mxt_state.h"
@@ -105,53 +107,82 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /* PA9: 虚拟 SSN 输出 — 推挽、无上下拉、高速(50MHz)；帧间 idle 为高 */
-  HAL_GPIO_WritePin(SSN_OUT_GPIO_Port, SSN_OUT_Pin, GPIO_PIN_SET);
-  GPIO_InitStruct.Pin = SSN_OUT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(SSN_OUT_GPIO_Port, &GPIO_InitStruct);
-
-  /* PA10: MISO 监视 — 双边沿 EXTI + TIM1 判帧；初始化在 MXT_SSN_Init() */
-  GPIO_InitStruct.Pin = CLK_MON_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(CLK_MON_GPIO_Port, &GPIO_InitStruct);
+  /* PA9 SSN 推挽输出；PA10 MISO 输入监视 */
+  MXT_TIM1_SsnPinGpioEnable();
 
 }
 
 /* USER CODE BEGIN 2 */
 
-/* PA10(MISO) → PA9 虚拟 SSN（双边沿 EXTI + TIM1 2us 计时）
- *
- *  帧间拉高 PA9：帧间 MISO 低电平 > SSN_GAP_MIN_US(500us) 后变高并确认
- *  帧内拉低 PA9：SPI 停振 > SSN_SPI_IDLE_US，或 MISO 低电平 > SSN_LOW_PULL_US
+/* PA9 BSRR 直写；PA10 EXTI+DWT 测脉宽，>=1ms 低后上升沿 ISR 内立即下拉
+ * 流模式帧内 3ms TIM1 单次定时拉高；非流模式保留 100us 轮询
  */
-#define SSN_SAMPLE_US           2U
-#define SSN_LOW_PULL_US         20U
-#define SSN_SPI_IDLE_US         2500U
-#define SSN_STOP_PULLUP_US      250U
-#define SSN_GAP_MIN_US          500U
-#define SSN_GAP_HIGH_CONFIRM_US 4U
+#define SSN_GAP_POLL_US           100U
+#define SSN_LOW_PULL_US           20U
+#define SSN_SPI_IDLE_US           2500U
+#define SSN_FRAME_MAX_US          3000U
+#define SSN_STOP_PULLUP_US        250U
+#define SSN_GAP_MIN_US            500U
+#define SSN_PA10_LOW_MIN_US       1000U
 
-#define SSN_OUT_HIGH()          (GPIOA->BSRR = (uint32_t)SSN_OUT_Pin)
-#define SSN_OUT_LOW()           (GPIOA->BSRR = (uint32_t)SSN_OUT_Pin << 16U)
-#define SSN_MISO_HIGH()         (((GPIOA->IDR) & CLK_MON_Pin) != 0U)
+#define SSN_MISO_HIGH()           (((GPIOA->IDR) & CLK_MON_Pin) != 0U)
+#define SSN_OUT_HIGH()            (GPIOA->BSRR = (uint32_t)SSN_OUT_Pin)
+#define SSN_OUT_LOW()             (GPIOA->BSRR = (uint32_t)SSN_OUT_Pin << 16U)
+
+static uint8_t MXT_SSN_UseStreamTiming(void)
+{
+  return (uint8_t)((g_spi_stream_enabled != 0U) || (g_spi_check_requested != 0U));
+}
 
 static volatile uint8_t  g_ssn_in_gap;
 static volatile uint8_t  g_ssn_gap_evt;
 static volatile uint8_t  g_ssn_active_evt;
-static volatile uint8_t  g_ssn_prev_miso;
 static volatile uint16_t g_ssn_low_us;
 static volatile uint16_t g_ssn_gap_low_us;
 static volatile uint8_t  g_ssn_gap_ready;
-static volatile uint16_t g_ssn_gap_high_us;
 static volatile uint16_t g_ssn_no_spi_us;
 static volatile uint8_t  g_ssn_stop_pullup_armed;
 static volatile uint32_t g_ssn_frame_enter_cnt;
 static volatile uint32_t g_ssn_frame_exit_cnt;
+static volatile uint16_t g_ssn_last_dma_pos;
+static volatile uint8_t  g_ssn_gap_seen_high;
+static volatile uint8_t  g_ssn_tim_running;
+static volatile uint8_t  g_ssn_frame_timer;
+static volatile uint32_t g_ssn_pa10_fall_us;
+static volatile uint32_t g_ssn_time_base_us;
+static volatile uint32_t g_ssn_fall_cyc;
+static uint32_t          g_ssn_cyc_per_us;
+
+static void MXT_SSN_DwtInit(void)
+{
+  g_ssn_cyc_per_us = SystemCoreClock / 1000000U;
+  if (g_ssn_cyc_per_us == 0U) {
+    g_ssn_cyc_per_us = 1U;
+  }
+  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+  DWT->CYCCNT = 0U;
+  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+}
+
+static void MXT_SSN_MisoExtiEnable(uint8_t on)
+{
+  GPIO_InitTypeDef gpio = {0};
+
+  gpio.Pin = CLK_MON_Pin;
+  gpio.Pull = GPIO_NOPULL;
+  gpio.Speed = GPIO_SPEED_FREQ_HIGH;
+  if (on != 0U) {
+    gpio.Mode = GPIO_MODE_IT_RISING_FALLING;
+    HAL_GPIO_Init(CLK_MON_GPIO_Port, &gpio);
+    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+    __HAL_GPIO_EXTI_CLEAR_IT(CLK_MON_Pin);
+  } else {
+    gpio.Mode = GPIO_MODE_INPUT;
+    HAL_GPIO_Init(CLK_MON_GPIO_Port, &gpio);
+    __HAL_GPIO_EXTI_CLEAR_IT(CLK_MON_Pin);
+  }
+}
 
 static void MXT_SSN_DelayUs(uint32_t us)
 {
@@ -162,6 +193,48 @@ static void MXT_SSN_DelayUs(uint32_t us)
   }
 }
 
+static uint32_t MXT_SSN_TimeUs(void)
+{
+  return g_ssn_time_base_us + (uint32_t)__HAL_TIM_GET_COUNTER(&htim1);
+}
+
+static void MXT_SSN_GapReset(void)
+{
+  g_ssn_gap_low_us = 0U;
+  g_ssn_gap_ready = 0U;
+  g_ssn_gap_seen_high = 0U;
+}
+
+static void MXT_SSN_IcEnable(uint8_t on)
+{
+  if (on != 0U) {
+    __HAL_TIM_CLEAR_FLAG(&htim1, TIM_FLAG_CC3);
+    MXT_TIM1_SsnIcArmFalling();
+    (void)HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_3);
+  } else {
+    (void)HAL_TIM_IC_Stop_IT(&htim1, TIM_CHANNEL_3);
+    __HAL_TIM_CLEAR_FLAG(&htim1, TIM_FLAG_CC3);
+  }
+}
+
+static void MXT_SSN_ListenBegin(void)
+{
+  MXT_SSN_GapReset();
+  g_ssn_pa10_fall_us = 0U;
+  g_ssn_fall_cyc = DWT->CYCCNT;
+  MXT_TIM1_SsnListenStart();
+  MXT_SSN_IcEnable(0U);
+  MXT_SSN_MisoExtiEnable(1U);
+}
+
+static void MXT_SSN_GapPollBegin(void)
+{
+  MXT_TIM1_SsnGapPollStop();
+  MXT_SSN_GapReset();
+  g_ssn_time_base_us = 0U;
+  MXT_TIM1_SsnGapPollStart();
+}
+
 static void MXT_SSN_EndActive(void)
 {
   if (g_ssn_in_gap != 0U) {
@@ -169,15 +242,23 @@ static void MXT_SSN_EndActive(void)
   }
 
   SSN_OUT_HIGH();
+  if (g_ssn_frame_timer != 0U) {
+    g_ssn_frame_timer = 0U;
+    MXT_TIM1_SsnActiveWindowStop();
+  }
   g_ssn_in_gap = 1U;
   g_ssn_low_us = 0U;
-  g_ssn_gap_low_us = 0U;
-  g_ssn_gap_ready = 0U;
-  g_ssn_gap_high_us = 0U;
   g_ssn_no_spi_us = 0U;
   g_ssn_gap_evt = 1U;
   g_ssn_frame_exit_cnt++;
-  MXT_SPI_QueueGapMarker();
+  MXT_SPI_OnSsnGap();
+  if (g_ssn_tim_running != 0U) {
+    if (MXT_SSN_UseStreamTiming() != 0U) {
+      MXT_SSN_ListenBegin();
+    } else {
+      MXT_SSN_GapPollBegin();
+    }
+  }
 }
 
 static void MXT_SSN_EnterActive(void)
@@ -186,50 +267,69 @@ static void MXT_SSN_EnterActive(void)
     return;
   }
 
+  SSN_OUT_LOW();
   g_ssn_in_gap = 0U;
   g_ssn_low_us = 0U;
-  g_ssn_gap_low_us = 0U;
-  g_ssn_gap_ready = 0U;
-  g_ssn_gap_high_us = 0U;
-  SSN_OUT_LOW();
   g_ssn_no_spi_us = 0U;
+  MXT_SSN_GapReset();
+  MXT_SSN_IcEnable(0U);
+  MXT_SSN_MisoExtiEnable(0U);
+  if (MXT_SSN_UseStreamTiming() == 0U) {
+    MXT_TIM1_SsnGapPollStart();
+  } else {
+    MXT_TIM1_SsnGapPollStop();
+  }
+  g_ssn_last_dma_pos = MXT_SPI_GetDmaWritePos();
+  MXT_SPI_OnSsnActive();
+  if ((g_spi_stream_enabled != 0U) && (g_spi_stream_mode != 0U)) {
+    MXT_SPI_QueueStartMarker();
+  }
   g_ssn_active_evt = 1U;
   g_ssn_frame_enter_cnt++;
-  MXT_SPI_OnSsnActive();
 }
 
-static uint32_t MXT_SSN_Tim1Hz(void)
+static void MXT_SSN_StartFrameLow(void)
 {
-  return HAL_RCC_GetPCLK2Freq();
-}
-
-static void MXT_SSN_Tim1Init(void)
-{
-  uint32_t tim_hz;
-  uint32_t psc;
-
-  __HAL_RCC_TIM1_CLK_ENABLE();
-
-  tim_hz = MXT_SSN_Tim1Hz();
-  psc = (tim_hz / 1000000U);
-  if (psc == 0U) {
-    psc = 1U;
+  if (g_ssn_in_gap == 0U) {
+    return;
   }
-  psc -= 1U;
 
-  TIM1->CR1 = 0U;
-  TIM1->PSC = (uint16_t)psc;
-  TIM1->ARR = (uint16_t)(SSN_SAMPLE_US - 1U);
-  TIM1->CNT = 0U;
-  TIM1->CCMR1 = 0U;
-  TIM1->CCMR2 = 0U;
-  TIM1->CCER = 0U;
-  TIM1->DIER = TIM_DIER_UIE;
-  TIM1->EGR = TIM_EGR_UG;
-  TIM1->SR = 0U;
+  SSN_OUT_LOW();
+  g_ssn_in_gap = 0U;
+  g_ssn_low_us = 0U;
+  g_ssn_no_spi_us = 0U;
+  MXT_SSN_GapReset();
+  MXT_SSN_MisoExtiEnable(0U);
+  g_ssn_last_dma_pos = MXT_SPI_GetDmaWritePos();
+  MXT_SPI_OnSsnActive();
+  if ((g_spi_stream_enabled != 0U) && (g_spi_stream_mode != 0U)) {
+    MXT_SPI_QueueStartMarker();
+  }
+  g_ssn_active_evt = 1U;
+  g_ssn_frame_enter_cnt++;
+  g_ssn_frame_timer = 1U;
+  MXT_TIM1_SsnActiveWindowStart(SSN_FRAME_MAX_US);
+}
 
-  HAL_NVIC_SetPriority(TIM1_UP_IRQn, 2, 0);
-  HAL_NVIC_EnableIRQ(TIM1_UP_IRQn);
+void MXT_SSN_OnMisoEdge(void)
+{
+  uint32_t low_us;
+
+  if (g_ssn_tim_running == 0U) {
+    return;
+  }
+
+  if (SSN_MISO_HIGH()) {
+    if ((g_ssn_in_gap == 0U) || (MXT_SSN_UseStreamTiming() == 0U)) {
+      return;
+    }
+    low_us = (DWT->CYCCNT - g_ssn_fall_cyc) / g_ssn_cyc_per_us;
+    if (low_us >= SSN_PA10_LOW_MIN_US) {
+      MXT_SSN_StartFrameLow();
+    }
+  } else {
+    g_ssn_fall_cyc = DWT->CYCCNT;
+  }
 }
 
 static uint8_t MXT_SSN_SpiWireActive(void)
@@ -246,113 +346,95 @@ static uint8_t MXT_SSN_SpiWireActive(void)
 static void MXT_SSN_TryEnterFromGap(uint8_t miso)
 {
   if ((g_ssn_in_gap == 0U) || (g_ssn_gap_ready == 0U) || (miso == 0U)) {
-    g_ssn_gap_high_us = 0U;
-    return;
-  }
-
-  if (g_ssn_gap_high_us < 60000U) {
-    g_ssn_gap_high_us = (uint16_t)(g_ssn_gap_high_us + SSN_SAMPLE_US);
-  }
-
-  if (g_ssn_gap_high_us <= SSN_GAP_HIGH_CONFIRM_US) {
     return;
   }
 
   MXT_SSN_EnterActive();
 }
 
-static void MXT_SSN_Sample(void)
+static void MXT_SSN_ActivePollTick(void)
 {
   uint8_t miso;
 
-  miso = SSN_MISO_HIGH() ? 1U : 0U;
-
-  if (g_ssn_in_gap != 0U) {
-    if (miso == 0U) {
-      g_ssn_gap_high_us = 0U;
-      if (g_ssn_gap_low_us < 60000U) {
-        g_ssn_gap_low_us = (uint16_t)(g_ssn_gap_low_us + SSN_SAMPLE_US);
-      }
-      if (g_ssn_gap_low_us > SSN_GAP_MIN_US) {
-        g_ssn_gap_ready = 1U;
-      }
-      g_ssn_prev_miso = 0U;
-    } else {
-      MXT_SSN_TryEnterFromGap(miso);
-      if (g_ssn_in_gap != 0U) {
-        g_ssn_gap_low_us = 0U;
-      }
-      g_ssn_prev_miso = 1U;
-    }
+  if (MXT_SSN_UseStreamTiming() != 0U) {
     return;
   }
 
-  g_ssn_gap_high_us = 0U;
-
+  miso = SSN_MISO_HIGH() ? 1U : 0U;
   if (MXT_SSN_SpiWireActive() != 0U) {
     g_ssn_no_spi_us = 0U;
   } else if (g_ssn_no_spi_us < 60000U) {
-    g_ssn_no_spi_us = (uint16_t)(g_ssn_no_spi_us + SSN_SAMPLE_US);
+    g_ssn_no_spi_us = (uint16_t)(g_ssn_no_spi_us + SSN_GAP_POLL_US);
   }
-
   if (g_ssn_no_spi_us > SSN_SPI_IDLE_US) {
     MXT_SSN_EndActive();
     return;
   }
 
-  if (miso != 0U) {
+  if (miso == 0U) {
+    if (g_ssn_low_us < 60000U) {
+      g_ssn_low_us = (uint16_t)(g_ssn_low_us + SSN_GAP_POLL_US);
+    }
+    if (g_ssn_low_us > SSN_LOW_PULL_US) {
+      MXT_SSN_EndActive();
+    }
+  } else {
     g_ssn_low_us = 0U;
-    return;
-  }
-
-  if (g_ssn_low_us < 60000U) {
-    g_ssn_low_us = (uint16_t)(g_ssn_low_us + SSN_SAMPLE_US);
-  }
-
-  if (g_ssn_low_us > SSN_LOW_PULL_US) {
-    MXT_SSN_EndActive();
   }
 }
 
-void MXT_SSN_OnMisoEdge(void)
+static void MXT_SSN_GapPollTick(void)
 {
   uint8_t miso;
 
-  miso = SSN_MISO_HIGH() ? 1U : 0U;
-
-  if (miso == 0U) {
-    if (g_ssn_in_gap == 0U) {
-      g_ssn_low_us = 0U;
-    }
-  } else {
-    if ((g_ssn_prev_miso == 0U) && (g_ssn_in_gap != 0U)) {
-      MXT_SSN_TryEnterFromGap(miso);
-    } else if (g_ssn_in_gap == 0U) {
-      g_ssn_low_us = 0U;
-    }
+  if (g_ssn_in_gap == 0U) {
+    return;
   }
 
-  g_ssn_prev_miso = miso;
+  if (__HAL_TIM_GET_COUNTER(&htim1) >= (65535U - SSN_GAP_POLL_US)) {
+    g_ssn_time_base_us += 65536U;
+  }
+
+  miso = SSN_MISO_HIGH() ? 1U : 0U;
+
+  if (MXT_SSN_UseStreamTiming() != 0U) {
+    return;
+  }
+
+  if (miso == 0U) {
+    if (g_ssn_gap_low_us < 60000U) {
+      g_ssn_gap_low_us = (uint16_t)(g_ssn_gap_low_us + SSN_GAP_POLL_US);
+    }
+    if (g_ssn_gap_low_us >= SSN_GAP_MIN_US) {
+      g_ssn_gap_ready = 1U;
+    }
+  } else {
+    if (g_ssn_gap_ready != 0U) {
+      g_ssn_gap_seen_high = 1U;
+    }
+    g_ssn_gap_low_us = 0U;
+    MXT_SSN_TryEnterFromGap(miso);
+  }
 }
 
 void MXT_SSN_Init(void)
 {
-  MXT_SSN_Tim1Init();
   g_ssn_in_gap = 1U;
   g_ssn_gap_evt = 0U;
   g_ssn_active_evt = 0U;
-  g_ssn_prev_miso = SSN_MISO_HIGH() ? 1U : 0U;
   g_ssn_low_us = 0U;
-  g_ssn_gap_low_us = 0U;
-  g_ssn_gap_ready = 0U;
-  g_ssn_gap_high_us = 0U;
   g_ssn_no_spi_us = 0U;
   g_ssn_frame_enter_cnt = 0U;
   g_ssn_frame_exit_cnt = 0U;
+  g_ssn_tim_running = 0U;
+  g_ssn_frame_timer = 0U;
+  g_ssn_time_base_us = 0U;
+  g_ssn_pa10_fall_us = 0U;
+  MXT_SSN_GapReset();
+  MXT_SSN_DwtInit();
+  MXT_TIM1_SsnHwInit();
+  MXT_TIM1_SsnPinGpioEnable();
   SSN_OUT_HIGH();
-
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
 void MXT_SSN_NotifySpiRx(void)
@@ -367,12 +449,22 @@ void MXT_SSN_ResetForStream(void)
   g_ssn_gap_evt = 0U;
   g_ssn_active_evt = 0U;
   g_ssn_low_us = 0U;
-  g_ssn_gap_low_us = 0U;
-  g_ssn_gap_ready = 0U;
-  g_ssn_gap_high_us = 0U;
   g_ssn_no_spi_us = 0U;
-  g_ssn_prev_miso = SSN_MISO_HIGH() ? 1U : 0U;
+  g_ssn_frame_timer = 0U;
+  g_ssn_time_base_us = 0U;
+  g_ssn_pa10_fall_us = 0U;
+  MXT_SSN_GapReset();
+  g_ssn_last_dma_pos = MXT_SPI_GetDmaWritePos();
+  MXT_TIM1_SsnActiveWindowStop();
+  MXT_TIM1_SsnGapPollStop();
+  MXT_SSN_IcEnable(0U);
+  MXT_SSN_MisoExtiEnable(0U);
   SSN_OUT_HIGH();
+  if (MXT_SSN_UseStreamTiming() != 0U) {
+    MXT_SSN_ListenBegin();
+  } else {
+    MXT_SSN_GapPollBegin();
+  }
 }
 
 void MXT_SSN_GetDebug(uint8_t *in_gap, uint16_t *no_spi_us, uint16_t *low_us,
@@ -428,27 +520,49 @@ uint8_t MXT_SSN_TakeActiveEvent(void)
   return 1U;
 }
 
-void MXT_SSN_TimUpIsr(void)
-{
-  if ((TIM1->SR & TIM_SR_UIF) == 0U) {
-    return;
-  }
-  TIM1->SR = (uint16_t)(TIM1->SR & (uint16_t)(~TIM_SR_UIF));
-  MXT_SSN_Sample();
-}
-
 void MXT_SSN_TimStart(void)
 {
-  TIM1->CR1 &= (uint16_t)(~TIM_CR1_CEN);
-  TIM1->CNT = 0U;
-  TIM1->SR = 0U;
-  g_ssn_prev_miso = SSN_MISO_HIGH() ? 1U : 0U;
-  TIM1->CR1 |= TIM_CR1_CEN;
+  MXT_TIM1_SsnPinGpioEnable();
+  SSN_OUT_HIGH();
+  g_ssn_tim_running = 1U;
+  g_ssn_time_base_us = 0U;
+  g_ssn_pa10_fall_us = 0U;
+  if (MXT_SSN_UseStreamTiming() != 0U) {
+    MXT_SSN_ListenBegin();
+  } else {
+    MXT_SSN_GapPollBegin();
+  }
 }
 
 void MXT_SSN_TimStop(void)
 {
-  TIM1->CR1 &= (uint16_t)(~TIM_CR1_CEN);
+  g_ssn_tim_running = 0U;
+  g_ssn_frame_timer = 0U;
+  MXT_TIM1_SsnActiveWindowStop();
+  MXT_TIM1_SsnGapPollStop();
+  MXT_SSN_IcEnable(0U);
+  MXT_SSN_MisoExtiEnable(0U);
+  MXT_TIM1_SsnCounterStop();
+  MXT_TIM1_SsnPinGpioEnable();
+  SSN_OUT_HIGH();
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if (htim->Instance != TIM1) {
+    return;
+  }
+
+  if (g_ssn_frame_timer != 0U) {
+    MXT_SSN_EndActive();
+    return;
+  }
+
+  if (g_ssn_in_gap != 0U) {
+    MXT_SSN_GapPollTick();
+  } else {
+    MXT_SSN_ActivePollTick();
+  }
 }
 
 void MXT_SSN_Poll(void)

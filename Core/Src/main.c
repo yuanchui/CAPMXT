@@ -18,6 +18,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
+#include "tim.h"
 #include "i2c.h"
 #include "spi.h"
 #include "usb_device.h"
@@ -28,6 +30,7 @@
 #include "usbd_cdc_if.h"
 #include "mxt/mxt_spi_stream.h"
 #include "mxt/mxt_state.h"
+#include "mxt/mxt_usb_io.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -91,6 +94,8 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
+  MX_TIM1_Init();
   MX_I2C2_Init();
   MX_SPI1_Init();
   MX_USB_DEVICE_Init();
@@ -125,28 +130,28 @@ int main(void)
     /* 处理USB接收的命令 */
     MXT_ProcessCommand();
     MXT_ProcessControlPending();
-    if ((g_spi_stream_enabled != 0U) || (MXT_SSN_StopPullupPending() != 0U)) {
-      uint8_t burst;
-      for (burst = 0U; burst < 64U; burst++) {
+
+    if ((g_spi_stream_enabled != 0U) || (g_spi_check_requested != 0U)
+        || (MXT_SSN_StopPullupPending() != 0U)) {
+      if (g_spi_stream_enabled != 0U) {
         MXT_ProcessSPICheck();
-        if (g_spi_rx_q_head == g_spi_rx_q_tail) {
-          break;
-        }
+        MXT_USB_ServiceTx();
       }
+      MXT_SSN_Poll();
+      MXT_FlushMessageBuffer();
     } else {
       MXT_ProcessSPICheck();
+      MXT_SSN_Poll();
+      MXT_FlushMessageBuffer();
+
+      /* 检查并处理CHG引脚消息 */
+      MXT_CheckAndProcessMessages();
+      MXT_FlushMessageBuffer();
+
+      /* 定时读取诊断数据 (在START命令后启用) */
+      MXT_TimerDiagnosticRead();
+      MXT_FlushMessageBuffer();
     }
-    MXT_SSN_Poll();
-    MXT_FlushMessageBuffer();
-    
-    /* 检查并处理CHG引脚消息 */
-    MXT_CheckAndProcessMessages();
-    MXT_FlushMessageBuffer();
-    
-    /* 定时读取诊断数据 (在START命令后启用) */
-    MXT_TimerDiagnosticRead();
-    /* 多次刷新确保缓冲区结尾数据发送完成（避免尾数据残留在缓冲器） */
-    MXT_FlushMessageBuffer();
   }
   /* USER CODE END 3 */
 }

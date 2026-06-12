@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "gpio.h"
+#include "tim.h"
 #include "usbd_cdc_if.h"
 #include "spi.h"
 /* USER CODE END Includes */
@@ -60,6 +61,7 @@
 /* External variables --------------------------------------------------------*/
 extern PCD_HandleTypeDef hpcd_USB_FS;
 extern SPI_HandleTypeDef hspi1;
+extern DMA_HandleTypeDef hdma_spi1_rx;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -238,6 +240,14 @@ void SPI1_IRQHandler(void)
   HAL_SPI_IRQHandler(&hspi1);
 }
 
+/**
+  * @brief This function handles DMA1 channel2 global interrupt.
+  */
+void DMA1_Channel2_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(&hdma_spi1_rx);
+}
+
 /* USER CODE BEGIN 1 */
 /**
   * @brief This function handles EXTI line3 interrupt.
@@ -259,14 +269,19 @@ void EXTI3_IRQHandler(void)
 
 void TIM1_UP_IRQHandler(void)
 {
-  MXT_SSN_TimUpIsr();
+  HAL_TIM_IRQHandler(&htim1);
+}
+
+void TIM1_CC_IRQHandler(void)
+{
+  HAL_TIM_IRQHandler(&htim1);
 }
 
 void EXTI15_10_IRQHandler(void)
 {
-  if (__HAL_GPIO_EXTI_GET_IT(CLK_MON_Pin) != RESET) {
+  if ((EXTI->PR & CLK_MON_Pin) != 0U) {
+    EXTI->PR = CLK_MON_Pin;
     MXT_SSN_OnMisoEdge();
-    __HAL_GPIO_EXTI_CLEAR_IT(CLK_MON_Pin);
   }
 }
 

@@ -18,15 +18,22 @@
 #define CMD_FIND_IIC_ADDRESS   0xE0
 #define MXT_T6_DEBUGCTRL2_OFFSET 6U
 #define MXT_STARTUP_DEBUGCTRL2   0x80U
-#define SPI_IT_CHUNK_LEN        16U
+#define SPI_DMA_RING_SIZE       512U
 #define SPI_STREAM_STALL_MS     25U
 #define SPI_IDLE_STALL_MS       100U
-#define SPI_RX_QUEUE_DEPTH      2048U
+#define SPI_RX_QUEUE_DEPTH      256U
+#define SPI_DRAIN_BUDGET_ISR    16U
+#define SPI_DRAIN_BUDGET_LOOP   96U
 #define SPI_RX_MARK_GAP         1U
+#define SPI_RX_MARK_START       2U
 #define SPI_FRAME_MAGIC0        0x87U
 #define SPI_FRAME_MAGIC1        0x78U
 #define SPI_USB_PKT_SIZE        64U
-#define SPI_RAW_OUT_BYTES       32U
+#define SPI_RAW_OUT_BYTES       33U
+/* 原始 hex 行：\r + 33*(HH + space) + \r\n ≈ 102B；8 槽待发送环 + 2 CDC ping-pong */
+#define SPI_RAW_CDC_LINE_SIZE   (1U + (SPI_RAW_OUT_BYTES * 3U) + 2U)
+#define SPI_RAW_LINE_SLOTS      4U
+#define SPI_MAIN_LOOP_BURST     1U
 
 /* CFGWRITE/CFGREAD */
 #define CFG_PROTOCOL_VERSION       0x01
@@ -60,15 +67,16 @@
 #define TOUCH_MAX_X 830
 #define TOUCH_MAX_Y 940
 #define TOUCH_QUEUE_SIZE 32
-#define MSG_BUFFER_SIZE 2048
+#define MSG_BUFFER_SIZE 1024
 #define CMD_BUFFER_SIZE 64
 #define MSG_FLUSH_CHUNK  64
 
 /* 通用工作区（单缓冲复用，非 SPI/USB 主通道） */
-#define MXT_WORK_BUF_SIZE 768U
+#define MXT_WORK_BUF_SIZE 512U
 
-/* SPI 二进制发送环形缓冲；START1 文本模式复用同一缓冲 */
-#define SPI_TX_BUF_SIZE         4096U
+/* SPI 文本/二进制发送缓冲；与 g_msg_buffer 复用同一块 RAM */
+#define MXT_USB_STREAM_BUF_SIZE 1024U
+#define SPI_TX_BUF_SIZE         MXT_USB_STREAM_BUF_SIZE
 
 typedef struct {
   uint16_t addr;

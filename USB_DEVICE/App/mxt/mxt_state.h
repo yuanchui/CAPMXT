@@ -30,32 +30,50 @@ extern volatile uint8_t g_unfreeze_pending;
 extern uint8_t g_debugctrl_applied;
 
 /* ---- SPI 主缓冲（大块，SPI 流 → USB） ---- */
+/* volatile：IRQ(TIM/SPI/USB) 与主循环共享，禁止编译器缓存到寄存器 */
 extern volatile uint8_t g_spi_check_requested;
 extern volatile uint8_t g_spi_stream_enabled;
 extern volatile uint8_t g_spi_stream_mode;
-extern uint8_t g_spi_in_frame;
-extern uint16_t g_spi_frame_bytes;
+extern volatile uint8_t g_spi_in_frame;
+extern volatile uint16_t g_spi_frame_bytes;
 extern volatile uint8_t g_spi_it_active;
 extern volatile uint16_t g_spi_rx_q_head;
 extern volatile uint16_t g_spi_rx_q_tail;
 extern volatile uint16_t g_spi_rx_overflow;
 extern volatile uint32_t g_spi_last_irq_ms;
 extern volatile uint16_t g_spi_err_count;
-extern uint8_t g_spi_it_rx_buf[2][SPI_IT_CHUNK_LEN];
-extern volatile uint8_t g_spi_it_buf_idx;
+extern uint8_t g_spi_dma_ring[SPI_DMA_RING_SIZE];
+extern volatile uint16_t g_spi_dma_last_pos;
 extern uint8_t g_spi_rx_queue[SPI_RX_QUEUE_DEPTH];
 extern uint8_t g_spi_rx_mark[SPI_RX_QUEUE_DEPTH];
-extern uint32_t g_spi_last_overflow_report_ms;
-extern uint8_t g_spi_tx_buf[SPI_TX_BUF_SIZE];
-extern uint16_t g_spi_tx_len;
-extern uint8_t g_spi_start1_collecting;
-extern uint16_t g_spi_start1_payload_bytes;
-extern uint8_t g_spi_start1_row_bytes;
-extern uint8_t g_spi_start1_src_row_bytes;
-extern uint8_t g_spi_start3_frame_id;
-extern uint8_t g_spi_start3_row_id;
-extern uint8_t g_spi_start3_row_buf[32];
-extern uint8_t g_spi_start3_row_len;
+extern volatile uint32_t g_spi_last_overflow_report_ms;
+
+typedef union {
+  uint8_t spi_tx[SPI_TX_BUF_SIZE];
+  char    msg[MSG_BUFFER_SIZE];
+} MxtUsbStreamBuf_u;
+
+extern MxtUsbStreamBuf_u g_usb_stream_buf;
+#define g_spi_tx_buf  (g_usb_stream_buf.spi_tx)
+#define g_msg_buffer  (g_usb_stream_buf.msg)
+
+extern volatile uint16_t g_spi_tx_len;
+extern volatile uint8_t g_spi_start1_collecting;
+extern volatile uint16_t g_spi_start1_payload_bytes;
+extern volatile uint8_t g_spi_start1_row_bytes;
+extern volatile uint8_t g_spi_start1_src_row_bytes;
+extern volatile uint8_t g_spi_start3_frame_id;
+extern volatile uint8_t g_spi_start3_row_id;
+extern volatile uint8_t g_spi_start3_row_buf[32];
+extern volatile uint8_t g_spi_start3_row_len;
+extern volatile uint8_t g_spi_raw_rx_count;
+extern volatile uint8_t g_spi_gap_restart_pending;
+extern volatile uint8_t g_spi_resync_pending;
+extern volatile uint8_t g_spi_prev_ssn_sel;
+extern volatile uint8_t g_spi_raw_line_len;
+extern volatile uint8_t g_spi_raw_line_ready;
+extern volatile uint32_t g_spi_raw_usb_drop;
+extern volatile uint32_t g_spi_raw_partial_drop;
 
 /* ---- object table ---- */
 extern uint16_t g_t6_addr;
@@ -97,19 +115,18 @@ extern uint8_t g_stream_pre_cal;
 
 /* ---- command queue ---- */
 extern char g_cmd_buffer[CMD_BUFFER_SIZE];
-extern uint8_t g_cmd_pending;
+extern volatile uint8_t g_cmd_pending;
 extern MenuState_t g_menu_state;
 extern uint32_t g_last_diag_time;
 extern uint8_t g_t37_reading;
 
 /* ---- USB 主缓冲（文本输出环形缓冲 + CDC 分包） ---- */
-extern char g_msg_buffer[MSG_BUFFER_SIZE];
-extern uint16_t g_msg_buffer_head;
-extern uint16_t g_msg_buffer_tail;
-extern uint8_t g_msg_buffer_overflow;
+extern volatile uint16_t g_msg_buffer_head;
+extern volatile uint16_t g_msg_buffer_tail;
+extern volatile uint8_t g_msg_buffer_overflow;
 extern uint8_t g_msg_tx_chunk[MSG_FLUSH_CHUNK];
 
-/* ---- 通用工作区（768B 单缓冲，其余逻辑复用） ---- */
+/* ---- 通用工作区（单缓冲复用） ---- */
 extern uint8_t g_work_buf[MXT_WORK_BUF_SIZE];
 
 #endif /* MXT_STATE_H */

@@ -28,9 +28,13 @@ stmusbatmxt640\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash_e
 stmusbatmxt640\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_i2c.h
 stmusbatmxt640\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h
 stmusbatmxt640\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_spi.h
+stmusbatmxt640\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
+stmusbatmxt640\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 stmusbatmxt640\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd.h
 stmusbatmxt640\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h
 stmusbatmxt640\gpio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h
+stmusbatmxt640\gpio.o: ../Drivers/CMSIS/Include/core_cm3.h
+stmusbatmxt640\gpio.o: ../Core/Inc/tim.h
 stmusbatmxt640\gpio.o: ../Core/Inc/spi.h
 stmusbatmxt640\gpio.o: ../USB_DEVICE/App/mxt/mxt_spi_stream.h
 stmusbatmxt640\gpio.o: ../USB_DEVICE/App/mxt/mxt_state.h

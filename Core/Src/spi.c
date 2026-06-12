@@ -25,6 +25,7 @@
 /* USER CODE END 0 */
 
 SPI_HandleTypeDef hspi1;
+DMA_HandleTypeDef hdma_spi1_rx;
 
 /* SPI1 init function */
 void MX_SPI1_Init(void)
@@ -81,8 +82,24 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+    /* SPI1 DMA Init (参考 aaaa：DMA1_Channel2 环形 RX) */
+    hdma_spi1_rx.Instance = DMA1_Channel2;
+    hdma_spi1_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    hdma_spi1_rx.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_spi1_rx.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_spi1_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    hdma_spi1_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    hdma_spi1_rx.Init.Mode = DMA_CIRCULAR;
+    hdma_spi1_rx.Init.Priority = DMA_PRIORITY_LOW;
+    if (HAL_DMA_Init(&hdma_spi1_rx) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+    __HAL_LINKDMA(spiHandle, hdmarx, hdma_spi1_rx);
+
   /* USER CODE BEGIN SPI1_MspInit 1 */
-  HAL_NVIC_SetPriority(SPI1_IRQn, 1, 0);
+  HAL_NVIC_SetPriority(SPI1_IRQn, 3, 0);
     HAL_NVIC_EnableIRQ(SPI1_IRQn);
 
   /* USER CODE END SPI1_MspInit 1 */
@@ -105,6 +122,8 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef* spiHandle)
     PA7     ------> SPI1_MOSI
     */
     HAL_GPIO_DeInit(GPIOA, SPI1_SCK_Pin|SPI_MOSI_Pin);
+
+    HAL_DMA_DeInit(spiHandle->hdmarx);
 
   /* USER CODE BEGIN SPI1_MspDeInit 1 */
     HAL_NVIC_DisableIRQ(SPI1_IRQn);

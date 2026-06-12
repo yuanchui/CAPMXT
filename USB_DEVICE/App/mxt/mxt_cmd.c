@@ -29,10 +29,15 @@ void ProcessStringCommand(uint8_t *buf, uint32_t len)
         }
     }
     if (strlen(MXT_WORK_STR) == 0) return;
-    if (g_cmd_pending) return;
+    if (g_cmd_pending != 0U) {
+      if ((strcmp(MXT_WORK_STR, "SPISTOP") != 0) && (strcmp(MXT_WORK_STR, "spistop") != 0)
+          && (strcmp(MXT_WORK_STR, "SPIDBG") != 0) && (strcmp(MXT_WORK_STR, "spidbg") != 0)) {
+        return;
+      }
+    }
 
     memcpy(g_cmd_buffer, MXT_WORK_STR, strlen(MXT_WORK_STR) + 1);
-    g_cmd_pending = 1;
+    g_cmd_pending = 1U;
 }
 
 
@@ -61,20 +66,35 @@ void ProcessPendingCommand(void)
         USB_SendString(MXT_WORK_STR);
         USB_SendString("Type 'u' to enter diagnostic menu\r\n");
     }
-    else if (strcmp(cmd_str, "SPISTART") == 0 || strcmp(cmd_str, "spistart") == 0) {
+    else if (strncmp(cmd_str, "SPISTART", 8) == 0 || strncmp(cmd_str, "spistart", 8) == 0) {
+        const char *opt = cmd_str + 8;
+        uint8_t ssn_only = 0U;
+
+        while (*opt == ' ') {
+            opt++;
+        }
+        if (strncmp(opt, "-no", 3) == 0) {
+            ssn_only = 1U;
+        }
+
         if (!g_touch_inited) MXT_InitTouchScreen();
         g_spi_stream_enabled = 0U;
-        g_spi_check_requested = 0U;
         MXT_SPI_StopIT();
-        MXT_SSN_ResetForStream();
-        SPIUSB_ResetState(0U);
-        USB_SendString("INFO: SPI stream START (hex, first byte per SSN frame)\r\n");
+        if (ssn_only == 0U) {
+            SPIUSB_ResetState(0U);
+            USB_SendString("INFO: SPI stream START (hex, 33 bytes/line per SSN frame)\r\n");
+        } else {
+            USB_SendString("INFO: SPI SSN only (no SPI read/USB tx)\r\n");
+        }
         MXT_FlushMessageBuffer();
         MXT_WaitUsbIdle(300U);
-        (void)MXT_EnableDebugCtrl2();
         g_spi_check_requested = 1U;
-        g_spi_stream_enabled = 1U;
-        MXT_SPI_StartIT();
+        (void)MXT_EnableDebugCtrl2();
+        MXT_SSN_ResetForStream();
+        if (ssn_only == 0U) {
+            g_spi_stream_enabled = 1U;
+            MXT_SPI_StartIT();
+        }
     }
     else if (strcmp(cmd_str, "SPISTART1") == 0 || strcmp(cmd_str, "spistart1") == 0) {
         if (!g_touch_inited) MXT_InitTouchScreen();
@@ -82,6 +102,7 @@ void ProcessPendingCommand(void)
         SPIUSB_ResetState(1U);
         g_spi_check_requested = 1U;
         g_spi_stream_enabled = 1U;
+        MXT_SSN_ResetForStream();
         MXT_SPI_StartIT();
         USB_SendString("INFO: SPI stream START1 (16x16 text)\r\n");
     }
@@ -91,18 +112,22 @@ void ProcessPendingCommand(void)
         SPIUSB_ResetState(2U);
         g_spi_check_requested = 1U;
         g_spi_stream_enabled = 1U;
+        MXT_SSN_ResetForStream();
         MXT_SPI_StartIT();
         USB_SendString("INFO: SPI stream START3 (cropped packets)\r\n");
     }
     else if (strcmp(cmd_str, "SPISTOP") == 0 || strcmp(cmd_str, "spistop") == 0) {
-        g_spi_check_requested = 0U;
         g_spi_stream_enabled = 0U;
+        g_spi_check_requested = 0U;
+        g_spi_resync_pending = 0U;
+        g_spi_gap_restart_pending = 0U;
+        SPIUSB_RawStop();
         SPIUSB_EndRawFrame();
-        SPIUSB_TryFlush();
         MXT_SSN_StopPullup();
+        MXT_SSN_TimStop();
         if (!g_touch_inited) MXT_InitTouchScreen();
         (void)MXT_DisableDebugCtrl2();
-        USB_SendString("INFO: SPI stream STOP\r\n");
+        SendResponse((uint8_t *)"INFO: SPI stream STOP\r\n", 24U);
     }
     else if (strcmp(cmd_str, "SPIDBG") == 0 || strcmp(cmd_str, "spidbg") == 0) {
         uint8_t in_gap;
@@ -120,7 +145,8 @@ void ProcessPendingCommand(void)
         }
         snprintf(MXT_WORK_STR, MXT_WORK_BUF_SIZE,
                  "SPIDBG: gap=%u ssn=%u no_spi=%uus low=%uus enter=%lu exit=%lu "
-                 "spi_it=%u chk=%u strm=%u q=%u/%u tx=%u ovf=%u err=%u stop=%u\r\n",
+                 "spi_it=%u chk=%u strm=%u q=%u/%u tx=%u ovf=%u err=%u stop=%u "
+                 "usb_pend=%u usb_drop=%lu part_drop=%lu\r\n",
                  (unsigned)in_gap,
                  (unsigned)MXT_SSN_IsSelected(),
                  (unsigned)no_spi_us,
@@ -135,8 +161,11 @@ void ProcessPendingCommand(void)
                  (unsigned)g_spi_tx_len,
                  (unsigned)g_spi_rx_overflow,
                  (unsigned)g_spi_err_count,
-                 (unsigned)MXT_SSN_StopPullupPending());
-        USB_SendString(MXT_WORK_STR);
+                 (unsigned)MXT_SSN_StopPullupPending(),
+                 (unsigned)SPIUSB_RawHasPending(),
+                 (unsigned long)g_spi_raw_usb_drop,
+                 (unsigned long)g_spi_raw_partial_drop);
+        SendResponse((uint8_t *)MXT_WORK_STR, (uint16_t)strlen(MXT_WORK_STR));
     }
     /* Command: "START" / "START1" - Start diagnostic output
      * 语法1: START  [MAP16*] [HEX|CHAR] interval_ms   -> 默认 FRAME0 (Mutual Delta, 0x10)
@@ -735,19 +764,26 @@ void ProcessPendingCommand(void)
     else if (strcmp(cmd_str, "SPI") == 0 || strcmp(cmd_str, "spi") == 0) {
         g_spi_stream_enabled = (uint8_t)!g_spi_stream_enabled;
         if (g_spi_stream_enabled) {
+            MXT_SSN_ResetForStream();
             SPIUSB_ResetState(0U);
-            USB_SendString("INFO: SPI stream START (hex, first byte per SSN frame)\r\n");
+            USB_SendString("INFO: SPI stream START (hex, 33 bytes/line per SSN frame)\r\n");
             MXT_FlushMessageBuffer();
             MXT_WaitUsbIdle(300U);
             (void)MXT_EnableDebugCtrl2();
+            MXT_SSN_ResetForStream();
             g_spi_check_requested = 1U;
             MXT_SPI_StartIT();
         } else {
+            g_spi_stream_enabled = 0U;
             g_spi_check_requested = 0U;
-            MXT_SSN_StopPullup();
+            g_spi_resync_pending = 0U;
+            g_spi_gap_restart_pending = 0U;
+            SPIUSB_RawStop();
             SPIUSB_EndRawFrame();
-            SPIUSB_TryFlush();
-            USB_SendString("INFO: SPI stream STOP\r\n");
+            MXT_SSN_StopPullup();
+            MXT_SSN_TimStop();
+            (void)MXT_DisableDebugCtrl2();
+            SendResponse((uint8_t *)"INFO: SPI stream STOP\r\n", 24U);
         }
     }
     /* Command: "HELP" - Show available commands */
@@ -790,7 +826,8 @@ void ProcessPendingCommand(void)
         USB_SendString("  MSG      - Read one message (T5 from object table)\r\n");
         USB_SendString("  T100CFG  - Read T100 UNKNOWN[9]/UNKNOWN[20]\r\n");
         USB_SendString("  STATUS   - Query current status\r\n");
-        USB_SendString("  SPISTART  - SPI hex, first byte per SSN frame\r\n");
+        USB_SendString("  SPISTART  - SPI hex, 33 bytes/line per SSN frame\r\n");
+        USB_SendString("  SPISTART -no - SSN only (no SPI read/USB tx)\r\n");
         USB_SendString("  SPISTART1 - SPI crop 20x16 to 16x16 text rows\r\n");
         USB_SendString("  SPISTART3 - SPI crop 20x16 to 16x16 packets\r\n");
         USB_SendString("  SPISTOP   - Stop SPI stream\r\n");

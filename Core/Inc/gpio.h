@@ -45,15 +45,14 @@ void MXT_SSN_StopPullup(void);
 uint8_t MXT_SSN_StopPullupPending(void);
 uint8_t MXT_SSN_IsSelected(void);
 void MXT_SSN_NotifySpiRx(void);
-void MXT_SSN_OnMisoEdge(void);
 uint8_t MXT_SSN_TakeGapEvent(void);
 uint8_t MXT_SSN_TakeActiveEvent(void);
-void MXT_SSN_TimUpIsr(void);
 void MXT_SSN_TimStart(void);
 void MXT_SSN_TimStop(void);
 void MXT_SSN_Poll(void);
 void MXT_SSN_GetDebug(uint8_t *in_gap, uint16_t *no_spi_us, uint16_t *low_us,
                       uint32_t *enter_cnt, uint32_t *exit_cnt);
+void MXT_SSN_OnMisoEdge(void);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

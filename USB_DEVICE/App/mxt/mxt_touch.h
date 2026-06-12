@@ -4,7 +4,9 @@
 #include "mxt_config.h"
 void MXT_InitTouchScreen(void);
 uint8_t MXT_EnableDebugCtrl2(void);
+uint8_t MXT_EnableDebugCtrl2Quiet(void);
 uint8_t MXT_DisableDebugCtrl2(void);
+uint8_t MXT_DisableDebugCtrl2Quiet(void);
 uint16_t MXT_GetObjectAddr(uint8_t obj_type);
 uint8_t MXT_ObjectTableReady(void);
 void MXT_EnableOutput(uint8_t enable);

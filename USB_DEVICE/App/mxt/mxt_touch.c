@@ -1,12 +1,13 @@
 #include "mxt_touch.h"
+#include "gpio.h"
 #include "mxt_state.h"
 #include "mxt_work.h"
 #include "mxt_config.h"
 #include "mxt_i2c.h"
 #include "mxt_usb_io.h"
 #include "mxt_msg.h"
+#include "mxt_spi_stream.h"
 #include "usbd_cdc_if.h"
-#include "gpio.h"
 #include <stdio.h>
 #include <string.h>
 #include "stm32f1xx_hal.h"
@@ -226,6 +227,22 @@ uint8_t MXT_EnableDebugCtrl2(void)
   return 0;
 }
 
+uint8_t MXT_EnableDebugCtrl2Quiet(void)
+{
+  uint8_t debugctrl2 = MXT_STARTUP_DEBUGCTRL2;
+
+  if (!g_touch_inited || g_t6_addr == 0) {
+    return 1;
+  }
+
+  if (MXT_I2C_Write(g_mxt_i2c_addr, (uint16_t)(g_t6_addr + MXT_T6_DEBUGCTRL2_OFFSET), &debugctrl2, 1) != 0) {
+    return 2;
+  }
+
+  g_debugctrl_applied = 1;
+  return 0;
+}
+
 uint8_t MXT_DisableDebugCtrl2(void)
 {
   uint8_t debugctrl2 = 0x00U;
@@ -247,8 +264,24 @@ uint8_t MXT_DisableDebugCtrl2(void)
   return 0;
 }
 
+uint8_t MXT_DisableDebugCtrl2Quiet(void)
+{
+  uint8_t debugctrl2 = 0x00U;
 
-static uint8_t MXT_ReadT37Page(uint8_t mode, uint8_t page)
+  if (!g_touch_inited || g_t6_addr == 0) {
+    return 1;
+  }
+
+  if (MXT_I2C_Write(g_mxt_i2c_addr, (uint16_t)(g_t6_addr + MXT_T6_DEBUGCTRL2_OFFSET), &debugctrl2, 1) != 0) {
+    return 2;
+  }
+
+  g_debugctrl_applied = 0;
+  return 0;
+}
+
+
+static uint8_t MXT_ReadT37Page(uint8_t mode, uint8_t page, uint8_t quiet)
 {
   uint8_t cmd;
   uint8_t read_cmd;
@@ -271,7 +304,9 @@ static uint8_t MXT_ReadT37Page(uint8_t mode, uint8_t page)
     break;
   }
   if (result != 0) {
-    USB_SendString("ERR: T37 write cmd failed\r\n");
+    if (quiet == 0U) {
+      USB_SendString("ERR: T37 write cmd failed\r\n");
+    }
     return result;
   }
   
@@ -286,7 +321,9 @@ static uint8_t MXT_ReadT37Page(uint8_t mode, uint8_t page)
       timeout++;
       continue;
     } else if (result != 0) {
-      USB_SendString("ERR: T37 read cmd status failed\r\n");
+      if (quiet == 0U) {
+        USB_SendString("ERR: T37 read cmd status failed\r\n");
+      }
       return result;
     }
     
@@ -294,7 +331,9 @@ static uint8_t MXT_ReadT37Page(uint8_t mode, uint8_t page)
     timeout++;
   }
   if (timeout >= 1000) {
-    USB_SendString("ERR: T37 cmd timeout\r\n");
+    if (quiet == 0U) {
+      USB_SendString("ERR: T37 cmd timeout\r\n");
+    }
     return 0xFF;  // 超时
   }
   
@@ -308,7 +347,9 @@ static uint8_t MXT_ReadT37Page(uint8_t mode, uint8_t page)
       continue;
     }
     if (result != 0) {
-      USB_SendString("ERR: T37 read page failed\r\n");
+      if (quiet == 0U) {
+        USB_SendString("ERR: T37 read page failed\r\n");
+      }
       return result;
     }
     
@@ -321,14 +362,16 @@ static uint8_t MXT_ReadT37Page(uint8_t mode, uint8_t page)
   }
   
   // 超时，输出调试信息
+  if (quiet == 0U) {
     snprintf(MXT_WORK_STR, MXT_WORK_BUF_SIZE, "ERR: T37 mismatch (exp=0x%02X/%d, got=0x%02X/%d)\r\n", 
            mode, page, g_t37_data[0], g_t37_data[1]);
-  USB_SendString(MXT_WORK_STR);
+    USB_SendString(MXT_WORK_STR);
+  }
   return 0xFE;  // 模式不匹配
 }
 
 
-uint8_t MXT_ReadCompleteDiagnosticFrame(void)
+static uint8_t MXT_ReadCompleteDiagnosticFrameInternal(uint8_t quiet)
 {
   uint8_t result;
   uint16_t data_offset = 0;
@@ -343,7 +386,9 @@ uint8_t MXT_ReadCompleteDiagnosticFrame(void)
       MXT_ReadObjectTable();
     }
     if (g_pages_per_pass == 0 || g_t37_addr == 0) {
-      USB_SendString("ERR: T37 not configured (run INFO/OBJTBL first or check device)\r\n");
+      if (quiet == 0U) {
+        USB_SendString("ERR: T37 not configured (run INFO/OBJTBL first or check device)\r\n");
+      }
       return 0xFD;
     }
   }
@@ -356,11 +401,12 @@ uint8_t MXT_ReadCompleteDiagnosticFrame(void)
   
   // 读取所有页
   for (uint8_t page = 0; page < g_pages_per_pass; page++) {
-    result = MXT_ReadT37Page(g_diag_mode, page);
+    result = MXT_ReadT37Page((uint8_t)g_diag_mode, page, quiet);
     if (result != 0) {
-            snprintf(MXT_WORK_STR, MXT_WORK_BUF_SIZE, "ERR: T37 read failed page %d, code 0x%02X\r\n", page, result);
-      USB_SendString(MXT_WORK_STR);
-      // 恢复CHG消息处理
+      if (quiet == 0U) {
+        snprintf(MXT_WORK_STR, MXT_WORK_BUF_SIZE, "ERR: T37 read failed page %d, code 0x%02X\r\n", page, result);
+        USB_SendString(MXT_WORK_STR);
+      }
       g_t37_reading = 0;
       return result;
     }
@@ -376,15 +422,21 @@ uint8_t MXT_ReadCompleteDiagnosticFrame(void)
     }
   }
   
-  // 恢复CHG消息处理
   g_t37_reading = 0;
   
-  // T37读取完成后，检查CHG引脚，若拉低则触发消息处理
-  if (HAL_GPIO_ReadPin(CHG_EXTI3_GPIO_Port, CHG_EXTI3_Pin) == GPIO_PIN_RESET) {
-    MXT_CheckAndProcessMessages();
+  if (quiet == 0U) {
+    if (HAL_GPIO_ReadPin(CHG_EXTI3_GPIO_Port, CHG_EXTI3_Pin) == GPIO_PIN_RESET) {
+      MXT_CheckAndProcessMessages();
+    }
   }
   
   return 0;
+}
+
+
+uint8_t MXT_ReadCompleteDiagnosticFrame(void)
+{
+  return MXT_ReadCompleteDiagnosticFrameInternal(0U);
 }
 
 
