@@ -22,23 +22,28 @@ static void MXT_SPI_TryRestartAfterGap(void);
 static void MXT_SPI_ApplyResyncIfNeeded(void);
 static void MXT_SPI_CheckStreamStall(void);
 static uint16_t MXT_SPI_DrainDmaRingBudget(uint16_t budget);
-static void MXT_SPI_RawFinishPending(void);
 static void MXT_SPI_EnqueueRxByte(uint8_t b);
 static uint16_t MXT_SPI_DmaWritePos(void);
 static uint8_t SPIUSB_RawHandleFrameMark(uint8_t mark);
-static uint8_t SPIUSB_RawQueueLine(void);
+static uint8_t SPIUSB_RawCommitSlot(const uint8_t *data, uint16_t len);
+static uint16_t SPIUSB_RawPktLen(uint16_t payload_len);
+static uint8_t SPIUSB_RawEncodedByte(uint16_t pos, const uint8_t *raw, uint16_t payload_len);
+static void SPIUSB_RawTxReset(void);
 static void SPIUSB_ProcessByte(uint8_t b);
 static void SPIUSB_LineEnqueue(const char *s);
 static void SPIUSB_HexEnqueueByte(uint8_t b);
 
-/* ?? hex ??33B ????+ 2 ????+ 2�CDC ping-pong?? RX ????*/
-static uint8_t g_spi_raw_line_buf[SPI_RAW_OUT_BYTES];
-static uint8_t g_spi_raw_slots[SPI_RAW_LINE_SLOTS][SPI_RAW_CDC_LINE_SIZE];
-static volatile uint16_t g_spi_raw_slot_len[SPI_RAW_LINE_SLOTS];
+/* raw 514B 槽 + 64B CDC 分包：88 77 66 + LE u16 len + payload */
+static uint8_t g_spi_raw_slots[SPI_RAW_LINE_SLOTS][SPI_RAW_OUT_BYTES];
+static uint16_t g_spi_raw_slot_len[SPI_RAW_LINE_SLOTS];
 static volatile uint8_t g_spi_raw_slot_r;
 static volatile uint8_t g_spi_raw_slot_w;
-static uint8_t g_spi_cdc_txbuf[2][SPI_RAW_CDC_LINE_SIZE];
+static uint8_t g_spi_cdc_txbuf[2][SPI_RAW_TX_CHUNK];
 static volatile uint8_t g_spi_cdc_txbuf_idx;
+static volatile uint8_t g_spi_raw_tx_active;
+static volatile uint16_t g_spi_raw_tx_pos;
+static uint8_t g_spi_raw_staging[SPI_RAW_OUT_BYTES];
+static volatile uint16_t g_spi_raw_staging_len;
 static uint8_t   g_spi_usb_buf[2][SPI_USB_PKT_SIZE];
 static volatile uint8_t g_spi_usb_buf_idx;
 
@@ -99,29 +104,87 @@ static void MXT_SPI_EnqueueRxByte(uint8_t b)
   }
 }
 
+static uint16_t SPIUSB_RawPktLen(uint16_t payload_len)
+{
+  return (uint16_t)(SPI_RAW_FRAME_HDR_LEN + payload_len);
+}
+
+static uint8_t SPIUSB_RawEncodedByte(uint16_t pos, const uint8_t *raw, uint16_t payload_len)
+{
+  if (pos == 0U) {
+    return SPI_RAW_FRAME_HDR0;
+  }
+  if (pos == 1U) {
+    return SPI_RAW_FRAME_HDR1;
+  }
+  if (pos == 2U) {
+    return SPI_RAW_FRAME_HDR2;
+  }
+  if (pos == 3U) {
+    return (uint8_t)(payload_len & 0xFFU);
+  }
+  if (pos == 4U) {
+    return (uint8_t)((payload_len >> 8) & 0xFFU);
+  }
+  pos = (uint16_t)(pos - SPI_RAW_FRAME_HDR_LEN);
+  if (pos < payload_len) {
+    return raw[pos];
+  }
+  return 0U;
+}
+
+static void SPIUSB_RawTxReset(void)
+{
+  g_spi_raw_tx_active = 0U;
+  g_spi_raw_tx_pos = 0U;
+}
+
+static uint8_t SPIUSB_RawCommitSlot(const uint8_t *data, uint16_t len)
+{
+  uint8_t next_w;
+
+  if ((data == NULL) || (len == 0U) || (len > SPI_RAW_OUT_BYTES)) {
+    return 0U;
+  }
+
+  next_w = (uint8_t)((g_spi_raw_slot_w + 1U) & (SPI_RAW_LINE_SLOTS - 1U));
+  if (next_w == g_spi_raw_slot_r) {
+    g_spi_raw_usb_drop++;
+    return 0U;
+  }
+
+  memcpy(g_spi_raw_slots[g_spi_raw_slot_w], data, len);
+  g_spi_raw_slot_len[g_spi_raw_slot_w] = len;
+  g_spi_raw_slot_w = next_w;
+  return 1U;
+}
+
 static void MXT_SPI_RawExtractFrameAtGap(uint16_t start_pos, uint16_t wr)
 {
   uint16_t pos;
-  uint8_t i;
+  uint16_t i;
+  uint8_t next_w;
+
+  next_w = (uint8_t)((g_spi_raw_slot_w + 1U) & (SPI_RAW_LINE_SLOTS - 1U));
+  if (next_w == g_spi_raw_slot_r) {
+    g_spi_raw_usb_drop++;
+    g_spi_dma_last_pos = wr;
+    g_spi_raw_rx_count = 0U;
+    return;
+  }
 
   pos = start_pos;
-
   for (i = 0U; i < SPI_RAW_OUT_BYTES; i++) {
     if (pos == wr) {
       break;
     }
-    g_spi_raw_line_buf[i] = g_spi_dma_ring[pos];
+    g_spi_raw_slots[g_spi_raw_slot_w][i] = g_spi_dma_ring[pos];
     pos = (uint16_t)((pos + 1U) % SPI_DMA_RING_SIZE);
   }
 
-  if (i == SPI_RAW_OUT_BYTES) {
-    g_spi_raw_line_len = SPI_RAW_OUT_BYTES;
-    g_spi_raw_line_ready = 1U;
-  } else if (i > 0U) {
-    g_spi_raw_partial_drop++;
-    g_spi_raw_line_len = 0U;
-  } else {
-    g_spi_raw_line_len = 0U;
+  if (i > 0U) {
+    g_spi_raw_slot_len[g_spi_raw_slot_w] = i;
+    g_spi_raw_slot_w = next_w;
   }
 
   g_spi_dma_last_pos = wr;
@@ -142,24 +205,27 @@ static void MXT_SPI_ProcessGapExtract(void)
 
   g_spi_gap_extract_pending = 0U;
   start_pos = g_spi_gap_ssn_snap;
-  /* ????????? DMA ?????? OnSsnGap ???? */
   wr = MXT_SPI_DmaWritePos();
   if (wr == start_pos) {
     wr = g_spi_gap_wr_snap;
   }
-  MXT_SPI_RawExtractFrameAtGap(start_pos, wr);
+  if (wr != start_pos) {
+    MXT_SPI_RawExtractFrameAtGap(start_pos, wr);
+  }
 }
 
 static void MXT_SPI_RawDiscardGapDrain(uint16_t budget)
 {
   uint16_t wr;
   uint16_t rd;
+  uint16_t rd0;
 
   if (g_spi_it_active == 0U) {
     return;
   }
 
   rd = g_spi_dma_last_pos;
+  rd0 = rd;
   while (budget > 0U) {
     wr = MXT_SPI_DmaWritePos();
     if (rd == wr) {
@@ -168,18 +234,10 @@ static void MXT_SPI_RawDiscardGapDrain(uint16_t budget)
     rd = (uint16_t)((rd + 1U) % SPI_DMA_RING_SIZE);
     budget--;
   }
+  if (rd != rd0) {
+    g_spi_last_irq_ms = HAL_GetTick();
+  }
   g_spi_dma_last_pos = rd;
-}
-
-static void MXT_SPI_RawFinishPending(void)
-{
-  if (g_spi_raw_line_ready == 0U) {
-    return;
-  }
-  g_spi_raw_line_ready = 0U;
-  if (g_spi_raw_line_len == SPI_RAW_OUT_BYTES) {
-    (void)SPIUSB_RawQueueLine();
-  }
 }
 
 static uint16_t MXT_SPI_DrainDmaRingBudget(uint16_t budget)
@@ -198,7 +256,6 @@ static uint16_t MXT_SPI_DrainDmaRingBudget(uint16_t budget)
 
   if (raw_fast != 0U) {
     if (MXT_SSN_IsSelected() != 0U) {
-      /* ???? drain/hex?GAP ???? ssn_pos ???? */
       return budget;
     }
     MXT_SPI_RawDiscardGapDrain(budget);
@@ -241,8 +298,6 @@ void MXT_SPI_OnSsnActive(void)
   g_spi_dma_last_pos = pos;
   g_spi_dma_ssn_pos = pos;
   g_spi_raw_rx_count = 0U;
-  g_spi_raw_line_len = 0U;
-  g_spi_raw_line_ready = 0U;
   g_spi_prev_ssn_sel = 1U;
 }
 
@@ -430,8 +485,10 @@ void MXT_ProcessSPICheck(void)
       MXT_SPI_CheckStreamStall();
     }
 
-    MXT_SPI_RawFinishPending();
-    (void)SPIUSB_RawFlushPending();
+    while (SPIUSB_RawFlushPending() != 0U) {
+      /* 连续发送队列中的二进制帧 */
+    }
+    (void)MSG_BufferFlush();
     return;
   }
 
@@ -479,8 +536,8 @@ void MXT_ProcessSPICheck(void)
 
     if (g_spi_stream_enabled != 0U) {
       if (g_spi_stream_mode == 0U) {
-        if (g_spi_raw_line_len < SPI_RAW_OUT_BYTES) {
-          g_spi_raw_line_buf[g_spi_raw_line_len++] = b;
+        if (g_spi_raw_staging_len < SPI_RAW_OUT_BYTES) {
+          g_spi_raw_staging[g_spi_raw_staging_len++] = b;
         }
         local_tail = (uint16_t)((local_tail + 1U) % SPI_RX_QUEUE_DEPTH);
         g_spi_rx_q_tail = local_tail;
@@ -521,17 +578,15 @@ void MXT_ProcessSPICheck(void)
 static uint8_t SPIUSB_RawHandleFrameMark(uint8_t mark)
 {
   if (mark == SPI_RX_MARK_START) {
-    if (g_spi_raw_line_len != 0U) {
+    if (g_spi_raw_staging_len != 0U) {
       g_spi_raw_partial_drop++;
-      g_spi_raw_line_len = 0U;
+      g_spi_raw_staging_len = 0U;
     }
   } else if (mark == SPI_RX_MARK_GAP) {
-    if (g_spi_raw_line_len == SPI_RAW_OUT_BYTES) {
-      (void)SPIUSB_RawQueueLine();
-    } else if (g_spi_raw_line_len != 0U) {
-      g_spi_raw_partial_drop++;
-      g_spi_raw_line_len = 0U;
+    if (g_spi_raw_staging_len != 0U) {
+      (void)SPIUSB_RawCommitSlot(g_spi_raw_staging, g_spi_raw_staging_len);
     }
+    g_spi_raw_staging_len = 0U;
     MXT_SPI_TryRestartAfterGap();
   }
 
@@ -541,55 +596,21 @@ static uint8_t SPIUSB_RawHandleFrameMark(uint8_t mark)
 
 uint8_t SPIUSB_RawHasPending(void)
 {
+  if (g_spi_raw_tx_active != 0U) {
+    return 1U;
+  }
   return (g_spi_raw_slot_r != g_spi_raw_slot_w) ? 1U : 0U;
-}
-
-static uint8_t SPIUSB_RawQueueLine(void)
-{
-  uint8_t next_w;
-  uint16_t pos;
-  uint8_t i;
-
-  if (g_spi_raw_line_len != SPI_RAW_OUT_BYTES) {
-    return 0U;
-  }
-
-  next_w = (uint8_t)((g_spi_raw_slot_w + 1U) & (SPI_RAW_LINE_SLOTS - 1U));
-  if (next_w == g_spi_raw_slot_r) {
-    g_spi_raw_usb_drop++;
-    g_spi_raw_line_len = 0U;
-    return 0U;
-  }
-
-  pos = 0U;
-  g_spi_raw_slots[g_spi_raw_slot_w][pos++] = (uint8_t)'\r';
-  for (i = 0U; i < SPI_RAW_OUT_BYTES; i++) {
-    g_spi_raw_slots[g_spi_raw_slot_w][pos++] =
-        (uint8_t)g_hex_digits[(g_spi_raw_line_buf[i] >> 4) & 0x0FU];
-    g_spi_raw_slots[g_spi_raw_slot_w][pos++] =
-        (uint8_t)g_hex_digits[g_spi_raw_line_buf[i] & 0x0FU];
-    if ((i + 1U) < SPI_RAW_OUT_BYTES) {
-      g_spi_raw_slots[g_spi_raw_slot_w][pos++] = (uint8_t)' ';
-    }
-  }
-  g_spi_raw_slots[g_spi_raw_slot_w][pos++] = (uint8_t)'\r';
-  g_spi_raw_slots[g_spi_raw_slot_w][pos++] = (uint8_t)'\n';
-  g_spi_raw_slot_len[g_spi_raw_slot_w] = pos;
-  g_spi_raw_slot_w = next_w;
-  g_spi_raw_line_len = 0U;
-  return 1U;
 }
 
 uint8_t SPIUSB_RawFlushPending(void)
 {
   USBD_CDC_HandleTypeDef *hcdc;
   uint8_t idx;
-  uint16_t len;
+  uint16_t chunk;
+  uint16_t enc_len;
+  const uint8_t *raw;
 
   if (g_spi_stream_mode != 0U) {
-    return 0U;
-  }
-  if (g_spi_raw_slot_r == g_spi_raw_slot_w) {
     return 0U;
   }
   if (hUsbDeviceFS.dev_state != USBD_STATE_CONFIGURED) {
@@ -604,16 +625,41 @@ uint8_t SPIUSB_RawFlushPending(void)
     return 0U;
   }
 
-  len = g_spi_raw_slot_len[g_spi_raw_slot_r];
-  idx = g_spi_cdc_txbuf_idx;
-  memcpy(g_spi_cdc_txbuf[idx], g_spi_raw_slots[g_spi_raw_slot_r], len);
+  if (g_spi_raw_tx_active == 0U) {
+    if (g_spi_raw_slot_r == g_spi_raw_slot_w) {
+      return 0U;
+    }
+    g_spi_raw_tx_active = 1U;
+    g_spi_raw_tx_pos = 0U;
+  }
 
-  if (CDC_Transmit_FS(g_spi_cdc_txbuf[idx], len) != USBD_OK) {
+  raw = g_spi_raw_slots[g_spi_raw_slot_r];
+  enc_len = SPIUSB_RawPktLen(g_spi_raw_slot_len[g_spi_raw_slot_r]);
+  idx = g_spi_cdc_txbuf_idx;
+  chunk = 0U;
+  while ((chunk < SPI_RAW_TX_CHUNK) && (g_spi_raw_tx_pos < enc_len)) {
+    g_spi_cdc_txbuf[idx][chunk++] = SPIUSB_RawEncodedByte(g_spi_raw_tx_pos, raw,
+                                                          g_spi_raw_slot_len[g_spi_raw_slot_r]);
+    g_spi_raw_tx_pos++;
+  }
+
+  if (chunk == 0U) {
+    g_spi_raw_tx_active = 0U;
+    g_spi_raw_slot_r = (uint8_t)((g_spi_raw_slot_r + 1U) & (SPI_RAW_LINE_SLOTS - 1U));
+    return 0U;
+  }
+
+  if (CDC_Transmit_FS(g_spi_cdc_txbuf[idx], chunk) != USBD_OK) {
+    g_spi_raw_tx_pos = (uint16_t)(g_spi_raw_tx_pos - chunk);
     return 0U;
   }
 
   g_spi_cdc_txbuf_idx = (uint8_t)(1U - g_spi_cdc_txbuf_idx);
-  g_spi_raw_slot_r = (uint8_t)((g_spi_raw_slot_r + 1U) & (SPI_RAW_LINE_SLOTS - 1U));
+  if (g_spi_raw_tx_pos >= enc_len) {
+    g_spi_raw_tx_active = 0U;
+    g_spi_raw_tx_pos = 0U;
+    g_spi_raw_slot_r = (uint8_t)((g_spi_raw_slot_r + 1U) & (SPI_RAW_LINE_SLOTS - 1U));
+  }
   return 1U;
 }
 
@@ -632,8 +678,9 @@ void SPIUSB_RawStop(void)
 
   g_spi_raw_slot_r = 0U;
   g_spi_raw_slot_w = 0U;
-  g_spi_raw_line_len = 0U;
-  g_spi_raw_line_ready = 0U;
+  memset(g_spi_raw_slot_len, 0, sizeof(g_spi_raw_slot_len));
+  g_spi_raw_staging_len = 0U;
+  SPIUSB_RawTxReset();
 
   for (spin = 0U; spin < 64U; spin++) {
     MXT_FlushMessageBuffer();
@@ -715,8 +762,8 @@ void SPIUSB_ResetState(uint8_t mode)
   g_spi_dma_last_pos = 0U;
   g_spi_dma_ssn_pos = 0U;
   g_spi_raw_rx_count = 0U;
-  g_spi_raw_line_len = 0U;
-  g_spi_raw_line_ready = 0U;
+  g_spi_raw_staging_len = 0U;
+  SPIUSB_RawTxReset();
   g_spi_gap_restart_pending = 0U;
   g_spi_resync_pending = 0U;
   g_spi_gap_extract_pending = 0U;
@@ -726,6 +773,7 @@ void SPIUSB_ResetState(uint8_t mode)
   g_spi_usb_buf_idx = 0U;
   g_spi_raw_slot_r = 0U;
   g_spi_raw_slot_w = 0U;
+  memset(g_spi_raw_slot_len, 0, sizeof(g_spi_raw_slot_len));
   g_spi_cdc_txbuf_idx = 0U;
   g_spi_raw_usb_drop = 0U;
   g_spi_raw_partial_drop = 0U;
@@ -738,7 +786,7 @@ void SPIUSB_ResetState(uint8_t mode)
 
 void SPIUSB_EndRawFrame(void)
 {
-  g_spi_raw_line_len = 0U;
+  g_spi_raw_staging_len = 0U;
 }
 
 void MXT_USB_ServiceTx(void)
@@ -747,9 +795,11 @@ void MXT_USB_ServiceTx(void)
     if (MXT_SSN_IsSelected() != 0U) {
       return;
     }
-    if (SPIUSB_RawFlushPending() != 0U) {
-      return;
+    while (SPIUSB_RawFlushPending() != 0U) {
+      /* CDC 空闲时尽量排空 raw 队列 */
     }
+    (void)MSG_BufferFlush();
+    return;
   } else if (g_spi_tx_len > 0U) {
     SPIUSB_TryFlush();
     return;

@@ -55,8 +55,6 @@ volatile uint8_t g_spi_raw_rx_count = 0U;
 volatile uint8_t g_spi_gap_restart_pending = 0U;
 volatile uint8_t g_spi_resync_pending = 0U;
 volatile uint8_t g_spi_prev_ssn_sel = 0U;
-volatile uint8_t g_spi_raw_line_len = 0U;
-volatile uint8_t g_spi_raw_line_ready = 0U;
 volatile uint32_t g_spi_raw_usb_drop = 0U;
 volatile uint32_t g_spi_raw_partial_drop = 0U;
 

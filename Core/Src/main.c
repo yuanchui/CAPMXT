@@ -133,15 +133,15 @@ int main(void)
 
     if ((g_spi_stream_enabled != 0U) || (g_spi_check_requested != 0U)
         || (MXT_SSN_StopPullupPending() != 0U)) {
+      MXT_SSN_Poll();
+      MXT_ProcessSPICheck();
       if (g_spi_stream_enabled != 0U) {
-        MXT_ProcessSPICheck();
         MXT_USB_ServiceTx();
       }
-      MXT_SSN_Poll();
       MXT_FlushMessageBuffer();
     } else {
-      MXT_ProcessSPICheck();
       MXT_SSN_Poll();
+      MXT_ProcessSPICheck();
       MXT_FlushMessageBuffer();
 
       /* 检查并处理CHG引脚消息 */

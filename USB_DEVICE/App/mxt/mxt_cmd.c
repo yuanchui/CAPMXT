@@ -82,18 +82,28 @@ void ProcessPendingCommand(void)
         MXT_SPI_StopIT();
         if (ssn_only == 0U) {
             SPIUSB_ResetState(0U);
-            USB_SendString("INFO: SPI stream START (hex, 33 bytes/line per SSN frame)\r\n");
-        } else {
-            USB_SendString("INFO: SPI SSN only (no SPI read/USB tx)\r\n");
         }
-        MXT_FlushMessageBuffer();
-        MXT_WaitUsbIdle(300U);
         g_spi_check_requested = 1U;
-        (void)MXT_EnableDebugCtrl2();
-        MXT_SSN_ResetForStream();
-        if (ssn_only == 0U) {
-            g_spi_stream_enabled = 1U;
+        if (MXT_EnableDebugCtrl2Quiet() != 0U) {
+            g_spi_check_requested = 0U;
+            SendResponse((uint8_t *)"ERR: DEBUGCTRL2 enable failed\r\n",
+                         (uint16_t)strlen("ERR: DEBUGCTRL2 enable failed\r\n"));
+        } else {
+            MXT_SSN_ResetForStream();
+            if (ssn_only == 0U) {
+                g_spi_stream_enabled = 1U;
+            }
             MXT_SPI_StartIT();
+            if (ssn_only == 0U) {
+                SendResponse((uint8_t *)"INFO: SPI stream START (binary, 88 77 66 + LE u16 len + payload)\r\n",
+                             (uint16_t)strlen("INFO: SPI stream START (binary, 88 77 66 + LE u16 len + payload)\r\n"));
+            } else {
+                SendResponse((uint8_t *)"INFO: SPI SSN only (no SPI read/USB tx)\r\n",
+                             (uint16_t)strlen("INFO: SPI SSN only (no SPI read/USB tx)\r\n"));
+            }
+            SendResponse((uint8_t *)"INFO: DEBUGCTRL2 enabled (Byte6=0x80 DBGOBJMODEEN)\r\n",
+                         (uint16_t)strlen("INFO: DEBUGCTRL2 enabled (Byte6=0x80 DBGOBJMODEEN)\r\n"));
+            MXT_SSN_TimStart();
         }
     }
     else if (strcmp(cmd_str, "SPISTART1") == 0 || strcmp(cmd_str, "spistart1") == 0) {
@@ -764,15 +774,24 @@ void ProcessPendingCommand(void)
     else if (strcmp(cmd_str, "SPI") == 0 || strcmp(cmd_str, "spi") == 0) {
         g_spi_stream_enabled = (uint8_t)!g_spi_stream_enabled;
         if (g_spi_stream_enabled) {
-            MXT_SSN_ResetForStream();
+            g_spi_stream_enabled = 0U;
+            MXT_SPI_StopIT();
             SPIUSB_ResetState(0U);
-            USB_SendString("INFO: SPI stream START (hex, 33 bytes/line per SSN frame)\r\n");
-            MXT_FlushMessageBuffer();
-            MXT_WaitUsbIdle(300U);
-            (void)MXT_EnableDebugCtrl2();
-            MXT_SSN_ResetForStream();
             g_spi_check_requested = 1U;
-            MXT_SPI_StartIT();
+            if (MXT_EnableDebugCtrl2Quiet() != 0U) {
+                g_spi_check_requested = 0U;
+                SendResponse((uint8_t *)"ERR: DEBUGCTRL2 enable failed\r\n",
+                         (uint16_t)strlen("ERR: DEBUGCTRL2 enable failed\r\n"));
+            } else {
+                MXT_SSN_ResetForStream();
+                g_spi_stream_enabled = 1U;
+                MXT_SPI_StartIT();
+                SendResponse((uint8_t *)"INFO: SPI stream START (binary, 88 77 66 + LE u16 len + payload)\r\n",
+                             (uint16_t)strlen("INFO: SPI stream START (binary, 88 77 66 + LE u16 len + payload)\r\n"));
+                SendResponse((uint8_t *)"INFO: DEBUGCTRL2 enabled (Byte6=0x80 DBGOBJMODEEN)\r\n",
+                             (uint16_t)strlen("INFO: DEBUGCTRL2 enabled (Byte6=0x80 DBGOBJMODEEN)\r\n"));
+                MXT_SSN_TimStart();
+            }
         } else {
             g_spi_stream_enabled = 0U;
             g_spi_check_requested = 0U;
@@ -826,7 +845,7 @@ void ProcessPendingCommand(void)
         USB_SendString("  MSG      - Read one message (T5 from object table)\r\n");
         USB_SendString("  T100CFG  - Read T100 UNKNOWN[9]/UNKNOWN[20]\r\n");
         USB_SendString("  STATUS   - Query current status\r\n");
-        USB_SendString("  SPISTART  - SPI hex, 33 bytes/line per SSN frame\r\n");
+        USB_SendString("  SPISTART  - SPI binary, 88 77 66 + LE u16 len + payload\r\n");
         USB_SendString("  SPISTART -no - SSN only (no SPI read/USB tx)\r\n");
         USB_SendString("  SPISTART1 - SPI crop 20x16 to 16x16 text rows\r\n");
         USB_SendString("  SPISTART3 - SPI crop 20x16 to 16x16 packets\r\n");

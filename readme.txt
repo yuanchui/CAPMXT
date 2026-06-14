@@ -69,7 +69,9 @@
   A) SPI 无活动超时：SPI 接收标志/状态非 busy 且持续 > SSN_SPI_IDLE_US (2500us)
   B) MISO 低电平持续 > SSN_LOW_PULL_US (20us)（MISO 为高时清零计数）
 
-  退出时：PA9 拉高，调用 MXT_SPI_QueueGapMarker() 向 SPI 队列插入帧间隔标记。
+  退出时：PA9 拉高，调用 MXT_SPI_OnSsnGap()
+    mode0 → 置 gap_extract_pending，帧间从 DMA ring 提取本帧
+    其他  → MXT_SPI_QueueGapMarker() 向 SPI 字节队列插入 GAP 标记
 
 2.6 定时采样
   TIM1 以 2us (SSN_SAMPLE_US) 周期中断，执行 MXT_SSN_Sample() 做上述计时。
@@ -119,38 +121,46 @@
     MXT_DisableDebugCtrl2()   — SPISTOP 时关闭
   由 SPISTART / SPISTART1 / SPISTART3 命令触发。
 
-3.3 中断接收流程 (mxt_spi_stream.c)
+3.3 接收流程 (mxt_spi_stream.c)
 
   启动：MXT_SPI_StartIT()
-    → HAL_SPI_Receive_IT() 双缓冲 ping-pong 接收
+    → HAL_SPI_Receive_DMA() 写入环形缓冲 g_spi_dma_ring[640]（DMA 循环模式）
 
-  完成回调：HAL_SPI_RxCpltCallback()
-    1) 检测 SSN 上升沿（帧开始），复位 g_spi_raw_first_done
-    2) 流模式/检查模式下立即 MXT_SPI_RestartReceive()（防止丢时钟）
-    3) MXT_SSN_NotifySpiRx() 通知 SSN 模块有 SPI 活动
-    4) 仅当 MXT_SSN_IsSelected()==1（帧内）时，将数据写入环形队列
-    5) SPISTART 原始模式 (mode=0)：每 SSN 帧只取第一个字节
+  DMA 半满/全满回调：HAL_SPI_RxHalfCpltCallback / HAL_SPI_RxCpltCallback
+    → MXT_SPI_OnDmaProgress()（mode0 原始流不在 ISR 里逐字节入队）
 
-  主循环处理：MXT_ProcessSPICheck()
-    → 从环形队列取字节，按模式解析
-    → SPIUSB_TryFlush() 推送至 USB
+  SSN 帧内 (PA9 低)：
+    → DMA 持续收字节进 ring，记录 g_spi_dma_ssn_pos 为帧起点
+    → 主循环 MXT_ProcessSPICheck() 仅做 stall 检测，不发 USB
+
+  SSN 帧间 (PA9 高)：
+    → MXT_SPI_OnSsnGap() 置 g_spi_gap_extract_pending
+    → MXT_SPI_RawExtractFrameAtGap() 从 ring 拷贝本帧数据到槽缓冲
+    → SPIUSB_RawFlushPending() 经 USB CDC 64B 分包发出
+
+  主循环：MXT_ProcessSPICheck() + MXT_USB_ServiceTx()
+    USB 发送完成回调 SPIUSB_OnTxComplete() 链式继续 flush
 
 3.4 接收缓冲与队列
   项目                          值/说明
   ----------------------------  ----------------------------------
-  双缓冲 g_spi_it_rx_buf[2][]   每块 SPI_IT_CHUNK_LEN = 16 字节
-  环形队列 g_spi_rx_queue[]     深度 SPI_RX_QUEUE_DEPTH = 2048
-  帧间隔标记 g_spi_rx_mark[]    SPI_RX_MARK_GAP = 1
-  空闲重启                      非流模式 100ms 无中断则 Stop+Start
-  发送缓冲 g_spi_tx_buf[]       SPI_TX_BUF_SIZE = 4096 字节
+  DMA 环形 g_spi_dma_ring[]     SPI_DMA_RING_SIZE = 640 字节
+  原始帧槽 g_spi_raw_slots[][]  2 槽 × 514B（SPI_RAW_LINE_SLOTS）
+  槽长度 g_spi_raw_slot_len[]   每帧实际 SPI 字节数（≤514）
+  CDC 发送乒乓 g_spi_cdc_txbuf  2 × 64B（SPI_RAW_TX_CHUNK）
+  字节队列 g_spi_rx_queue[]     深度 128（SPISTART1/3 等模式用）
+  帧标记 g_spi_rx_mark[]        GAP=1, START=2
+  空闲重启                      非流模式 100ms 无活动则 Stop+Start
+  文本/SPI1/3 缓冲 g_spi_tx_buf SPI_TX_BUF_SIZE = 1024 字节
 
 3.5 SPI 流模式命令 (mxt_cmd.c)
 
   命令          mode  输出格式
   ------------  ----  ------------------------------------------------
-  SPISTART      0     每 SSN 帧输出 1 个字节的 HEX 文本（如 "A3 \r\n"）
+  SPISTART      0     每 SSN 帧二进制：88 77 66 + LE u16 长度 + payload(≤514B)
   SPISTART1     1     20×16 源矩阵裁剪为 16×16，HEX 文本行输出
   SPISTART3     2     20×16 裁剪为 16×16，打包为 Mode3 二进制包 (AA 10 33)
+  SPISTART -no  0     仅 SSN 时序，不读 SPI / 不发 USB
   SPISTOP       -     停止流，关闭 DEBUGCTRL2，收尾 SSN
   SPI           -     切换 SPISTART 原始流开/关
   SPIDBG        -     打印 SSN/SPI 诊断信息
@@ -165,10 +175,42 @@
     DATA 内每 2 字节高低位交换
     CRC16-CCITT-FALSE，计算范围 packet[0..37]
 
-3.7 SPISTART 原始模式帧边界
-  SSN EndActive → 队列插入 GAP 标记
-  主循环遇到 GAP → SPIUSB_RawEndFrame() + 复位首字节标志
-  下一 SSN 帧第一个字节 → SPIUSB_RawBeginFrame() → HEX 输出
+3.7 SPISTART 原始模式（mode=0）帧边界与 USB 包格式
+
+  帧边界（SSN 驱动，非逐字节队列）：
+    SSN EnterActive (PA9↓) → MXT_SPI_OnSsnActive() 记录 DMA 写指针起点
+    SSN EndActive   (PA9↑) → MXT_SPI_OnSsnGap() 记录终点，置 gap_extract_pending
+    帧间主循环     → MXT_SPI_RawExtractFrameAtGap() 拷贝 [起点,终点) 到槽缓冲
+    读到 0 字节    → 不输出；1~514 字节 → 均输出（不强制凑满 514）
+
+  USB 输出格式（小端）：
+    偏移  长度  内容
+    0     3     88 77 66  帧同步头
+    3     2     LE u16    payload 字节数 N（1 ≤ N ≤ 514）
+    5     N     SPI 原始数据
+
+  示例：本帧 SPI 100 字节 → USB 发出 105 字节：88 77 66 64 00 [100B data]
+
+  PC 解析：扫描 88 77 66 → 读 2 字节 LE 长度 N → 再读 N 字节 payload
+
+3.8 SPISTART 半流水线（SPI 采集 vs USB 发送）
+
+  层级              机制                          说明
+  ----------------  ----------------------------  ---------------------------
+  SPI 采集          DMA 循环 ring[640]            硬件持续收，不占 CPU 逐字节
+  帧组装            2 槽 g_spi_raw_slots[2][514]  SSN 间隙从 ring 批量提取
+  USB 发送          2×64B CDC 乒乓 + TxComplete   流式组帧，每包最多 64B
+
+  时序约束：
+    SSN 低（帧内）→ 只收 SPI，主循环 deliberately 不 flush USB
+    SSN 高（帧间）→ 提取上一帧入槽 + 排空 USB 队列
+  因此 SPI 与 USB 不是同一帧内并行，而是「帧内采集、帧间发送」；
+  最多 2 帧在槽中排队（USB 慢则 g_spi_raw_usb_drop++ 丢帧）。
+
+  涉及文件：
+    mxt_config.h      SPI_RAW_* 帧头/槽/包长宏
+    mxt_spi_stream.c  RawExtract / RawCommit / RawFlushPending
+    mxt_cmd.c         SPISTART 命令与 HELP 文案
 
 
 四、USB 2.0 传输方式
@@ -205,12 +247,18 @@
   └─────────────────────────────────────────────────────────────────────┘
 
   ┌─────────────────────────────────────────────────────────────────────┐
-  │ 通道 B：SPI 二进制流                                                 │
-  │   SPI 解析 → g_spi_tx_buf[] (4096B)                                 │
-  │     → SPIUSB_TryFlush()                                             │
-  │     → 按 SPI_USB_PKT_SIZE = 64B 分包                                │
-  │     → 双缓冲 g_spi_usb_buf[2][64] 拷贝后 CDC_Transmit_FS()          │
-  │   用途：SPISTART3 Mode3 二进制包                                    │
+  │ 通道 B：SPI 二进制流（SPISTART3 等）                                 │
+  │   SPI 解析 → g_spi_tx_buf[] (1024B)                                 │
+  │     → SPIUSB_TryFlush() → 双缓冲 g_spi_usb_buf[2][64]               │
+  │   用途：SPISTART3 Mode3 二进制包 (AA 10 33)                         │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │ 通道 B2：SPISTART 原始二进制流（mode=0）                             │
+  │   SSN 间隙 DMA 提取 → g_spi_raw_slots[2][514]                       │
+  │     → SPIUSB_RawFlushPending() 流式组帧（88 77 66 + len + data）  │
+  │     → 双缓冲 g_spi_cdc_txbuf[2][64] → CDC_Transmit_FS()             │
+  │   用途：SPISTART 原始 SPI 帧，PC 须二进制接收                        │
   └─────────────────────────────────────────────────────────────────────┘
 
   ┌─────────────────────────────────────────────────────────────────────┐
@@ -237,13 +285,13 @@
   1) 连接 USB，等待枚举完成（设备管理器出现 COM 口）
   2) 打开串口终端（115200 或任意波特率，CDC 忽略波特率设置）
   3) 发送文本命令（mode1 默认）：
-       SPISTART    开启 SPI 原始 HEX 流
+       SPISTART    开启 SPI 原始二进制流（88 77 66 帧头）
        SPISTART3   开启 SPI Mode3 二进制流
        SPISTOP     停止
        SPIDBG      查看 SSN/SPI 状态
        HELP        完整命令列表
-  4) SPISTART3 模式需用二进制方式接收（每包 40 字节 AA 10 33 帧）
-  5) SPISTART/SPISTART1 模式可直接在终端查看 HEX 文本
+  4) SPISTART / SPISTART3 须用二进制方式接收（勿用纯文本终端看原始数据）
+  5) SPISTART1 可直接在终端查看 HEX 文本
 
 
 五、数据流总览
@@ -256,8 +304,8 @@
   │ SPI Out  │── SCK/MOSI ─►│ SPI1 Slave   │           │  终端   │
   │ (MISO)   │── 监视 ────►│ SSN 解析     │           │         │
   └──────────┘              │ (PA10→PA9)   │           │         │
-                            │ 帧内取数据   │── USB CDC►│ COM口   │
-                            │ SPI→USB      │  64B/包   │         │
+                            │ 帧内 DMA 收   │── USB CDC►│ COM口   │
+                            │ 帧间组包发送  │  64B/包   │(二进制) │
                             └──────────────┘           └─────────┘
 
 
@@ -268,7 +316,54 @@
   ej/doc/                               maXTouch 调试端口官方文档
 
 
+七、SPISTART 变更记录与问题修复（2026-06）
+--------------------------------------------------------------------------------
+7.1 变更摘要
+
+  目标：SPISTART (mode=0) 由 HEX 文本行改为 USB 二进制帧，便于 PC 高效解析。
+
+  修改文件：
+    USB_DEVICE/App/mxt/mxt_config.h       帧头魔数、长度字段、包长宏
+    USB_DEVICE/App/mxt/mxt_spi_stream.c   提取、组帧、CDC 发送逻辑
+    USB_DEVICE/App/mxt/mxt_cmd.c          SPISTART 提示信息与 HELP 文案
+
+  协议演进：
+    旧：每 SSN 帧一行 HEX 文本（514×3 字符 + CRLF），体积大、需文本解析
+    新：88 77 66 + LE u16 长度 + payload，体积约 5+N 字节/帧
+
+7.2 问题：改为二进制后无 USB 输出
+
+  现象：SPISTART 开启后 SPIDBG 显示 SSN 正常，但 PC 收不到数据。
+
+  根因：MXT_SPI_RawExtractFrameAtGap() 仅在拷贝字节数 == 514 时才提交槽位；
+        实际每帧 SPI 长度常小于 514，被计入 g_spi_raw_partial_drop 直接丢弃。
+
+  修复：
+    1) SSN 间隙结束时，只要 i > 0 即提交（读到多少输出多少，上限 514）
+    2) 增加 g_spi_raw_slot_len[] 记录每帧实际长度
+    3) USB 发送长度改为 SPI_RAW_FRAME_HDR_LEN(5) + 实际长度，不再固定 517 字节
+    4) 提取循环计数 i 由 uint8_t 改为 uint16_t（避免 >255 时溢出）
+
+7.3 问题：PC 无法从流中判断帧长
+
+  需求：帧格式为「88 77 66  长度 | payload」。
+
+  实现：帧头 3 字节固定魔数 + 2 字节小端 u16 表示 payload 长度 N，
+        随后 N 字节 SPI 数据（mxt_spi_stream.c SPIUSB_RawEncodedByte）。
+
+  PC 侧伪代码：
+    if buf[i:i+3] == [0x88,0x77,0x66]:
+        n = buf[i+3] | (buf[i+4] << 8)   # LE u16
+        payload = buf[i+5 : i+5+n]
+        i += 5 + n
+
+7.4 半流水线架构说明（见 3.8）
+
+  SPI DMA 在 SSN 帧内持续采集；USB 仅在 SSN 帧间发送，避免与采集抢总线。
+  2 槽帧队列 + 2×64B CDC 乒乓构成软件流水线；USB 慢于帧率时会丢帧。
+
+
 ================================================================================
   版本: test-V2.7
-  生成日期: 2026-06-11
+  生成日期: 2026-06-14
 ================================================================================

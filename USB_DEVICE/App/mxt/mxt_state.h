@@ -70,8 +70,6 @@ extern volatile uint8_t g_spi_raw_rx_count;
 extern volatile uint8_t g_spi_gap_restart_pending;
 extern volatile uint8_t g_spi_resync_pending;
 extern volatile uint8_t g_spi_prev_ssn_sel;
-extern volatile uint8_t g_spi_raw_line_len;
-extern volatile uint8_t g_spi_raw_line_ready;
 extern volatile uint32_t g_spi_raw_usb_drop;
 extern volatile uint32_t g_spi_raw_partial_drop;
 

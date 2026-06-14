@@ -114,11 +114,11 @@ void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 2 */
 
-/* PA9 GPIO(BSRR); PA10 EXTI+DWT enter frame; SSN_HOLD_LOW_US DWT hold; stream GAP: TIM stopped */
+/* PA9 GPIO(BSRR); PA10 EXTI+DWT enter frame; DWT 6208us 帧内低电平；GAP 监听 TIM 停止 */
 #define SSN_GAP_POLL_US           100U
 #define SSN_LOW_PULL_US           20U
 #define SSN_SPI_IDLE_US           2500U
-#define SSN_HOLD_LOW_US           3000U
+#define SSN_HOLD_LOW_US           6208U
 #define SSN_STOP_PULLUP_US        250U
 #define SSN_GAP_MIN_US            500U
 #define SSN_PA10_LOW_MIN_US       1000U
@@ -149,6 +149,8 @@ static volatile uint8_t  g_ssn_frame_timer;
 static volatile uint32_t g_ssn_fall_cyc;
 static volatile uint32_t g_ssn_hold_end_cyc;
 static uint32_t          g_ssn_cyc_per_us;
+
+static void MXT_SSN_FrameHoldService(void);
 
 static void MXT_SSN_DwtInit(void)
 {
@@ -363,7 +365,8 @@ static void MXT_SSN_GapPollTick(void)
 
   if (g_ssn_in_gap == 0U) {
     return;
-  }  miso = SSN_MISO_HIGH() ? 1U : 0U;
+  }
+  miso = SSN_MISO_HIGH() ? 1U : 0U;
 
   if (MXT_SSN_UseStreamTiming() != 0U) {
     return;
@@ -536,7 +539,6 @@ static void MXT_SSN_FrameHoldService(void)
 void MXT_SSN_Poll(void)
 {
   MXT_SSN_FrameHoldService();
-
 
   if (g_ssn_stop_pullup_armed == 0U) {
     return;

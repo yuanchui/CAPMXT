@@ -3,7 +3,7 @@
 <title>Static Call Graph - [STMUSBATMXT640\STMUSBATMXT640.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image STMUSBATMXT640\STMUSBATMXT640.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5050169: Last Updated: Sun Jun 14 17:49:20 2026
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5050169: Last Updated: Sun Jun 14 22:33:15 2026
 <BR><P>
 <H3>Maximum Stack Usage =        504 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -424,16 +424,16 @@ Global Symbols
 <LI><a href="#[127]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadObjectTable
 <LI><a href="#[150]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadT100UnknownFields
 <LI><a href="#[12a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ParseMessage
-<LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMapAll
-<LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMap16Transformed
-<LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMap16
-<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputDiagnosticData
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
-<LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsTxt
+<LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMapAll
+<LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMap16Transformed
+<LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMap16
+<LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputDiagnosticData
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsTxt
 <LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessBridgePacket
 <LI><a href="#[b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CDC_Init_FS
 <LI><a href="#[14f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadT37Page
-<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadInfoBlock
+<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadInfoBlock
 <LI><a href="#[14e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadCompleteDiagnosticFrameInternal
 </UL>
 
@@ -511,7 +511,7 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[81]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;strtol
 <LI><a href="#[80]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_errno_addr
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[82]"></a>strtok</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, strtok.o(.text))
@@ -519,11 +519,11 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[83]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__strtok_internal
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
-<P><STRONG><a name="[18e]"></a>strchr</STRONG> (Thumb, 20 bytes, Stack size 0 bytes, strchr.o(.text))
-<BR><BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<P><STRONG><a name="[18d]"></a>strchr</STRONG> (Thumb, 20 bytes, Stack size 0 bytes, strchr.o(.text))
+<BR><BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[84]"></a>strncasecmp</STRONG> (Thumb, 50 bytes, Stack size 24 bytes, strncasecmp.o(.text))
@@ -531,7 +531,7 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;tolower
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[86]"></a>strcasecmp</STRONG> (Thumb, 42 bytes, Stack size 24 bytes, strcasecmp.o(.text))
@@ -539,25 +539,25 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;tolower
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[124]"></a>strlen</STRONG> (Thumb, 62 bytes, Stack size 8 bytes, strlen.o(.text))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = strlen
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 <LI><a href="#[a0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessStringCommand
 <LI><a href="#[9d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MSG_BufferWrite
 </UL>
 
-<P><STRONG><a name="[187]"></a>strncmp</STRONG> (Thumb, 150 bytes, Stack size 16 bytes, strncmp.o(.text))
+<P><STRONG><a name="[186]"></a>strncmp</STRONG> (Thumb, 150 bytes, Stack size 16 bytes, strncmp.o(.text))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = strncmp
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[8a]"></a>__aeabi_memcpy</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, rt_memcpy_v6.o(.text))
-<BR><BR>[Called By]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawFlushPending
+<BR><BR>[Called By]<UL><LI><a href="#[14a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawCommitSlot
 <LI><a href="#[14c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_TryFlush
 <LI><a href="#[a0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessStringCommand
 <LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessBridgePacket
@@ -570,7 +570,7 @@ Global Symbols
 
 <P><STRONG><a name="[1e0]"></a>_memcpy_lastbytes</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, rt_memcpy_v6.o(.text), UNUSED)
 
-<P><STRONG><a name="[183]"></a>__aeabi_memmove</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, rt_memmove_v6.o(.text))
+<P><STRONG><a name="[182]"></a>__aeabi_memmove</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, rt_memmove_v6.o(.text))
 <BR><BR>[Called By]<UL><LI><a href="#[14c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_TryFlush
 <LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessBridgePacket
 </UL>
@@ -613,11 +613,11 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[8f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memclr
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
-<P><STRONG><a name="[186]"></a>strcmp</STRONG> (Thumb, 128 bytes, Stack size 0 bytes, strcmpv7m.o(.text))
-<BR><BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<P><STRONG><a name="[185]"></a>strcmp</STRONG> (Thumb, 128 bytes, Stack size 0 bytes, strcmpv7m.o(.text))
+<BR><BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 <LI><a href="#[a0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessStringCommand
 <LI><a href="#[52]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;_get_lc_ctype
 </UL>
@@ -869,10 +869,10 @@ Global Symbols
 <P><STRONG><a name="[ef]"></a>Error_Handler</STRONG> (Thumb, 4 bytes, Stack size 0 bytes, main.o(i.Error_Handler))
 <BR><BR>[Called By]<UL><LI><a href="#[107]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_SPI_MspInit
 <LI><a href="#[165]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_TIM1_SsnHwInit
-<LI><a href="#[17e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_USB_DEVICE_Init
-<LI><a href="#[17c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_TIM1_Init
-<LI><a href="#[17b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_SPI1_Init
-<LI><a href="#[17a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_I2C2_Init
+<LI><a href="#[17d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_USB_DEVICE_Init
+<LI><a href="#[17b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_TIM1_Init
+<LI><a href="#[17a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_SPI1_Init
+<LI><a href="#[179]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_I2C2_Init
 <LI><a href="#[1ac]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USBD_LL_Init
 <LI><a href="#[e2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_PCD_ResetCallback
 </UL>
@@ -916,8 +916,7 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[b1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 </UL>
 <BR>[Called By]<UL><LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
-<LI><a href="#[189]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawStop
-<LI><a href="#[177]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_WaitUsbIdle
+<LI><a href="#[188]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawStop
 <LI><a href="#[9d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MSG_BufferWrite
 <LI><a href="#[14f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadT37Page
 </UL>
@@ -929,7 +928,7 @@ Global Symbols
 <LI><a href="#[b3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_I2C_MspInit
 <LI><a href="#[166]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_TIM1_SsnPinGpioEnable
 <LI><a href="#[161]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_MisoExtiEnable
-<LI><a href="#[179]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_GPIO_Init
+<LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_GPIO_Init
 </UL>
 
 <P><STRONG><a name="[ab]"></a>HAL_GPIO_ReadPin</STRONG> (Thumb, 10 bytes, Stack size 0 bytes, stm32f1xx_hal_gpio.o(i.HAL_GPIO_ReadPin))
@@ -941,7 +940,7 @@ Global Symbols
 
 <P><STRONG><a name="[ac]"></a>HAL_GPIO_WritePin</STRONG> (Thumb, 10 bytes, Stack size 0 bytes, stm32f1xx_hal_gpio.o(i.HAL_GPIO_WritePin))
 <BR><BR>[Called By]<UL><LI><a href="#[166]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_TIM1_SsnPinGpioEnable
-<LI><a href="#[179]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_GPIO_Init
+<LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_GPIO_Init
 <LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 <LI><a href="#[2c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EXTI3_IRQHandler
 </UL>
@@ -949,8 +948,8 @@ Global Symbols
 <P><STRONG><a name="[b1]"></a>HAL_GetTick</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, stm32f1xx_hal.o(i.HAL_GetTick))
 <BR><BR>[Called By]<UL><LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_TimerDiagnosticRead
 <LI><a href="#[103]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_StartIT
-<LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
-<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessControlPending
+<LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
+<LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessControlPending
 <LI><a href="#[125]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_CheckAndProcessMessages
 <LI><a href="#[ff]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_RCC_OscConfig
 <LI><a href="#[fd]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_RCC_ClockConfig
@@ -958,17 +957,16 @@ Global Symbols
 <LI><a href="#[b0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
 <LI><a href="#[10c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_OnDmaProgress
 <LI><a href="#[15a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_RestartAfterGap
-<LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DrainDmaRingBudget
-<LI><a href="#[143]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_CheckStreamStall
-<LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_ApplyResyncIfNeeded
+<LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DrainDmaRingBudget
+<LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_CheckStreamStall
+<LI><a href="#[141]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_ApplyResyncIfNeeded
 <LI><a href="#[c0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_I2C_Mem_Write
 <LI><a href="#[be]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_I2C_Mem_Read
 <LI><a href="#[ba]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_I2C_Master_Transmit
 <LI><a href="#[b7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_I2C_Master_Receive
 <LI><a href="#[b5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_I2C_IsDeviceReady
-<LI><a href="#[189]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawStop
-<LI><a href="#[177]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_WaitUsbIdle
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[188]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawStop
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 <LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessBridgePacket
 <LI><a href="#[9d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MSG_BufferWrite
 <LI><a href="#[bc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2C_WaitOnTXEFlagUntilTimeout
@@ -987,7 +985,7 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[b3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_I2C_MspInit
 <LI><a href="#[b4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_RCC_GetPCLK1Freq
 </UL>
-<BR>[Called By]<UL><LI><a href="#[17a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_I2C2_Init
+<BR>[Called By]<UL><LI><a href="#[179]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_I2C2_Init
 </UL>
 
 <P><STRONG><a name="[b5]"></a>HAL_I2C_IsDeviceReady</STRONG> (Thumb, 354 bytes, Stack size 56 bytes, stm32f1xx_hal_i2c.o(i.HAL_I2C_IsDeviceReady))
@@ -996,7 +994,7 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[b1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 <LI><a href="#[b6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2C_WaitOnFlagUntilTimeout
 </UL>
-<BR>[Called By]<UL><LI><a href="#[134]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_Probe
+<BR>[Called By]<UL><LI><a href="#[135]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_Probe
 </UL>
 
 <P><STRONG><a name="[b7]"></a>HAL_I2C_Master_Receive</STRONG> (Thumb, 576 bytes, Stack size 40 bytes, stm32f1xx_hal_i2c.o(i.HAL_I2C_Master_Receive))
@@ -1007,7 +1005,7 @@ Global Symbols
 <LI><a href="#[b6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2C_WaitOnFlagUntilTimeout
 <LI><a href="#[b8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2C_MasterRequestRead
 </UL>
-<BR>[Called By]<UL><LI><a href="#[135]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_ReadNoReg
+<BR>[Called By]<UL><LI><a href="#[136]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_ReadNoReg
 </UL>
 
 <P><STRONG><a name="[ba]"></a>HAL_I2C_Master_Transmit</STRONG> (Thumb, 290 bytes, Stack size 40 bytes, stm32f1xx_hal_i2c.o(i.HAL_I2C_Master_Transmit))
@@ -1019,7 +1017,7 @@ Global Symbols
 <LI><a href="#[bd]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2C_WaitOnBTFFlagUntilTimeout
 <LI><a href="#[bb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;I2C_MasterRequestWrite
 </UL>
-<BR>[Called By]<UL><LI><a href="#[136]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_WriteNoReg
+<BR>[Called By]<UL><LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_WriteNoReg
 </UL>
 
 <P><STRONG><a name="[be]"></a>HAL_I2C_Mem_Read</STRONG> (Thumb, 586 bytes, Stack size 64 bytes, stm32f1xx_hal_i2c.o(i.HAL_I2C_Mem_Read))
@@ -1087,8 +1085,8 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[107]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_SPI_MspInit
 <LI><a href="#[10f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_Base_MspInit
 <LI><a href="#[161]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_MisoExtiEnable
-<LI><a href="#[179]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_GPIO_Init
-<LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_DMA_Init
+<LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_GPIO_Init
+<LI><a href="#[177]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_DMA_Init
 <LI><a href="#[e8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_PCD_MspInit
 </UL>
 
@@ -1100,8 +1098,8 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[107]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_SPI_MspInit
 <LI><a href="#[10f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_Base_MspInit
 <LI><a href="#[161]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_MisoExtiEnable
-<LI><a href="#[179]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_GPIO_Init
-<LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_DMA_Init
+<LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_GPIO_Init
+<LI><a href="#[177]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_DMA_Init
 <LI><a href="#[e8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_PCD_MspInit
 <LI><a href="#[c5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_InitTick
 </UL>
@@ -1121,7 +1119,7 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[ca]"></a>HAL_PCD_DataInStageCallback</STRONG> (Thumb, 38 bytes, Stack size 8 bytes, usbd_conf.o(i.HAL_PCD_DataInStageCallback))
-<BR><BR>[Stack]<UL><LI>Max Depth = 128<LI>Call Chain = HAL_PCD_DataInStageCallback &rArr; SPIUSB_OnTxComplete &rArr; MXT_USB_ServiceTx &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
+<BR><BR>[Stack]<UL><LI>Max Depth = 128<LI>Call Chain = HAL_PCD_DataInStageCallback &rArr; SPIUSB_OnTxComplete &rArr; MXT_USB_ServiceTx &rArr; SPIUSB_RawFlushPending &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
 <BR>[Calls]<UL><LI><a href="#[cc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_OnTxComplete
 <LI><a href="#[cb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USBD_LL_DataInStage
@@ -1192,7 +1190,7 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[df]"></a>HAL_PCD_IRQHandler</STRONG> (Thumb, 308 bytes, Stack size 24 bytes, stm32f1xx_hal_pcd.o(i.HAL_PCD_IRQHandler))
-<BR><BR>[Stack]<UL><LI>Max Depth = 232<LI>Call Chain = HAL_PCD_IRQHandler &rArr; PCD_EP_ISR_Handler &rArr; HAL_PCD_EP_DB_Transmit &rArr; HAL_PCD_DataInStageCallback &rArr; SPIUSB_OnTxComplete &rArr; MXT_USB_ServiceTx &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
+<BR><BR>[Stack]<UL><LI>Max Depth = 232<LI>Call Chain = HAL_PCD_IRQHandler &rArr; PCD_EP_ISR_Handler &rArr; HAL_PCD_EP_DB_Transmit &rArr; HAL_PCD_DataInStageCallback &rArr; SPIUSB_OnTxComplete &rArr; MXT_USB_ServiceTx &rArr; SPIUSB_RawFlushPending &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
 <BR>[Calls]<UL><LI><a href="#[e1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PCD_EP_ISR_Handler
 <LI><a href="#[e3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_PCD_SetAddress
@@ -1309,8 +1307,8 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[b2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_I2C_Init
 </UL>
 
-<P><STRONG><a name="[17d]"></a>HAL_RCC_GetPCLK2Freq</STRONG> (Thumb, 20 bytes, Stack size 0 bytes, stm32f1xx_hal_rcc.o(i.HAL_RCC_GetPCLK2Freq))
-<BR><BR>[Called By]<UL><LI><a href="#[17c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_TIM1_Init
+<P><STRONG><a name="[17c]"></a>HAL_RCC_GetPCLK2Freq</STRONG> (Thumb, 20 bytes, Stack size 0 bytes, stm32f1xx_hal_rcc.o(i.HAL_RCC_GetPCLK2Freq))
+<BR><BR>[Called By]<UL><LI><a href="#[17b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_TIM1_Init
 </UL>
 
 <P><STRONG><a name="[fe]"></a>HAL_RCC_GetSysClockFreq</STRONG> (Thumb, 58 bytes, Stack size 0 bytes, stm32f1xx_hal_rcc.o(i.HAL_RCC_GetSysClockFreq))
@@ -1359,7 +1357,7 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[107]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_SPI_MspInit
 </UL>
-<BR>[Called By]<UL><LI><a href="#[17b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_SPI1_Init
+<BR>[Called By]<UL><LI><a href="#[17a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_SPI1_Init
 </UL>
 
 <P><STRONG><a name="[107]"></a>HAL_SPI_MspInit</STRONG> (Thumb, 130 bytes, Stack size 40 bytes, spi.o(i.HAL_SPI_MspInit))
@@ -1384,7 +1382,7 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[10b]"></a>HAL_SPI_RxCpltCallback</STRONG> (Thumb, 14 bytes, Stack size 0 bytes, mxt_spi_stream.o(i.HAL_SPI_RxCpltCallback))
-<BR><BR>[Stack]<UL><LI>Max Depth = 56<LI>Call Chain = HAL_SPI_RxCpltCallback &rArr; MXT_SPI_OnDmaProgress &rArr; MXT_SPI_DrainDmaRingBudget &rArr; MXT_SPI_EnqueueRxByte
+<BR><BR>[Stack]<UL><LI>Max Depth = 64<LI>Call Chain = HAL_SPI_RxCpltCallback &rArr; MXT_SPI_OnDmaProgress &rArr; MXT_SPI_DrainDmaRingBudget &rArr; MXT_SPI_EnqueueRxByte
 </UL>
 <BR>[Calls]<UL><LI><a href="#[10c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_OnDmaProgress
 </UL>
@@ -1392,7 +1390,7 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[10d]"></a>HAL_SPI_RxHalfCpltCallback</STRONG> (Thumb, 14 bytes, Stack size 0 bytes, mxt_spi_stream.o(i.HAL_SPI_RxHalfCpltCallback))
-<BR><BR>[Stack]<UL><LI>Max Depth = 56<LI>Call Chain = HAL_SPI_RxHalfCpltCallback &rArr; MXT_SPI_OnDmaProgress &rArr; MXT_SPI_DrainDmaRingBudget &rArr; MXT_SPI_EnqueueRxByte
+<BR><BR>[Stack]<UL><LI>Max Depth = 64<LI>Call Chain = HAL_SPI_RxHalfCpltCallback &rArr; MXT_SPI_OnDmaProgress &rArr; MXT_SPI_DrainDmaRingBudget &rArr; MXT_SPI_EnqueueRxByte
 </UL>
 <BR>[Calls]<UL><LI><a href="#[10c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_OnDmaProgress
 </UL>
@@ -1437,7 +1435,7 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[10f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_Base_MspInit
 <LI><a href="#[110]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TIM_Base_SetConfig
 </UL>
-<BR>[Called By]<UL><LI><a href="#[17c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_TIM1_Init
+<BR>[Called By]<UL><LI><a href="#[17b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_TIM1_Init
 </UL>
 
 <P><STRONG><a name="[10f]"></a>HAL_TIM_Base_MspInit</STRONG> (Thumb, 66 bytes, Stack size 8 bytes, tim.o(i.HAL_TIM_Base_MspInit))
@@ -1542,7 +1540,8 @@ Global Symbols
 <LI><a href="#[a3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CDC_Transmit_FS
 </UL>
 <BR>[Called By]<UL><LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_USB_ServiceTx
-<LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FlushMessageBuffer
+<LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
+<LI><a href="#[134]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FlushMessageBuffer
 <LI><a href="#[9d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MSG_BufferWrite
 </UL>
 
@@ -1556,9 +1555,9 @@ Global Symbols
 <LI><a href="#[124]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;strlen
 </UL>
 <BR>[Called By]<UL><LI><a href="#[125]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_CheckAndProcessMessages
-<LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMapAll
-<LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMap16Transformed
-<LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMap16
+<LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMapAll
+<LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMap16Transformed
+<LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMap16
 <LI><a href="#[123]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USB_SendString
 <LI><a href="#[b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CDC_Init_FS
 </UL>
@@ -1578,7 +1577,7 @@ Global Symbols
 <LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2snprintf
 </UL>
 <BR>[Called By]<UL><LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 <LI><a href="#[14e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadCompleteDiagnosticFrameInternal
 </UL>
 
@@ -1597,7 +1596,7 @@ Global Symbols
 <LI><a href="#[123]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USB_SendString
 <LI><a href="#[12c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_Write
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[12f]"></a>MXT_EnableDebugCtrl2</STRONG> (Thumb, 72 bytes, Stack size 8 bytes, mxt_touch.o(i.MXT_EnableDebugCtrl2))
@@ -1607,15 +1606,23 @@ Global Symbols
 <LI><a href="#[123]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USB_SendString
 <LI><a href="#[12c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_Write
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
-<P><STRONG><a name="[184]"></a>MXT_EnableOutput</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, mxt_touch.o(i.MXT_EnableOutput))
-<BR><BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<P><STRONG><a name="[131]"></a>MXT_EnableDebugCtrl2Quiet</STRONG> (Thumb, 56 bytes, Stack size 8 bytes, mxt_touch.o(i.MXT_EnableDebugCtrl2Quiet))
+<BR><BR>[Stack]<UL><LI>Max Depth = 160<LI>Call Chain = MXT_EnableDebugCtrl2Quiet &rArr; MXT_I2C_Write &rArr; HAL_I2C_Mem_Write &rArr; I2C_RequestMemoryWrite &rArr; I2C_WaitOnMasterAddressFlagUntilTimeout
+</UL>
+<BR>[Calls]<UL><LI><a href="#[12c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_Write
+</UL>
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+</UL>
+
+<P><STRONG><a name="[183]"></a>MXT_EnableOutput</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, mxt_touch.o(i.MXT_EnableOutput))
+<BR><BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 <LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessBridgePacket
 </UL>
 
-<P><STRONG><a name="[131]"></a>MXT_ExportConfigAsBin</STRONG> (Thumb, 334 bytes, Stack size 72 bytes, mxt_bridge.o(i.MXT_ExportConfigAsBin))
+<P><STRONG><a name="[132]"></a>MXT_ExportConfigAsBin</STRONG> (Thumb, 334 bytes, Stack size 72 bytes, mxt_bridge.o(i.MXT_ExportConfigAsBin))
 <BR><BR>[Stack]<UL><LI>Max Depth = 296 + Unknown Stack Size
 <LI>Call Chain = MXT_ExportConfigAsBin &rArr; MXT_InitTouchScreen &rArr; MXT_ReadObjectTable &rArr; MXT_I2C_Read &rArr; HAL_I2C_Mem_Read &rArr; I2C_RequestMemoryRead &rArr; I2C_WaitOnMasterAddressFlagUntilTimeout
 </UL>
@@ -1624,45 +1631,43 @@ Global Symbols
 <LI><a href="#[128]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_Read
 <LI><a href="#[9f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_InitTouchScreen
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
-<P><STRONG><a name="[132]"></a>MXT_ExportConfigAsTxt</STRONG> (Thumb, 240 bytes, Stack size 72 bytes, mxt_bridge.o(i.MXT_ExportConfigAsTxt))
+<P><STRONG><a name="[133]"></a>MXT_ExportConfigAsTxt</STRONG> (Thumb, 240 bytes, Stack size 72 bytes, mxt_bridge.o(i.MXT_ExportConfigAsTxt))
 <BR><BR>[Stack]<UL><LI>Max Depth = 296 + Unknown Stack Size
 <LI>Call Chain = MXT_ExportConfigAsTxt &rArr; MXT_InitTouchScreen &rArr; MXT_ReadObjectTable &rArr; MXT_I2C_Read &rArr; HAL_I2C_Mem_Read &rArr; I2C_RequestMemoryRead &rArr; I2C_WaitOnMasterAddressFlagUntilTimeout
 </UL>
-<BR>[Calls]<UL><LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FlushMessageBuffer
+<BR>[Calls]<UL><LI><a href="#[134]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FlushMessageBuffer
 <LI><a href="#[123]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USB_SendString
 <LI><a href="#[128]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_Read
 <LI><a href="#[9f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_InitTouchScreen
 <LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2snprintf
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[9e]"></a>MXT_FindI2CAddress</STRONG> (Thumb, 78 bytes, Stack size 8 bytes, mxt_i2c.o(i.MXT_FindI2CAddress))
 <BR><BR>[Stack]<UL><LI>Max Depth = 104<LI>Call Chain = MXT_FindI2CAddress &rArr; MXT_I2C_Probe &rArr; HAL_I2C_IsDeviceReady &rArr; I2C_WaitOnFlagUntilTimeout
 </UL>
-<BR>[Calls]<UL><LI><a href="#[134]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_Probe
+<BR>[Calls]<UL><LI><a href="#[135]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_Probe
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessControlPending
+<BR>[Called By]<UL><LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessControlPending
 <LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessBridgePacket
 <LI><a href="#[b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CDC_Init_FS
 </UL>
 
-<P><STRONG><a name="[133]"></a>MXT_FlushMessageBuffer</STRONG> (Thumb, 20 bytes, Stack size 8 bytes, mxt_usb_io.o(i.MXT_FlushMessageBuffer))
+<P><STRONG><a name="[134]"></a>MXT_FlushMessageBuffer</STRONG> (Thumb, 20 bytes, Stack size 8 bytes, mxt_usb_io.o(i.MXT_FlushMessageBuffer))
 <BR><BR>[Stack]<UL><LI>Max Depth = 96<LI>Call Chain = MXT_FlushMessageBuffer &rArr; MSG_BufferFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
 <BR>[Calls]<UL><LI><a href="#[122]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MSG_BufferFlush
 </UL>
 <BR>[Called By]<UL><LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
-<LI><a href="#[189]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawStop
-<LI><a href="#[177]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_WaitUsbIdle
-<LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMapAll
-<LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMap16Transformed
-<LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMap16
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
-<LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsTxt
+<LI><a href="#[188]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawStop
+<LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMapAll
+<LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMap16Transformed
+<LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMap16
+<LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsTxt
 </UL>
 
 <P><STRONG><a name="[126]"></a>MXT_GetObjectAddr</STRONG> (Thumb, 142 bytes, Stack size 32 bytes, mxt_touch.o(i.MXT_GetObjectAddr))
@@ -1673,10 +1678,10 @@ Global Symbols
 </UL>
 <BR>[Called By]<UL><LI><a href="#[125]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_CheckAndProcessMessages
 <LI><a href="#[150]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadT100UnknownFields
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
-<P><STRONG><a name="[134]"></a>MXT_I2C_Probe</STRONG> (Thumb, 22 bytes, Stack size 8 bytes, mxt_i2c.o(i.MXT_I2C_Probe))
+<P><STRONG><a name="[135]"></a>MXT_I2C_Probe</STRONG> (Thumb, 22 bytes, Stack size 8 bytes, mxt_i2c.o(i.MXT_I2C_Probe))
 <BR><BR>[Stack]<UL><LI>Max Depth = 96<LI>Call Chain = MXT_I2C_Probe &rArr; HAL_I2C_IsDeviceReady &rArr; I2C_WaitOnFlagUntilTimeout
 </UL>
 <BR>[Calls]<UL><LI><a href="#[b5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_I2C_IsDeviceReady
@@ -1692,15 +1697,15 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[125]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_CheckAndProcessMessages
 <LI><a href="#[127]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadObjectTable
 <LI><a href="#[150]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadT100UnknownFields
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
-<LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsTxt
-<LI><a href="#[131]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsBin
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsTxt
+<LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsBin
 <LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessBridgePacket
 <LI><a href="#[14f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadT37Page
-<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadInfoBlock
+<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadInfoBlock
 </UL>
 
-<P><STRONG><a name="[135]"></a>MXT_I2C_ReadNoReg</STRONG> (Thumb, 28 bytes, Stack size 8 bytes, mxt_i2c.o(i.MXT_I2C_ReadNoReg))
+<P><STRONG><a name="[136]"></a>MXT_I2C_ReadNoReg</STRONG> (Thumb, 28 bytes, Stack size 8 bytes, mxt_i2c.o(i.MXT_I2C_ReadNoReg))
 <BR><BR>[Stack]<UL><LI>Max Depth = 120<LI>Call Chain = MXT_I2C_ReadNoReg &rArr; HAL_I2C_Master_Receive &rArr; I2C_MasterRequestRead &rArr; I2C_WaitOnMasterAddressFlagUntilTimeout
 </UL>
 <BR>[Calls]<UL><LI><a href="#[b7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_I2C_Master_Receive
@@ -1714,15 +1719,16 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[c0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_I2C_Mem_Write
 </UL>
 <BR>[Called By]<UL><LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_TimerDiagnosticRead
-<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessControlPending
+<LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessControlPending
+<LI><a href="#[131]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_EnableDebugCtrl2Quiet
 <LI><a href="#[12f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_EnableDebugCtrl2
 <LI><a href="#[12b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_DisableDebugCtrl2
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 <LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessBridgePacket
 <LI><a href="#[14f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadT37Page
 </UL>
 
-<P><STRONG><a name="[136]"></a>MXT_I2C_WriteNoReg</STRONG> (Thumb, 28 bytes, Stack size 8 bytes, mxt_i2c.o(i.MXT_I2C_WriteNoReg))
+<P><STRONG><a name="[137]"></a>MXT_I2C_WriteNoReg</STRONG> (Thumb, 28 bytes, Stack size 8 bytes, mxt_i2c.o(i.MXT_I2C_WriteNoReg))
 <BR><BR>[Stack]<UL><LI>Max Depth = 104<LI>Call Chain = MXT_I2C_WriteNoReg &rArr; HAL_I2C_Master_Transmit &rArr; I2C_MasterRequestWrite &rArr; I2C_WaitOnMasterAddressFlagUntilTimeout
 </UL>
 <BR>[Calls]<UL><LI><a href="#[ba]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_I2C_Master_Transmit
@@ -1735,23 +1741,23 @@ Global Symbols
 <LI>Call Chain = MXT_InitTouchScreen &rArr; MXT_ReadObjectTable &rArr; MXT_I2C_Read &rArr; HAL_I2C_Mem_Read &rArr; I2C_RequestMemoryRead &rArr; I2C_WaitOnMasterAddressFlagUntilTimeout
 </UL>
 <BR>[Calls]<UL><LI><a href="#[127]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadObjectTable
-<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadInfoBlock
+<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadInfoBlock
 </UL>
 <BR>[Called By]<UL><LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_TimerDiagnosticRead
-<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessControlPending
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
-<LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsTxt
-<LI><a href="#[131]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsBin
+<LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessControlPending
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsTxt
+<LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsBin
 <LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessBridgePacket
 <LI><a href="#[b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CDC_Init_FS
 </UL>
 
-<P><STRONG><a name="[185]"></a>MXT_IsOutputEnabled</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, mxt_touch.o(i.MXT_IsOutputEnabled))
-<BR><BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<P><STRONG><a name="[184]"></a>MXT_IsOutputEnabled</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, mxt_touch.o(i.MXT_IsOutputEnabled))
+<BR><BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 <LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessBridgePacket
 </UL>
 
-<P><STRONG><a name="[138]"></a>MXT_OutputDiagnosticData</STRONG> (Thumb, 342 bytes, Stack size 32 bytes, mxt_touch.o(i.MXT_OutputDiagnosticData))
+<P><STRONG><a name="[139]"></a>MXT_OutputDiagnosticData</STRONG> (Thumb, 342 bytes, Stack size 32 bytes, mxt_touch.o(i.MXT_OutputDiagnosticData))
 <BR><BR>[Stack]<UL><LI>Max Depth = 176 + Unknown Stack Size
 <LI>Call Chain = MXT_OutputDiagnosticData &rArr; __2snprintf &rArr; _printf_char_common &rArr; __printf
 </UL>
@@ -1759,41 +1765,41 @@ Global Symbols
 <LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2snprintf
 </UL>
 <BR>[Called By]<UL><LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_TimerDiagnosticRead
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
-<P><STRONG><a name="[139]"></a>MXT_OutputMap16</STRONG> (Thumb, 178 bytes, Stack size 40 bytes, mxt_touch.o(i.MXT_OutputMap16))
+<P><STRONG><a name="[13a]"></a>MXT_OutputMap16</STRONG> (Thumb, 178 bytes, Stack size 40 bytes, mxt_touch.o(i.MXT_OutputMap16))
 <BR><BR>[Stack]<UL><LI>Max Depth = 184 + Unknown Stack Size
 <LI>Call Chain = MXT_OutputMap16 &rArr; __2snprintf &rArr; _printf_char_common &rArr; __printf
 </UL>
-<BR>[Calls]<UL><LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FlushMessageBuffer
+<BR>[Calls]<UL><LI><a href="#[134]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FlushMessageBuffer
 <LI><a href="#[9d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MSG_BufferWrite
 <LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2snprintf
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
-<P><STRONG><a name="[13a]"></a>MXT_OutputMap16Transformed</STRONG> (Thumb, 312 bytes, Stack size 48 bytes, mxt_touch.o(i.MXT_OutputMap16Transformed))
+<P><STRONG><a name="[13b]"></a>MXT_OutputMap16Transformed</STRONG> (Thumb, 312 bytes, Stack size 48 bytes, mxt_touch.o(i.MXT_OutputMap16Transformed))
 <BR><BR>[Stack]<UL><LI>Max Depth = 192 + Unknown Stack Size
 <LI>Call Chain = MXT_OutputMap16Transformed &rArr; __2snprintf &rArr; _printf_char_common &rArr; __printf
 </UL>
-<BR>[Calls]<UL><LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FlushMessageBuffer
+<BR>[Calls]<UL><LI><a href="#[134]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FlushMessageBuffer
 <LI><a href="#[9d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MSG_BufferWrite
 <LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2snprintf
 </UL>
 <BR>[Called By]<UL><LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_TimerDiagnosticRead
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
-<P><STRONG><a name="[13b]"></a>MXT_OutputMapAll</STRONG> (Thumb, 174 bytes, Stack size 32 bytes, mxt_touch.o(i.MXT_OutputMapAll))
+<P><STRONG><a name="[13c]"></a>MXT_OutputMapAll</STRONG> (Thumb, 174 bytes, Stack size 32 bytes, mxt_touch.o(i.MXT_OutputMapAll))
 <BR><BR>[Stack]<UL><LI>Max Depth = 176 + Unknown Stack Size
 <LI>Call Chain = MXT_OutputMapAll &rArr; __2snprintf &rArr; _printf_char_common &rArr; __printf
 </UL>
-<BR>[Calls]<UL><LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FlushMessageBuffer
+<BR>[Calls]<UL><LI><a href="#[134]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FlushMessageBuffer
 <LI><a href="#[9d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MSG_BufferWrite
 <LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2snprintf
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[12a]"></a>MXT_ParseMessage</STRONG> (Thumb, 558 bytes, Stack size 48 bytes, mxt_msg.o(i.MXT_ParseMessage))
@@ -1803,19 +1809,19 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2snprintf
 </UL>
 <BR>[Called By]<UL><LI><a href="#[125]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_CheckAndProcessMessages
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
-<P><STRONG><a name="[13c]"></a>MXT_ProcessCommand</STRONG> (Thumb, 4 bytes, Stack size 0 bytes, mxt_cmd.o(i.MXT_ProcessCommand))
+<P><STRONG><a name="[13d]"></a>MXT_ProcessCommand</STRONG> (Thumb, 4 bytes, Stack size 0 bytes, mxt_cmd.o(i.MXT_ProcessCommand))
 <BR><BR>[Stack]<UL><LI>Max Depth = 504 + Unknown Stack Size
 <LI>Call Chain = MXT_ProcessCommand &rArr; ProcessPendingCommand &rArr; MXT_ReadCompleteDiagnosticFrame &rArr; MXT_ReadCompleteDiagnosticFrameInternal &rArr; MXT_CheckAndProcessMessages &rArr; MXT_GetObjectAddr &rArr; MXT_ReadObjectTable &rArr; MXT_I2C_Read &rArr; HAL_I2C_Mem_Read &rArr; I2C_RequestMemoryRead &rArr; I2C_WaitOnMasterAddressFlagUntilTimeout
 </UL>
-<BR>[Calls]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<BR>[Calls]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 <BR>[Called By]<UL><LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[13e]"></a>MXT_ProcessControlPending</STRONG> (Thumb, 154 bytes, Stack size 32 bytes, mxt_bridge.o(i.MXT_ProcessControlPending))
+<P><STRONG><a name="[13f]"></a>MXT_ProcessControlPending</STRONG> (Thumb, 154 bytes, Stack size 32 bytes, mxt_bridge.o(i.MXT_ProcessControlPending))
 <BR><BR>[Stack]<UL><LI>Max Depth = 256 + Unknown Stack Size
 <LI>Call Chain = MXT_ProcessControlPending &rArr; MXT_InitTouchScreen &rArr; MXT_ReadObjectTable &rArr; MXT_I2C_Read &rArr; HAL_I2C_Mem_Read &rArr; I2C_RequestMemoryRead &rArr; I2C_WaitOnMasterAddressFlagUntilTimeout
 </UL>
@@ -1828,21 +1834,21 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[13f]"></a>MXT_ProcessSPICheck</STRONG> (Thumb, 414 bytes, Stack size 40 bytes, mxt_spi_stream.o(i.MXT_ProcessSPICheck))
+<P><STRONG><a name="[140]"></a>MXT_ProcessSPICheck</STRONG> (Thumb, 464 bytes, Stack size 40 bytes, mxt_spi_stream.o(i.MXT_ProcessSPICheck))
 <BR><BR>[Stack]<UL><LI>Max Depth = 256<LI>Call Chain = MXT_ProcessSPICheck &rArr; SPIUSB_Start1_ProcessPayloadByte &rArr; SPIUSB_Start3_EmitRowPacket &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
-<BR>[Calls]<UL><LI><a href="#[142]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_IsSelected
+<BR>[Calls]<UL><LI><a href="#[143]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_IsSelected
 <LI><a href="#[103]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_StartIT
+<LI><a href="#[122]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MSG_BufferFlush
 <LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawFlushPending
 <LI><a href="#[14b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_Start1_ProcessPayloadByte
-<LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawQueueLine
-<LI><a href="#[14a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawHandleFrameMark
-<LI><a href="#[141]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_TryRestartAfterGap
-<LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_RawExtractFrameAtGap
-<LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DrainDmaRingBudget
-<LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DmaWritePos
-<LI><a href="#[143]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_CheckStreamStall
-<LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_ApplyResyncIfNeeded
+<LI><a href="#[14a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawCommitSlot
+<LI><a href="#[142]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_TryRestartAfterGap
+<LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_RawExtractFrameAtGap
+<LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DrainDmaRingBudget
+<LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DmaWritePos
+<LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_CheckStreamStall
+<LI><a href="#[141]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_ApplyResyncIfNeeded
 <LI><a href="#[14c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_TryFlush
 <LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_StopIT
 <LI><a href="#[123]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USB_SendString
@@ -1858,7 +1864,7 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[14e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadCompleteDiagnosticFrameInternal
 </UL>
 <BR>[Called By]<UL><LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_TimerDiagnosticRead
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[127]"></a>MXT_ReadObjectTable</STRONG> (Thumb, 302 bytes, Stack size 56 bytes, mxt_touch.o(i.MXT_ReadObjectTable))
@@ -1884,11 +1890,11 @@ Global Symbols
 <LI><a href="#[128]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_Read
 <LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2snprintf
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[154]"></a>MXT_SPI_GetDmaWritePos</STRONG> (Thumb, 4 bytes, Stack size 0 bytes, mxt_spi_stream.o(i.MXT_SPI_GetDmaWritePos))
-<BR><BR>[Calls]<UL><LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DmaWritePos
+<BR><BR>[Calls]<UL><LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DmaWritePos
 </UL>
 <BR>[Called By]<UL><LI><a href="#[16a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_ResetForStream
 <LI><a href="#[168]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_StartFrameLow
@@ -1896,19 +1902,19 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[10c]"></a>MXT_SPI_OnDmaProgress</STRONG> (Thumb, 44 bytes, Stack size 8 bytes, mxt_spi_stream.o(i.MXT_SPI_OnDmaProgress))
-<BR><BR>[Stack]<UL><LI>Max Depth = 56<LI>Call Chain = MXT_SPI_OnDmaProgress &rArr; MXT_SPI_DrainDmaRingBudget &rArr; MXT_SPI_EnqueueRxByte
+<BR><BR>[Stack]<UL><LI>Max Depth = 64<LI>Call Chain = MXT_SPI_OnDmaProgress &rArr; MXT_SPI_DrainDmaRingBudget &rArr; MXT_SPI_EnqueueRxByte
 </UL>
-<BR>[Calls]<UL><LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DrainDmaRingBudget
+<BR>[Calls]<UL><LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DrainDmaRingBudget
 <LI><a href="#[b1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 </UL>
 <BR>[Called By]<UL><LI><a href="#[10d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_SPI_RxHalfCpltCallback
 <LI><a href="#[10b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_SPI_RxCpltCallback
 </UL>
 
-<P><STRONG><a name="[155]"></a>MXT_SPI_OnSsnActive</STRONG> (Thumb, 36 bytes, Stack size 8 bytes, mxt_spi_stream.o(i.MXT_SPI_OnSsnActive))
+<P><STRONG><a name="[155]"></a>MXT_SPI_OnSsnActive</STRONG> (Thumb, 28 bytes, Stack size 8 bytes, mxt_spi_stream.o(i.MXT_SPI_OnSsnActive))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = MXT_SPI_OnSsnActive
 </UL>
-<BR>[Calls]<UL><LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DmaWritePos
+<BR>[Calls]<UL><LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DmaWritePos
 </UL>
 <BR>[Called By]<UL><LI><a href="#[168]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_StartFrameLow
 <LI><a href="#[15f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_EnterActive
@@ -1918,7 +1924,7 @@ Global Symbols
 <BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = MXT_SPI_OnSsnGap &rArr; MXT_SPI_QueueGapMarker &rArr; MXT_SPI_QueueRxMark
 </UL>
 <BR>[Calls]<UL><LI><a href="#[157]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_QueueGapMarker
-<LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DmaWritePos
+<LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DmaWritePos
 </UL>
 <BR>[Called By]<UL><LI><a href="#[15c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_EndActive
 </UL>
@@ -1944,16 +1950,16 @@ Global Symbols
 <BR><BR>[Stack]<UL><LI>Max Depth = 76<LI>Call Chain = MXT_SPI_StartIT &rArr; HAL_SPI_Receive_DMA &rArr; HAL_SPI_TransmitReceive_DMA &rArr; HAL_DMA_Start_IT &rArr; DMA_SetConfig
 </UL>
 <BR>[Calls]<UL><LI><a href="#[109]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_SPI_Receive_DMA
-<LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DmaWritePos
+<LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DmaWritePos
 <LI><a href="#[b1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
+<BR>[Called By]<UL><LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
 <LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 <LI><a href="#[102]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_SPI_ErrorCallback
 <LI><a href="#[15a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_RestartAfterGap
-<LI><a href="#[143]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_CheckStreamStall
-<LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_ApplyResyncIfNeeded
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_CheckStreamStall
+<LI><a href="#[141]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_ApplyResyncIfNeeded
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[149]"></a>MXT_SPI_StopIT</STRONG> (Thumb, 34 bytes, Stack size 16 bytes, mxt_spi_stream.o(i.MXT_SPI_StopIT))
@@ -1961,17 +1967,17 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[100]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_SPI_DMAStop
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
+<BR>[Called By]<UL><LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
 <LI><a href="#[15a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_RestartAfterGap
-<LI><a href="#[143]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_CheckStreamStall
-<LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_ApplyResyncIfNeeded
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_CheckStreamStall
+<LI><a href="#[141]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_ApplyResyncIfNeeded
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
-<P><STRONG><a name="[18c]"></a>MXT_SSN_GetDebug</STRONG> (Thumb, 40 bytes, Stack size 16 bytes, gpio.o(i.MXT_SSN_GetDebug))
+<P><STRONG><a name="[18b]"></a>MXT_SSN_GetDebug</STRONG> (Thumb, 40 bytes, Stack size 16 bytes, gpio.o(i.MXT_SSN_GetDebug))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = MXT_SSN_GetDebug
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[164]"></a>MXT_SSN_Init</STRONG> (Thumb, 86 bytes, Stack size 16 bytes, gpio.o(i.MXT_SSN_Init))
@@ -1984,20 +1990,20 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[142]"></a>MXT_SSN_IsSelected</STRONG> (Thumb, 14 bytes, Stack size 0 bytes, gpio.o(i.MXT_SSN_IsSelected))
+<P><STRONG><a name="[143]"></a>MXT_SSN_IsSelected</STRONG> (Thumb, 14 bytes, Stack size 0 bytes, gpio.o(i.MXT_SSN_IsSelected))
 <BR><BR>[Called By]<UL><LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_USB_ServiceTx
-<LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
-<LI><a href="#[141]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_TryRestartAfterGap
+<LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
+<LI><a href="#[142]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_TryRestartAfterGap
 <LI><a href="#[152]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_EnqueueRxByte
-<LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DrainDmaRingBudget
-<LI><a href="#[143]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_CheckStreamStall
-<LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_ApplyResyncIfNeeded
-<LI><a href="#[188]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_ResetState
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DrainDmaRingBudget
+<LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_CheckStreamStall
+<LI><a href="#[141]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_ApplyResyncIfNeeded
+<LI><a href="#[187]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_ResetState
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[153]"></a>MXT_SSN_NotifySpiRx</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, gpio.o(i.MXT_SSN_NotifySpiRx))
-<BR><BR>[Called By]<UL><LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DrainDmaRingBudget
+<BR><BR>[Called By]<UL><LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DrainDmaRingBudget
 </UL>
 
 <P><STRONG><a name="[aa]"></a>MXT_SSN_OnMisoEdge</STRONG> (Thumb, 66 bytes, Stack size 16 bytes, gpio.o(i.MXT_SSN_OnMisoEdge))
@@ -2029,17 +2035,17 @@ Global Symbols
 <LI><a href="#[160]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_GapReset
 <LI><a href="#[15e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_GapPollBegin
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
-<P><STRONG><a name="[18b]"></a>MXT_SSN_StopPullup</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, gpio.o(i.MXT_SSN_StopPullup))
-<BR><BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<P><STRONG><a name="[18a]"></a>MXT_SSN_StopPullup</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, gpio.o(i.MXT_SSN_StopPullup))
+<BR><BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[12d]"></a>MXT_SSN_StopPullupPending</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, gpio.o(i.MXT_SSN_StopPullupPending))
 <BR><BR>[Called By]<UL><LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 <LI><a href="#[12b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_DisableDebugCtrl2
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[130]"></a>MXT_SSN_TimStart</STRONG> (Thumb, 42 bytes, Stack size 8 bytes, gpio.o(i.MXT_SSN_TimStart))
@@ -2051,6 +2057,7 @@ Global Symbols
 <LI><a href="#[15e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_GapPollBegin
 </UL>
 <BR>[Called By]<UL><LI><a href="#[12f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_EnableDebugCtrl2
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[12e]"></a>MXT_SSN_TimStop</STRONG> (Thumb, 42 bytes, Stack size 8 bytes, gpio.o(i.MXT_SSN_TimStop))
@@ -2063,7 +2070,7 @@ Global Symbols
 <LI><a href="#[161]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_MisoExtiEnable
 </UL>
 <BR>[Called By]<UL><LI><a href="#[12b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_DisableDebugCtrl2
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[16d]"></a>MXT_SendMode3Packets</STRONG> (Thumb, 478 bytes, Stack size 120 bytes, mxt_touch.o(i.MXT_SendMode3Packets))
@@ -2076,7 +2083,7 @@ Global Symbols
 <LI><a href="#[16e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memclr4
 </UL>
 <BR>[Called By]<UL><LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_TimerDiagnosticRead
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[171]"></a>MXT_SendSelfCapMode3Packets</STRONG> (Thumb, 254 bytes, Stack size 136 bytes, mxt_touch.o(i.MXT_SendSelfCapMode3Packets))
@@ -2086,7 +2093,7 @@ Global Symbols
 <LI><a href="#[151]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_DelayUs
 <LI><a href="#[a3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CDC_Transmit_FS
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[ad]"></a>MXT_SetChgPending</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, mxt_msg.o(i.MXT_SetChgPending))
@@ -2162,7 +2169,7 @@ Global Symbols
 </UL>
 <BR>[Called By]<UL><LI><a href="#[12e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_TimStop
 <LI><a href="#[130]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_TimStart
-<LI><a href="#[179]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_GPIO_Init
+<LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_GPIO_Init
 <LI><a href="#[164]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_Init
 </UL>
 
@@ -2172,8 +2179,8 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[16d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SendMode3Packets
 <LI><a href="#[14d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadCompleteDiagnosticFrame
-<LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMap16Transformed
-<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputDiagnosticData
+<LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMap16Transformed
+<LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputDiagnosticData
 <LI><a href="#[12c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_Write
 <LI><a href="#[b1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 <LI><a href="#[9f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_InitTouchScreen
@@ -2194,9 +2201,9 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[176]"></a>MXT_USB_ServiceTx</STRONG> (Thumb, 54 bytes, Stack size 8 bytes, mxt_spi_stream.o(i.MXT_USB_ServiceTx))
-<BR><BR>[Stack]<UL><LI>Max Depth = 112<LI>Call Chain = MXT_USB_ServiceTx &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
+<BR><BR>[Stack]<UL><LI>Max Depth = 112<LI>Call Chain = MXT_USB_ServiceTx &rArr; SPIUSB_RawFlushPending &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
-<BR>[Calls]<UL><LI><a href="#[142]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_IsSelected
+<BR>[Calls]<UL><LI><a href="#[143]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_IsSelected
 <LI><a href="#[122]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MSG_BufferFlush
 <LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawFlushPending
 <LI><a href="#[14c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_TryFlush
@@ -2205,17 +2212,7 @@ Global Symbols
 <LI><a href="#[cc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_OnTxComplete
 </UL>
 
-<P><STRONG><a name="[177]"></a>MXT_WaitUsbIdle</STRONG> (Thumb, 70 bytes, Stack size 24 bytes, mxt_usb_io.o(i.MXT_WaitUsbIdle))
-<BR><BR>[Stack]<UL><LI>Max Depth = 120<LI>Call Chain = MXT_WaitUsbIdle &rArr; MXT_FlushMessageBuffer &rArr; MSG_BufferFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
-</UL>
-<BR>[Calls]<UL><LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FlushMessageBuffer
-<LI><a href="#[b0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
-<LI><a href="#[b1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
-</UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
-</UL>
-
-<P><STRONG><a name="[178]"></a>MX_DMA_Init</STRONG> (Thumb, 40 bytes, Stack size 8 bytes, dma.o(i.MX_DMA_Init))
+<P><STRONG><a name="[177]"></a>MX_DMA_Init</STRONG> (Thumb, 40 bytes, Stack size 8 bytes, dma.o(i.MX_DMA_Init))
 <BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = MX_DMA_Init &rArr; HAL_NVIC_SetPriority
 </UL>
 <BR>[Calls]<UL><LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_NVIC_SetPriority
@@ -2224,7 +2221,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[179]"></a>MX_GPIO_Init</STRONG> (Thumb, 280 bytes, Stack size 56 bytes, gpio.o(i.MX_GPIO_Init))
+<P><STRONG><a name="[178]"></a>MX_GPIO_Init</STRONG> (Thumb, 280 bytes, Stack size 56 bytes, gpio.o(i.MX_GPIO_Init))
 <BR><BR>[Stack]<UL><LI>Max Depth = 136<LI>Call Chain = MX_GPIO_Init &rArr; MXT_TIM1_SsnPinGpioEnable &rArr; HAL_GPIO_Init
 </UL>
 <BR>[Calls]<UL><LI><a href="#[166]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_TIM1_SsnPinGpioEnable
@@ -2236,7 +2233,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[17a]"></a>MX_I2C2_Init</STRONG> (Thumb, 50 bytes, Stack size 8 bytes, i2c.o(i.MX_I2C2_Init))
+<P><STRONG><a name="[179]"></a>MX_I2C2_Init</STRONG> (Thumb, 50 bytes, Stack size 8 bytes, i2c.o(i.MX_I2C2_Init))
 <BR><BR>[Stack]<UL><LI>Max Depth = 96<LI>Call Chain = MX_I2C2_Init &rArr; HAL_I2C_Init &rArr; HAL_I2C_MspInit &rArr; HAL_GPIO_Init
 </UL>
 <BR>[Calls]<UL><LI><a href="#[b2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_I2C_Init
@@ -2245,7 +2242,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[17b]"></a>MX_SPI1_Init</STRONG> (Thumb, 62 bytes, Stack size 8 bytes, spi.o(i.MX_SPI1_Init))
+<P><STRONG><a name="[17a]"></a>MX_SPI1_Init</STRONG> (Thumb, 62 bytes, Stack size 8 bytes, spi.o(i.MX_SPI1_Init))
 <BR><BR>[Stack]<UL><LI>Max Depth = 104<LI>Call Chain = MX_SPI1_Init &rArr; HAL_SPI_Init &rArr; HAL_SPI_MspInit &rArr; HAL_GPIO_Init
 </UL>
 <BR>[Calls]<UL><LI><a href="#[106]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_SPI_Init
@@ -2254,24 +2251,24 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[17c]"></a>MX_TIM1_Init</STRONG> (Thumb, 62 bytes, Stack size 8 bytes, tim.o(i.MX_TIM1_Init))
+<P><STRONG><a name="[17b]"></a>MX_TIM1_Init</STRONG> (Thumb, 62 bytes, Stack size 8 bytes, tim.o(i.MX_TIM1_Init))
 <BR><BR>[Stack]<UL><LI>Max Depth = 40<LI>Call Chain = MX_TIM1_Init &rArr; HAL_TIM_Base_Init &rArr; HAL_TIM_Base_MspInit &rArr; HAL_NVIC_SetPriority
 </UL>
 <BR>[Calls]<UL><LI><a href="#[10e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_Base_Init
-<LI><a href="#[17d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_RCC_GetPCLK2Freq
+<LI><a href="#[17c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_RCC_GetPCLK2Freq
 <LI><a href="#[ef]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Error_Handler
 </UL>
 <BR>[Called By]<UL><LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[17e]"></a>MX_USB_DEVICE_Init</STRONG> (Thumb, 66 bytes, Stack size 8 bytes, usb_device.o(i.MX_USB_DEVICE_Init))
+<P><STRONG><a name="[17d]"></a>MX_USB_DEVICE_Init</STRONG> (Thumb, 66 bytes, Stack size 8 bytes, usb_device.o(i.MX_USB_DEVICE_Init))
 <BR><BR>[Stack]<UL><LI>Max Depth = 72<LI>Call Chain = MX_USB_DEVICE_Init &rArr; USBD_Init &rArr; USBD_LL_Init &rArr; HAL_PCD_Init &rArr; HAL_PCD_MspInit &rArr; HAL_NVIC_SetPriority
 </UL>
 <BR>[Calls]<UL><LI><a href="#[ef]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Error_Handler
-<LI><a href="#[182]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USBD_Start
-<LI><a href="#[180]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USBD_RegisterClass
-<LI><a href="#[17f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USBD_Init
-<LI><a href="#[181]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USBD_CDC_RegisterInterface
+<LI><a href="#[181]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USBD_Start
+<LI><a href="#[17f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USBD_RegisterClass
+<LI><a href="#[17e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USBD_Init
+<LI><a href="#[180]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USBD_CDC_RegisterInterface
 </UL>
 <BR>[Called By]<UL><LI><a href="#[6c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
@@ -2306,12 +2303,12 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[123]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USB_SendString
 <LI><a href="#[a8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SendResponse
-<LI><a href="#[185]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_IsOutputEnabled
-<LI><a href="#[136]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_WriteNoReg
+<LI><a href="#[184]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_IsOutputEnabled
+<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_WriteNoReg
 <LI><a href="#[12c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_Write
-<LI><a href="#[135]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_ReadNoReg
+<LI><a href="#[136]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_ReadNoReg
 <LI><a href="#[128]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_Read
-<LI><a href="#[184]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_EnableOutput
+<LI><a href="#[183]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_EnableOutput
 <LI><a href="#[b1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 <LI><a href="#[a7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CFG_SendResp
 <LI><a href="#[a5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CFG_CheckCRC16LE
@@ -2319,73 +2316,73 @@ Global Symbols
 <LI><a href="#[9f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_InitTouchScreen
 <LI><a href="#[9e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FindI2CAddress
 <LI><a href="#[ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_ReadPin
-<LI><a href="#[183]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memmove
+<LI><a href="#[182]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memmove
 <LI><a href="#[8a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memcpy
 <LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2snprintf
 </UL>
 <BR>[Called By]<UL><LI><a href="#[e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CDC_Receive_FS
 </UL>
 
-<P><STRONG><a name="[13d]"></a>ProcessPendingCommand</STRONG> (Thumb, 8938 bytes, Stack size 128 bytes, mxt_cmd.o(i.ProcessPendingCommand))
+<P><STRONG><a name="[13e]"></a>ProcessPendingCommand</STRONG> (Thumb, 9002 bytes, Stack size 128 bytes, mxt_cmd.o(i.ProcessPendingCommand))
 <BR><BR>[Stack]<UL><LI>Max Depth = 504 + Unknown Stack Size
 <LI>Call Chain = ProcessPendingCommand &rArr; MXT_ReadCompleteDiagnosticFrame &rArr; MXT_ReadCompleteDiagnosticFrameInternal &rArr; MXT_CheckAndProcessMessages &rArr; MXT_GetObjectAddr &rArr; MXT_ReadObjectTable &rArr; MXT_I2C_Read &rArr; HAL_I2C_Mem_Read &rArr; I2C_RequestMemoryRead &rArr; I2C_WaitOnMasterAddressFlagUntilTimeout
 </UL>
 <BR>[Calls]<UL><LI><a href="#[12e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_TimStop
-<LI><a href="#[18b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_StopPullup
+<LI><a href="#[130]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_TimStart
+<LI><a href="#[18a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_StopPullup
 <LI><a href="#[16a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_ResetForStream
-<LI><a href="#[142]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_IsSelected
-<LI><a href="#[18c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_GetDebug
+<LI><a href="#[143]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_IsSelected
+<LI><a href="#[18b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_GetDebug
 <LI><a href="#[12d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_StopPullupPending
 <LI><a href="#[103]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_StartIT
-<LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FlushMessageBuffer
 <LI><a href="#[125]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_CheckAndProcessMessages
 <LI><a href="#[14c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_TryFlush
-<LI><a href="#[188]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_ResetState
-<LI><a href="#[189]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawStop
-<LI><a href="#[18d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawHasPending
-<LI><a href="#[18a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_EndRawFrame
-<LI><a href="#[177]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_WaitUsbIdle
+<LI><a href="#[187]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_ResetState
+<LI><a href="#[188]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawStop
+<LI><a href="#[18c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawHasPending
+<LI><a href="#[189]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_EndRawFrame
 <LI><a href="#[171]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SendSelfCapMode3Packets
 <LI><a href="#[16d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SendMode3Packets
 <LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_StopIT
 <LI><a href="#[150]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadT100UnknownFields
 <LI><a href="#[14d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadCompleteDiagnosticFrame
 <LI><a href="#[12a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ParseMessage
-<LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMapAll
-<LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMap16Transformed
-<LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMap16
-<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputDiagnosticData
+<LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMapAll
+<LI><a href="#[13b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMap16Transformed
+<LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputMap16
+<LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputDiagnosticData
 <LI><a href="#[126]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_GetObjectAddr
+<LI><a href="#[131]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_EnableDebugCtrl2Quiet
 <LI><a href="#[12f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_EnableDebugCtrl2
 <LI><a href="#[12b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_DisableDebugCtrl2
 <LI><a href="#[123]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USB_SendString
 <LI><a href="#[a8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SendResponse
-<LI><a href="#[185]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_IsOutputEnabled
+<LI><a href="#[184]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_IsOutputEnabled
 <LI><a href="#[12c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_Write
 <LI><a href="#[128]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_Read
-<LI><a href="#[184]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_EnableOutput
+<LI><a href="#[183]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_EnableOutput
 <LI><a href="#[b1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
-<LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsTxt
-<LI><a href="#[131]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsBin
+<LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsTxt
+<LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsBin
 <LI><a href="#[9f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_InitTouchScreen
-<LI><a href="#[186]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;strcmp
+<LI><a href="#[185]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;strcmp
 <LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;strncpy
-<LI><a href="#[187]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;strncmp
+<LI><a href="#[186]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;strncmp
 <LI><a href="#[124]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;strlen
 <LI><a href="#[86]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;strcasecmp
 <LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;strncasecmp
-<LI><a href="#[18e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;strchr
+<LI><a href="#[18d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;strchr
 <LI><a href="#[82]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;strtok
 <LI><a href="#[7f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;atoi
 <LI><a href="#[72]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2snprintf
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessCommand
+<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessCommand
 </UL>
 
 <P><STRONG><a name="[a0]"></a>ProcessStringCommand</STRONG> (Thumb, 126 bytes, Stack size 8 bytes, mxt_cmd.o(i.ProcessStringCommand))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = ProcessStringCommand &rArr; strlen
 </UL>
-<BR>[Calls]<UL><LI><a href="#[186]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;strcmp
+<BR>[Calls]<UL><LI><a href="#[185]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;strcmp
 <LI><a href="#[8a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memcpy
 <LI><a href="#[124]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;strlen
 </UL>
@@ -2400,69 +2397,69 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f103xb.o(RESET)
 </UL>
-<P><STRONG><a name="[18a]"></a>SPIUSB_EndRawFrame</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, mxt_spi_stream.o(i.SPIUSB_EndRawFrame))
-<BR><BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<P><STRONG><a name="[189]"></a>SPIUSB_EndRawFrame</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, mxt_spi_stream.o(i.SPIUSB_EndRawFrame))
+<BR><BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[cc]"></a>SPIUSB_OnTxComplete</STRONG> (Thumb, 32 bytes, Stack size 8 bytes, mxt_spi_stream.o(i.SPIUSB_OnTxComplete))
-<BR><BR>[Stack]<UL><LI>Max Depth = 120<LI>Call Chain = SPIUSB_OnTxComplete &rArr; MXT_USB_ServiceTx &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
+<BR><BR>[Stack]<UL><LI>Max Depth = 120<LI>Call Chain = SPIUSB_OnTxComplete &rArr; MXT_USB_ServiceTx &rArr; SPIUSB_RawFlushPending &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
 <BR>[Calls]<UL><LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_USB_ServiceTx
-<LI><a href="#[141]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_TryRestartAfterGap
+<LI><a href="#[142]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_TryRestartAfterGap
 </UL>
 <BR>[Called By]<UL><LI><a href="#[ca]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_PCD_DataInStageCallback
 </UL>
 
-<P><STRONG><a name="[148]"></a>SPIUSB_RawFlushPending</STRONG> (Thumb, 128 bytes, Stack size 16 bytes, mxt_spi_stream.o(i.SPIUSB_RawFlushPending))
-<BR><BR>[Stack]<UL><LI>Max Depth = 88<LI>Call Chain = SPIUSB_RawFlushPending &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
+<P><STRONG><a name="[148]"></a>SPIUSB_RawFlushPending</STRONG> (Thumb, 258 bytes, Stack size 32 bytes, mxt_spi_stream.o(i.SPIUSB_RawFlushPending))
+<BR><BR>[Stack]<UL><LI>Max Depth = 104<LI>Call Chain = SPIUSB_RawFlushPending &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
 <BR>[Calls]<UL><LI><a href="#[a3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CDC_Transmit_FS
-<LI><a href="#[8a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memcpy
 </UL>
 <BR>[Called By]<UL><LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_USB_ServiceTx
-<LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
-<LI><a href="#[14a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawHandleFrameMark
-<LI><a href="#[189]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawStop
+<LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
+<LI><a href="#[188]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawStop
 </UL>
 
-<P><STRONG><a name="[18d]"></a>SPIUSB_RawHasPending</STRONG> (Thumb, 18 bytes, Stack size 0 bytes, mxt_spi_stream.o(i.SPIUSB_RawHasPending))
-<BR><BR>[Called By]<UL><LI><a href="#[189]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawStop
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<P><STRONG><a name="[18c]"></a>SPIUSB_RawHasPending</STRONG> (Thumb, 22 bytes, Stack size 0 bytes, mxt_spi_stream.o(i.SPIUSB_RawHasPending))
+<BR><BR>[Called By]<UL><LI><a href="#[188]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawStop
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
-<P><STRONG><a name="[189]"></a>SPIUSB_RawStop</STRONG> (Thumb, 102 bytes, Stack size 16 bytes, mxt_spi_stream.o(i.SPIUSB_RawStop))
-<BR><BR>[Stack]<UL><LI>Max Depth = 112<LI>Call Chain = SPIUSB_RawStop &rArr; MXT_FlushMessageBuffer &rArr; MSG_BufferFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
+<P><STRONG><a name="[188]"></a>SPIUSB_RawStop</STRONG> (Thumb, 106 bytes, Stack size 16 bytes, mxt_spi_stream.o(i.SPIUSB_RawStop))
+<BR><BR>[Stack]<UL><LI>Max Depth = 120<LI>Call Chain = SPIUSB_RawStop &rArr; SPIUSB_RawFlushPending &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
-<BR>[Calls]<UL><LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FlushMessageBuffer
+<BR>[Calls]<UL><LI><a href="#[134]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FlushMessageBuffer
 <LI><a href="#[b0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
 <LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawFlushPending
-<LI><a href="#[18d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawHasPending
+<LI><a href="#[18f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawTxReset
+<LI><a href="#[18c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawHasPending
 <LI><a href="#[b1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
-<P><STRONG><a name="[188]"></a>SPIUSB_ResetState</STRONG> (Thumb, 138 bytes, Stack size 16 bytes, mxt_spi_stream.o(i.SPIUSB_ResetState))
+<P><STRONG><a name="[187]"></a>SPIUSB_ResetState</STRONG> (Thumb, 142 bytes, Stack size 16 bytes, mxt_spi_stream.o(i.SPIUSB_ResetState))
 <BR><BR>[Stack]<UL><LI>Max Depth = 152<LI>Call Chain = SPIUSB_ResetState &rArr; SPIUSB_Start1_HandlePageMarker &rArr; SPIUSB_HexEnqueueByte &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
-<BR>[Calls]<UL><LI><a href="#[142]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_IsSelected
+<BR>[Calls]<UL><LI><a href="#[143]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_IsSelected
 <LI><a href="#[190]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_Start1_HandlePageMarker
+<LI><a href="#[18f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawTxReset
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[14c]"></a>SPIUSB_TryFlush</STRONG> (Thumb, 126 bytes, Stack size 32 bytes, mxt_spi_stream.o(i.SPIUSB_TryFlush))
 <BR><BR>[Stack]<UL><LI>Max Depth = 104<LI>Call Chain = SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
 <BR>[Calls]<UL><LI><a href="#[a3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CDC_Transmit_FS
-<LI><a href="#[183]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memmove
+<LI><a href="#[182]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memmove
 <LI><a href="#[8a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memcpy
 </UL>
 <BR>[Called By]<UL><LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_USB_ServiceTx
-<LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
+<LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
 <LI><a href="#[192]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_Start3_EmitRowPacket
-<LI><a href="#[18f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_HexEnqueueByte
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[18e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_HexEnqueueByte
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
 <P><STRONG><a name="[1f]"></a>SVC_Handler</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, stm32f1xx_it.o(i.SVC_Handler))
@@ -2474,8 +2471,8 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[151]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_DelayUs
 <LI><a href="#[a3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CDC_Transmit_FS
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
-<LI><a href="#[131]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsBin
+<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsBin
 <LI><a href="#[a7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CFG_SendResp
 <LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessBridgePacket
 </UL>
@@ -2537,8 +2534,8 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CDC_Receive_FS
 </UL>
 
-<P><STRONG><a name="[181]"></a>USBD_CDC_RegisterInterface</STRONG> (Thumb, 16 bytes, Stack size 0 bytes, usbd_cdc.o(i.USBD_CDC_RegisterInterface))
-<BR><BR>[Called By]<UL><LI><a href="#[17e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_USB_DEVICE_Init
+<P><STRONG><a name="[180]"></a>USBD_CDC_RegisterInterface</STRONG> (Thumb, 16 bytes, Stack size 0 bytes, usbd_cdc.o(i.USBD_CDC_RegisterInterface))
+<BR><BR>[Called By]<UL><LI><a href="#[17d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_USB_DEVICE_Init
 </UL>
 
 <P><STRONG><a name="[9c]"></a>USBD_CDC_SetRxBuffer</STRONG> (Thumb, 12 bytes, Stack size 0 bytes, usbd_cdc.o(i.USBD_CDC_SetRxBuffer))
@@ -2684,12 +2681,12 @@ Global Symbols
 <LI><a href="#[9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USBD_FS_ConfigStrDescriptor
 </UL>
 
-<P><STRONG><a name="[17f]"></a>USBD_Init</STRONG> (Thumb, 42 bytes, Stack size 8 bytes, usbd_core.o(i.USBD_Init))
+<P><STRONG><a name="[17e]"></a>USBD_Init</STRONG> (Thumb, 42 bytes, Stack size 8 bytes, usbd_core.o(i.USBD_Init))
 <BR><BR>[Stack]<UL><LI>Max Depth = 64<LI>Call Chain = USBD_Init &rArr; USBD_LL_Init &rArr; HAL_PCD_Init &rArr; HAL_PCD_MspInit &rArr; HAL_NVIC_SetPriority
 </UL>
 <BR>[Calls]<UL><LI><a href="#[1ac]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USBD_LL_Init
 </UL>
-<BR>[Called By]<UL><LI><a href="#[17e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_USB_DEVICE_Init
+<BR>[Called By]<UL><LI><a href="#[17d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_USB_DEVICE_Init
 </UL>
 
 <P><STRONG><a name="[1ad]"></a>USBD_LL_ClearStallEP</STRONG> (Thumb, 18 bytes, Stack size 8 bytes, usbd_conf.o(i.USBD_LL_ClearStallEP))
@@ -2744,7 +2741,7 @@ Global Symbols
 <LI><a href="#[e7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_PCD_Init
 <LI><a href="#[1b0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_PCDEx_PMAConfig
 </UL>
-<BR>[Called By]<UL><LI><a href="#[17f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USBD_Init
+<BR>[Called By]<UL><LI><a href="#[17e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USBD_Init
 </UL>
 
 <P><STRONG><a name="[1ba]"></a>USBD_LL_IsStallEP</STRONG> (Thumb, 30 bytes, Stack size 0 bytes, usbd_conf.o(i.USBD_LL_IsStallEP))
@@ -2837,7 +2834,7 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[f7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_PCD_Start
 <LI><a href="#[1ae]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USBD_Get_USB_Status
 </UL>
-<BR>[Called By]<UL><LI><a href="#[182]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USBD_Start
+<BR>[Called By]<UL><LI><a href="#[181]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USBD_Start
 </UL>
 
 <P><STRONG><a name="[fb]"></a>USBD_LL_Suspend</STRONG> (Thumb, 18 bytes, Stack size 0 bytes, usbd_core.o(i.USBD_LL_Suspend))
@@ -2861,8 +2858,8 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[f6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USBD_LL_SetupStage
 </UL>
 
-<P><STRONG><a name="[180]"></a>USBD_RegisterClass</STRONG> (Thumb, 16 bytes, Stack size 0 bytes, usbd_core.o(i.USBD_RegisterClass))
-<BR><BR>[Called By]<UL><LI><a href="#[17e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_USB_DEVICE_Init
+<P><STRONG><a name="[17f]"></a>USBD_RegisterClass</STRONG> (Thumb, 16 bytes, Stack size 0 bytes, usbd_core.o(i.USBD_RegisterClass))
+<BR><BR>[Called By]<UL><LI><a href="#[17d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_USB_DEVICE_Init
 </UL>
 
 <P><STRONG><a name="[1b9]"></a>USBD_SetClassConfig</STRONG> (Thumb, 22 bytes, Stack size 8 bytes, usbd_core.o(i.USBD_SetClassConfig))
@@ -2871,12 +2868,12 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[1b7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USBD_SetConfig
 </UL>
 
-<P><STRONG><a name="[182]"></a>USBD_Start</STRONG> (Thumb, 10 bytes, Stack size 8 bytes, usbd_core.o(i.USBD_Start))
+<P><STRONG><a name="[181]"></a>USBD_Start</STRONG> (Thumb, 10 bytes, Stack size 8 bytes, usbd_core.o(i.USBD_Start))
 <BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = USBD_Start &rArr; USBD_LL_Start &rArr; HAL_PCD_Start
 </UL>
 <BR>[Calls]<UL><LI><a href="#[1b6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USBD_LL_Start
 </UL>
-<BR>[Called By]<UL><LI><a href="#[17e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_USB_DEVICE_Init
+<BR>[Called By]<UL><LI><a href="#[17d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_USB_DEVICE_Init
 </UL>
 
 <P><STRONG><a name="[1b3]"></a>USBD_StdDevReq</STRONG> (Thumb, 274 bytes, Stack size 24 bytes, usbd_ctlreq.o(i.USBD_StdDevReq))
@@ -2985,14 +2982,14 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[36]"></a>USB_HP_CAN1_TX_IRQHandler</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, stm32f1xx_it.o(i.USB_HP_CAN1_TX_IRQHandler))
-<BR><BR>[Stack]<UL><LI>Max Depth = 232<LI>Call Chain = USB_HP_CAN1_TX_IRQHandler &rArr; HAL_PCD_IRQHandler &rArr; PCD_EP_ISR_Handler &rArr; HAL_PCD_EP_DB_Transmit &rArr; HAL_PCD_DataInStageCallback &rArr; SPIUSB_OnTxComplete &rArr; MXT_USB_ServiceTx &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
+<BR><BR>[Stack]<UL><LI>Max Depth = 232<LI>Call Chain = USB_HP_CAN1_TX_IRQHandler &rArr; HAL_PCD_IRQHandler &rArr; PCD_EP_ISR_Handler &rArr; HAL_PCD_EP_DB_Transmit &rArr; HAL_PCD_DataInStageCallback &rArr; SPIUSB_OnTxComplete &rArr; MXT_USB_ServiceTx &rArr; SPIUSB_RawFlushPending &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
 <BR>[Calls]<UL><LI><a href="#[df]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_PCD_IRQHandler
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f103xb.o(RESET)
 </UL>
 <P><STRONG><a name="[37]"></a>USB_LP_CAN1_RX0_IRQHandler</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, stm32f1xx_it.o(i.USB_LP_CAN1_RX0_IRQHandler))
-<BR><BR>[Stack]<UL><LI>Max Depth = 232<LI>Call Chain = USB_LP_CAN1_RX0_IRQHandler &rArr; HAL_PCD_IRQHandler &rArr; PCD_EP_ISR_Handler &rArr; HAL_PCD_EP_DB_Transmit &rArr; HAL_PCD_DataInStageCallback &rArr; SPIUSB_OnTxComplete &rArr; MXT_USB_ServiceTx &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
+<BR><BR>[Stack]<UL><LI>Max Depth = 232<LI>Call Chain = USB_LP_CAN1_RX0_IRQHandler &rArr; HAL_PCD_IRQHandler &rArr; PCD_EP_ISR_Handler &rArr; HAL_PCD_EP_DB_Transmit &rArr; HAL_PCD_DataInStageCallback &rArr; SPIUSB_OnTxComplete &rArr; MXT_USB_ServiceTx &rArr; SPIUSB_RawFlushPending &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
 <BR>[Calls]<UL><LI><a href="#[df]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_PCD_IRQHandler
 </UL>
@@ -3014,19 +3011,19 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[9d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MSG_BufferWrite
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
+<BR>[Called By]<UL><LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
 <LI><a href="#[122]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MSG_BufferFlush
 <LI><a href="#[127]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadObjectTable
 <LI><a href="#[150]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadT100UnknownFields
-<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputDiagnosticData
+<LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputDiagnosticData
 <LI><a href="#[12f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_EnableDebugCtrl2
 <LI><a href="#[12b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_DisableDebugCtrl2
-<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
-<LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsTxt
-<LI><a href="#[131]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsBin
+<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsTxt
+<LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsBin
 <LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessBridgePacket
 <LI><a href="#[14f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadT37Page
-<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadInfoBlock
+<LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadInfoBlock
 <LI><a href="#[14e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadCompleteDiagnosticFrameInternal
 </UL>
 
@@ -3056,26 +3053,26 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[7c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__printf
 </UL>
 
-<P><STRONG><a name="[6c]"></a>main</STRONG> (Thumb, 176 bytes, Stack size 0 bytes, main.o(i.main))
+<P><STRONG><a name="[6c]"></a>main</STRONG> (Thumb, 174 bytes, Stack size 0 bytes, main.o(i.main))
 <BR><BR>[Stack]<UL><LI>Max Depth = 504 + Unknown Stack Size
 <LI>Call Chain = main &rArr; MXT_ProcessCommand &rArr; ProcessPendingCommand &rArr; MXT_ReadCompleteDiagnosticFrame &rArr; MXT_ReadCompleteDiagnosticFrameInternal &rArr; MXT_CheckAndProcessMessages &rArr; MXT_GetObjectAddr &rArr; MXT_ReadObjectTable &rArr; MXT_I2C_Read &rArr; HAL_I2C_Mem_Read &rArr; I2C_RequestMemoryRead &rArr; I2C_WaitOnMasterAddressFlagUntilTimeout
 </UL>
-<BR>[Calls]<UL><LI><a href="#[17e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_USB_DEVICE_Init
-<LI><a href="#[17c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_TIM1_Init
-<LI><a href="#[17b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_SPI1_Init
-<LI><a href="#[17a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_I2C2_Init
-<LI><a href="#[179]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_GPIO_Init
-<LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_DMA_Init
+<BR>[Calls]<UL><LI><a href="#[17d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_USB_DEVICE_Init
+<LI><a href="#[17b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_TIM1_Init
+<LI><a href="#[17a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_SPI1_Init
+<LI><a href="#[179]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_I2C2_Init
+<LI><a href="#[178]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_GPIO_Init
+<LI><a href="#[177]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_DMA_Init
 <LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_USB_ServiceTx
 <LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_TimerDiagnosticRead
 <LI><a href="#[12d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_StopPullupPending
 <LI><a href="#[169]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_Poll
 <LI><a href="#[164]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_Init
 <LI><a href="#[103]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_StartIT
-<LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
-<LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessControlPending
-<LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessCommand
-<LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FlushMessageBuffer
+<LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
+<LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessControlPending
+<LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessCommand
+<LI><a href="#[134]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FlushMessageBuffer
 <LI><a href="#[125]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_CheckAndProcessMessages
 <LI><a href="#[c3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Init
 <LI><a href="#[ac]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_WritePin
@@ -3088,7 +3085,7 @@ Global Symbols
 <P><STRONG><a name="[52]"></a>_get_lc_ctype</STRONG> (Thumb, 44 bytes, Stack size 8 bytes, lc_ctype_c.o(locale$$code))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = _get_lc_ctype
 </UL>
-<BR>[Calls]<UL><LI><a href="#[186]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;strcmp
+<BR>[Calls]<UL><LI><a href="#[185]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;strcmp
 </UL>
 <BR>[Called By]<UL><LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__rt_lib_init_lc_ctype_2
 </UL>
@@ -3189,7 +3186,7 @@ Local Symbols
 <LI><a href="#[15f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_EnterActive
 </UL>
 
-<P><STRONG><a name="[168]"></a>MXT_SSN_StartFrameLow</STRONG> (Thumb, 98 bytes, Stack size 8 bytes, gpio.o(i.MXT_SSN_StartFrameLow))
+<P><STRONG><a name="[168]"></a>MXT_SSN_StartFrameLow</STRONG> (Thumb, 100 bytes, Stack size 8 bytes, gpio.o(i.MXT_SSN_StartFrameLow))
 <BR><BR>[Stack]<UL><LI>Max Depth = 80<LI>Call Chain = MXT_SSN_StartFrameLow &rArr; MXT_SSN_MisoExtiEnable &rArr; HAL_GPIO_Init
 </UL>
 <BR>[Calls]<UL><LI><a href="#[162]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_TIM1_SsnGapPollStop
@@ -3262,105 +3259,104 @@ Local Symbols
 <BR>[Calls]<UL><LI><a href="#[a8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SendResponse
 <LI><a href="#[a6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Map16_CalcCRC16
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessControlPending
+<BR>[Called By]<UL><LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessControlPending
 <LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessBridgePacket
 </UL>
 
-<P><STRONG><a name="[140]"></a>MXT_SPI_ApplyResyncIfNeeded</STRONG> (Thumb, 68 bytes, Stack size 16 bytes, mxt_spi_stream.o(i.MXT_SPI_ApplyResyncIfNeeded))
+<P><STRONG><a name="[141]"></a>MXT_SPI_ApplyResyncIfNeeded</STRONG> (Thumb, 68 bytes, Stack size 16 bytes, mxt_spi_stream.o(i.MXT_SPI_ApplyResyncIfNeeded))
 <BR><BR>[Stack]<UL><LI>Max Depth = 92<LI>Call Chain = MXT_SPI_ApplyResyncIfNeeded &rArr; MXT_SPI_StartIT &rArr; HAL_SPI_Receive_DMA &rArr; HAL_SPI_TransmitReceive_DMA &rArr; HAL_DMA_Start_IT &rArr; DMA_SetConfig
 </UL>
-<BR>[Calls]<UL><LI><a href="#[142]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_IsSelected
+<BR>[Calls]<UL><LI><a href="#[143]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_IsSelected
 <LI><a href="#[103]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_StartIT
-<LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DmaWritePos
+<LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DmaWritePos
 <LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_StopIT
 <LI><a href="#[b1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
+<BR>[Called By]<UL><LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
 </UL>
 
-<P><STRONG><a name="[143]"></a>MXT_SPI_CheckStreamStall</STRONG> (Thumb, 84 bytes, Stack size 16 bytes, mxt_spi_stream.o(i.MXT_SPI_CheckStreamStall))
+<P><STRONG><a name="[144]"></a>MXT_SPI_CheckStreamStall</STRONG> (Thumb, 84 bytes, Stack size 16 bytes, mxt_spi_stream.o(i.MXT_SPI_CheckStreamStall))
 <BR><BR>[Stack]<UL><LI>Max Depth = 92<LI>Call Chain = MXT_SPI_CheckStreamStall &rArr; MXT_SPI_StartIT &rArr; HAL_SPI_Receive_DMA &rArr; HAL_SPI_TransmitReceive_DMA &rArr; HAL_DMA_Start_IT &rArr; DMA_SetConfig
 </UL>
-<BR>[Calls]<UL><LI><a href="#[142]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_IsSelected
+<BR>[Calls]<UL><LI><a href="#[143]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_IsSelected
 <LI><a href="#[103]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_StartIT
-<LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DmaWritePos
+<LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DmaWritePos
 <LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_StopIT
 <LI><a href="#[b1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
+<BR>[Called By]<UL><LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
 </UL>
 
-<P><STRONG><a name="[144]"></a>MXT_SPI_DmaWritePos</STRONG> (Thumb, 30 bytes, Stack size 0 bytes, mxt_spi_stream.o(i.MXT_SPI_DmaWritePos))
+<P><STRONG><a name="[145]"></a>MXT_SPI_DmaWritePos</STRONG> (Thumb, 30 bytes, Stack size 0 bytes, mxt_spi_stream.o(i.MXT_SPI_DmaWritePos))
 <BR><BR>[Called By]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_OnSsnGap
 <LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_OnSsnActive
 <LI><a href="#[154]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_GetDmaWritePos
 <LI><a href="#[103]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_StartIT
-<LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
+<LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
 <LI><a href="#[15a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_RestartAfterGap
-<LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DrainDmaRingBudget
-<LI><a href="#[143]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_CheckStreamStall
-<LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_ApplyResyncIfNeeded
+<LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DrainDmaRingBudget
+<LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_CheckStreamStall
+<LI><a href="#[141]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_ApplyResyncIfNeeded
 </UL>
 
-<P><STRONG><a name="[146]"></a>MXT_SPI_DrainDmaRingBudget</STRONG> (Thumb, 136 bytes, Stack size 24 bytes, mxt_spi_stream.o(i.MXT_SPI_DrainDmaRingBudget))
-<BR><BR>[Stack]<UL><LI>Max Depth = 48<LI>Call Chain = MXT_SPI_DrainDmaRingBudget &rArr; MXT_SPI_EnqueueRxByte
+<P><STRONG><a name="[147]"></a>MXT_SPI_DrainDmaRingBudget</STRONG> (Thumb, 168 bytes, Stack size 32 bytes, mxt_spi_stream.o(i.MXT_SPI_DrainDmaRingBudget))
+<BR><BR>[Stack]<UL><LI>Max Depth = 56<LI>Call Chain = MXT_SPI_DrainDmaRingBudget &rArr; MXT_SPI_EnqueueRxByte
 </UL>
 <BR>[Calls]<UL><LI><a href="#[153]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_NotifySpiRx
-<LI><a href="#[142]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_IsSelected
+<LI><a href="#[143]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_IsSelected
 <LI><a href="#[152]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_EnqueueRxByte
-<LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DmaWritePos
+<LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DmaWritePos
 <LI><a href="#[b1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
+<BR>[Called By]<UL><LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
 <LI><a href="#[10c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_OnDmaProgress
 <LI><a href="#[15a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_RestartAfterGap
 </UL>
 
-<P><STRONG><a name="[152]"></a>MXT_SPI_EnqueueRxByte</STRONG> (Thumb, 122 bytes, Stack size 24 bytes, mxt_spi_stream.o(i.MXT_SPI_EnqueueRxByte))
+<P><STRONG><a name="[152]"></a>MXT_SPI_EnqueueRxByte</STRONG> (Thumb, 128 bytes, Stack size 24 bytes, mxt_spi_stream.o(i.MXT_SPI_EnqueueRxByte))
 <BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = MXT_SPI_EnqueueRxByte
 </UL>
-<BR>[Calls]<UL><LI><a href="#[142]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_IsSelected
+<BR>[Calls]<UL><LI><a href="#[143]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_IsSelected
 </UL>
-<BR>[Called By]<UL><LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DrainDmaRingBudget
+<BR>[Called By]<UL><LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DrainDmaRingBudget
 </UL>
 
-<P><STRONG><a name="[158]"></a>MXT_SPI_QueueRxMark</STRONG> (Thumb, 46 bytes, Stack size 8 bytes, mxt_spi_stream.o(i.MXT_SPI_QueueRxMark))
+<P><STRONG><a name="[158]"></a>MXT_SPI_QueueRxMark</STRONG> (Thumb, 48 bytes, Stack size 8 bytes, mxt_spi_stream.o(i.MXT_SPI_QueueRxMark))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = MXT_SPI_QueueRxMark
 </UL>
 <BR>[Called By]<UL><LI><a href="#[159]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_QueueStartMarker
 <LI><a href="#[157]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_QueueGapMarker
 </UL>
 
-<P><STRONG><a name="[145]"></a>MXT_SPI_RawExtractFrameAtGap</STRONG> (Thumb, 72 bytes, Stack size 12 bytes, mxt_spi_stream.o(i.MXT_SPI_RawExtractFrameAtGap))
-<BR><BR>[Stack]<UL><LI>Max Depth = 12<LI>Call Chain = MXT_SPI_RawExtractFrameAtGap
+<P><STRONG><a name="[146]"></a>MXT_SPI_RawExtractFrameAtGap</STRONG> (Thumb, 118 bytes, Stack size 36 bytes, mxt_spi_stream.o(i.MXT_SPI_RawExtractFrameAtGap))
+<BR><BR>[Stack]<UL><LI>Max Depth = 36<LI>Call Chain = MXT_SPI_RawExtractFrameAtGap
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
+<BR>[Called By]<UL><LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
 </UL>
 
 <P><STRONG><a name="[15a]"></a>MXT_SPI_RestartAfterGap</STRONG> (Thumb, 70 bytes, Stack size 16 bytes, mxt_spi_stream.o(i.MXT_SPI_RestartAfterGap))
 <BR><BR>[Stack]<UL><LI>Max Depth = 92<LI>Call Chain = MXT_SPI_RestartAfterGap &rArr; MXT_SPI_StartIT &rArr; HAL_SPI_Receive_DMA &rArr; HAL_SPI_TransmitReceive_DMA &rArr; HAL_DMA_Start_IT &rArr; DMA_SetConfig
 </UL>
 <BR>[Calls]<UL><LI><a href="#[103]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_StartIT
-<LI><a href="#[146]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DrainDmaRingBudget
-<LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DmaWritePos
+<LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DrainDmaRingBudget
+<LI><a href="#[145]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_DmaWritePos
 <LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_StopIT
 <LI><a href="#[b1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 </UL>
-<BR>[Called By]<UL><LI><a href="#[141]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_TryRestartAfterGap
+<BR>[Called By]<UL><LI><a href="#[142]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_TryRestartAfterGap
 </UL>
 
-<P><STRONG><a name="[141]"></a>MXT_SPI_TryRestartAfterGap</STRONG> (Thumb, 30 bytes, Stack size 8 bytes, mxt_spi_stream.o(i.MXT_SPI_TryRestartAfterGap))
+<P><STRONG><a name="[142]"></a>MXT_SPI_TryRestartAfterGap</STRONG> (Thumb, 30 bytes, Stack size 8 bytes, mxt_spi_stream.o(i.MXT_SPI_TryRestartAfterGap))
 <BR><BR>[Stack]<UL><LI>Max Depth = 100<LI>Call Chain = MXT_SPI_TryRestartAfterGap &rArr; MXT_SPI_RestartAfterGap &rArr; MXT_SPI_StartIT &rArr; HAL_SPI_Receive_DMA &rArr; HAL_SPI_TransmitReceive_DMA &rArr; HAL_DMA_Start_IT &rArr; DMA_SetConfig
 </UL>
-<BR>[Calls]<UL><LI><a href="#[142]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_IsSelected
+<BR>[Calls]<UL><LI><a href="#[143]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SSN_IsSelected
 <LI><a href="#[15a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_RestartAfterGap
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
+<BR>[Called By]<UL><LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
 <LI><a href="#[cc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_OnTxComplete
-<LI><a href="#[14a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawHandleFrameMark
 </UL>
 
-<P><STRONG><a name="[18f]"></a>SPIUSB_HexEnqueueByte</STRONG> (Thumb, 72 bytes, Stack size 24 bytes, mxt_spi_stream.o(i.SPIUSB_HexEnqueueByte))
+<P><STRONG><a name="[18e]"></a>SPIUSB_HexEnqueueByte</STRONG> (Thumb, 72 bytes, Stack size 24 bytes, mxt_spi_stream.o(i.SPIUSB_HexEnqueueByte))
 <BR><BR>[Stack]<UL><LI>Max Depth = 128<LI>Call Chain = SPIUSB_HexEnqueueByte &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
 <BR>[Calls]<UL><LI><a href="#[14c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_TryFlush
@@ -3376,31 +3372,27 @@ Local Symbols
 <LI><a href="#[190]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_Start1_HandlePageMarker
 </UL>
 
-<P><STRONG><a name="[14a]"></a>SPIUSB_RawHandleFrameMark</STRONG> (Thumb, 68 bytes, Stack size 8 bytes, mxt_spi_stream.o(i.SPIUSB_RawHandleFrameMark))
-<BR><BR>[Stack]<UL><LI>Max Depth = 108<LI>Call Chain = SPIUSB_RawHandleFrameMark &rArr; MXT_SPI_TryRestartAfterGap &rArr; MXT_SPI_RestartAfterGap &rArr; MXT_SPI_StartIT &rArr; HAL_SPI_Receive_DMA &rArr; HAL_SPI_TransmitReceive_DMA &rArr; HAL_DMA_Start_IT &rArr; DMA_SetConfig
+<P><STRONG><a name="[14a]"></a>SPIUSB_RawCommitSlot</STRONG> (Thumb, 82 bytes, Stack size 16 bytes, mxt_spi_stream.o(i.SPIUSB_RawCommitSlot))
+<BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = SPIUSB_RawCommitSlot
 </UL>
-<BR>[Calls]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawFlushPending
-<LI><a href="#[147]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawQueueLine
-<LI><a href="#[141]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_TryRestartAfterGap
+<BR>[Calls]<UL><LI><a href="#[8a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memcpy
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
+<BR>[Called By]<UL><LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
 </UL>
 
-<P><STRONG><a name="[147]"></a>SPIUSB_RawQueueLine</STRONG> (Thumb, 242 bytes, Stack size 36 bytes, mxt_spi_stream.o(i.SPIUSB_RawQueueLine))
-<BR><BR>[Stack]<UL><LI>Max Depth = 36<LI>Call Chain = SPIUSB_RawQueueLine
-</UL>
-<BR>[Called By]<UL><LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
-<LI><a href="#[14a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawHandleFrameMark
+<P><STRONG><a name="[18f]"></a>SPIUSB_RawTxReset</STRONG> (Thumb, 10 bytes, Stack size 0 bytes, mxt_spi_stream.o(i.SPIUSB_RawTxReset))
+<BR><BR>[Called By]<UL><LI><a href="#[187]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_ResetState
+<LI><a href="#[188]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_RawStop
 </UL>
 
 <P><STRONG><a name="[190]"></a>SPIUSB_Start1_HandlePageMarker</STRONG> (Thumb, 76 bytes, Stack size 8 bytes, mxt_spi_stream.o(i.SPIUSB_Start1_HandlePageMarker))
 <BR><BR>[Stack]<UL><LI>Max Depth = 136<LI>Call Chain = SPIUSB_Start1_HandlePageMarker &rArr; SPIUSB_HexEnqueueByte &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
 <BR>[Calls]<UL><LI><a href="#[191]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_LineEnqueue
-<LI><a href="#[18f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_HexEnqueueByte
+<LI><a href="#[18e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_HexEnqueueByte
 </UL>
 <BR>[Called By]<UL><LI><a href="#[14b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_Start1_ProcessPayloadByte
-<LI><a href="#[188]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_ResetState
+<LI><a href="#[187]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_ResetState
 </UL>
 
 <P><STRONG><a name="[14b]"></a>SPIUSB_Start1_ProcessPayloadByte</STRONG> (Thumb, 202 bytes, Stack size 32 bytes, mxt_spi_stream.o(i.SPIUSB_Start1_ProcessPayloadByte))
@@ -3409,9 +3401,9 @@ Local Symbols
 <BR>[Calls]<UL><LI><a href="#[192]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_Start3_EmitRowPacket
 <LI><a href="#[190]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_Start1_HandlePageMarker
 <LI><a href="#[191]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_LineEnqueue
-<LI><a href="#[18f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_HexEnqueueByte
+<LI><a href="#[18e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_HexEnqueueByte
 </UL>
-<BR>[Called By]<UL><LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
+<BR>[Called By]<UL><LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
 </UL>
 
 <P><STRONG><a name="[192]"></a>SPIUSB_Start3_EmitRowPacket</STRONG> (Thumb, 164 bytes, Stack size 80 bytes, mxt_spi_stream.o(i.SPIUSB_Start3_EmitRowPacket))
@@ -3438,7 +3430,7 @@ Local Symbols
 <BR>[Called By]<UL><LI><a href="#[14d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadCompleteDiagnosticFrame
 </UL>
 
-<P><STRONG><a name="[137]"></a>MXT_ReadInfoBlock</STRONG> (Thumb, 76 bytes, Stack size 24 bytes, mxt_touch.o(i.MXT_ReadInfoBlock))
+<P><STRONG><a name="[138]"></a>MXT_ReadInfoBlock</STRONG> (Thumb, 76 bytes, Stack size 24 bytes, mxt_touch.o(i.MXT_ReadInfoBlock))
 <BR><BR>[Stack]<UL><LI>Max Depth = 184 + Unknown Stack Size
 <LI>Call Chain = MXT_ReadInfoBlock &rArr; MXT_I2C_Read &rArr; HAL_I2C_Mem_Read &rArr; I2C_RequestMemoryRead &rArr; I2C_WaitOnMasterAddressFlagUntilTimeout
 </UL>
@@ -3483,7 +3475,7 @@ Local Symbols
 </UL>
 
 <P><STRONG><a name="[d5]"></a>HAL_PCD_EP_DB_Transmit</STRONG> (Thumb, 824 bytes, Stack size 40 bytes, stm32f1xx_hal_pcd.o(i.HAL_PCD_EP_DB_Transmit))
-<BR><BR>[Stack]<UL><LI>Max Depth = 168<LI>Call Chain = HAL_PCD_EP_DB_Transmit &rArr; HAL_PCD_DataInStageCallback &rArr; SPIUSB_OnTxComplete &rArr; MXT_USB_ServiceTx &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
+<BR><BR>[Stack]<UL><LI>Max Depth = 168<LI>Call Chain = HAL_PCD_EP_DB_Transmit &rArr; HAL_PCD_DataInStageCallback &rArr; SPIUSB_OnTxComplete &rArr; MXT_USB_ServiceTx &rArr; SPIUSB_RawFlushPending &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
 <BR>[Calls]<UL><LI><a href="#[ca]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_PCD_DataInStageCallback
 <LI><a href="#[d6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USB_WritePMA
@@ -3492,7 +3484,7 @@ Local Symbols
 </UL>
 
 <P><STRONG><a name="[e1]"></a>PCD_EP_ISR_Handler</STRONG> (Thumb, 934 bytes, Stack size 40 bytes, stm32f1xx_hal_pcd.o(i.PCD_EP_ISR_Handler))
-<BR><BR>[Stack]<UL><LI>Max Depth = 208<LI>Call Chain = PCD_EP_ISR_Handler &rArr; HAL_PCD_EP_DB_Transmit &rArr; HAL_PCD_DataInStageCallback &rArr; SPIUSB_OnTxComplete &rArr; MXT_USB_ServiceTx &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
+<BR><BR>[Stack]<UL><LI>Max Depth = 208<LI>Call Chain = PCD_EP_ISR_Handler &rArr; HAL_PCD_EP_DB_Transmit &rArr; HAL_PCD_DataInStageCallback &rArr; SPIUSB_OnTxComplete &rArr; MXT_USB_ServiceTx &rArr; SPIUSB_RawFlushPending &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
 <BR>[Calls]<UL><LI><a href="#[da]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USB_EPStartXfer
 <LI><a href="#[d5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_PCD_EP_DB_Transmit
@@ -3633,7 +3625,7 @@ Local Symbols
 <LI> stm32f1xx_hal_spi.o(i.HAL_SPI_TransmitReceive_DMA)
 </UL>
 <P><STRONG><a name="[54]"></a>SPI_DMAHalfReceiveCplt</STRONG> (Thumb, 10 bytes, Stack size 8 bytes, stm32f1xx_hal_spi.o(i.SPI_DMAHalfReceiveCplt))
-<BR><BR>[Stack]<UL><LI>Max Depth = 64<LI>Call Chain = SPI_DMAHalfReceiveCplt &rArr; HAL_SPI_RxHalfCpltCallback &rArr; MXT_SPI_OnDmaProgress &rArr; MXT_SPI_DrainDmaRingBudget &rArr; MXT_SPI_EnqueueRxByte
+<BR><BR>[Stack]<UL><LI>Max Depth = 72<LI>Call Chain = SPI_DMAHalfReceiveCplt &rArr; HAL_SPI_RxHalfCpltCallback &rArr; MXT_SPI_OnDmaProgress &rArr; MXT_SPI_DrainDmaRingBudget &rArr; MXT_SPI_EnqueueRxByte
 </UL>
 <BR>[Calls]<UL><LI><a href="#[10d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_SPI_RxHalfCpltCallback
 </UL>

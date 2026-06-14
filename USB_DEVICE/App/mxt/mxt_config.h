@@ -18,10 +18,10 @@
 #define CMD_FIND_IIC_ADDRESS   0xE0
 #define MXT_T6_DEBUGCTRL2_OFFSET 6U
 #define MXT_STARTUP_DEBUGCTRL2   0x80U
-#define SPI_DMA_RING_SIZE       512U
+#define SPI_DMA_RING_SIZE       640U
 #define SPI_STREAM_STALL_MS     25U
 #define SPI_IDLE_STALL_MS       100U
-#define SPI_RX_QUEUE_DEPTH      256U
+#define SPI_RX_QUEUE_DEPTH      128U
 #define SPI_DRAIN_BUDGET_ISR    16U
 #define SPI_DRAIN_BUDGET_LOOP   96U
 #define SPI_RX_MARK_GAP         1U
@@ -29,10 +29,17 @@
 #define SPI_FRAME_MAGIC0        0x87U
 #define SPI_FRAME_MAGIC1        0x78U
 #define SPI_USB_PKT_SIZE        64U
-#define SPI_RAW_OUT_BYTES       33U
-/* 原始 hex 行：\r + 33*(HH + space) + \r\n ≈ 102B；8 槽待发送环 + 2 CDC ping-pong */
-#define SPI_RAW_CDC_LINE_SIZE   (1U + (SPI_RAW_OUT_BYTES * 3U) + 2U)
-#define SPI_RAW_LINE_SLOTS      4U
+#define SPI_RAW_OUT_BYTES       514U
+#define SPI_RAW_FRAME_HDR0      0x88U
+#define SPI_RAW_FRAME_HDR1      0x77U
+#define SPI_RAW_FRAME_HDR2      0x66U
+#define SPI_RAW_FRAME_MAGIC_LEN 3U
+#define SPI_RAW_FRAME_LEN_BYTES 2U
+#define SPI_RAW_FRAME_HDR_LEN   (SPI_RAW_FRAME_MAGIC_LEN + SPI_RAW_FRAME_LEN_BYTES)
+#define SPI_RAW_PKT_BYTES       (SPI_RAW_FRAME_HDR_LEN + SPI_RAW_OUT_BYTES)
+/* 槽内存原始数据（≤514B）；USB 帧：88 77 66 + LE u16 长度 + payload */
+#define SPI_RAW_LINE_SLOTS      2U
+#define SPI_RAW_TX_CHUNK        SPI_USB_PKT_SIZE
 #define SPI_MAIN_LOOP_BURST     1U
 
 /* CFGWRITE/CFGREAD */
