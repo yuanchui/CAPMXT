@@ -114,13 +114,11 @@ void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 2 */
 
-/* PA9 BSRR 直写；PA10 EXTI+DWT 测脉宽，>=1ms 低后上升沿 ISR 内立即下拉
- * 流模式帧内 3ms TIM1 单次定时拉高；非流模式保留 100us 轮询
- */
+/* PA9 GPIO(BSRR); PA10 EXTI+DWT enter frame; SSN_HOLD_LOW_US DWT hold; stream GAP: TIM stopped */
 #define SSN_GAP_POLL_US           100U
 #define SSN_LOW_PULL_US           20U
 #define SSN_SPI_IDLE_US           2500U
-#define SSN_FRAME_MAX_US          3000U
+#define SSN_HOLD_LOW_US           3000U
 #define SSN_STOP_PULLUP_US        250U
 #define SSN_GAP_MIN_US            500U
 #define SSN_PA10_LOW_MIN_US       1000U
@@ -148,9 +146,8 @@ static volatile uint16_t g_ssn_last_dma_pos;
 static volatile uint8_t  g_ssn_gap_seen_high;
 static volatile uint8_t  g_ssn_tim_running;
 static volatile uint8_t  g_ssn_frame_timer;
-static volatile uint32_t g_ssn_pa10_fall_us;
-static volatile uint32_t g_ssn_time_base_us;
 static volatile uint32_t g_ssn_fall_cyc;
+static volatile uint32_t g_ssn_hold_end_cyc;
 static uint32_t          g_ssn_cyc_per_us;
 
 static void MXT_SSN_DwtInit(void)
@@ -193,11 +190,6 @@ static void MXT_SSN_DelayUs(uint32_t us)
   }
 }
 
-static uint32_t MXT_SSN_TimeUs(void)
-{
-  return g_ssn_time_base_us + (uint32_t)__HAL_TIM_GET_COUNTER(&htim1);
-}
-
 static void MXT_SSN_GapReset(void)
 {
   g_ssn_gap_low_us = 0U;
@@ -205,25 +197,11 @@ static void MXT_SSN_GapReset(void)
   g_ssn_gap_seen_high = 0U;
 }
 
-static void MXT_SSN_IcEnable(uint8_t on)
-{
-  if (on != 0U) {
-    __HAL_TIM_CLEAR_FLAG(&htim1, TIM_FLAG_CC3);
-    MXT_TIM1_SsnIcArmFalling();
-    (void)HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_3);
-  } else {
-    (void)HAL_TIM_IC_Stop_IT(&htim1, TIM_CHANNEL_3);
-    __HAL_TIM_CLEAR_FLAG(&htim1, TIM_FLAG_CC3);
-  }
-}
-
 static void MXT_SSN_ListenBegin(void)
 {
   MXT_SSN_GapReset();
-  g_ssn_pa10_fall_us = 0U;
   g_ssn_fall_cyc = DWT->CYCCNT;
   MXT_TIM1_SsnListenStart();
-  MXT_SSN_IcEnable(0U);
   MXT_SSN_MisoExtiEnable(1U);
 }
 
@@ -231,7 +209,6 @@ static void MXT_SSN_GapPollBegin(void)
 {
   MXT_TIM1_SsnGapPollStop();
   MXT_SSN_GapReset();
-  g_ssn_time_base_us = 0U;
   MXT_TIM1_SsnGapPollStart();
 }
 
@@ -242,10 +219,7 @@ static void MXT_SSN_EndActive(void)
   }
 
   SSN_OUT_HIGH();
-  if (g_ssn_frame_timer != 0U) {
-    g_ssn_frame_timer = 0U;
-    MXT_TIM1_SsnActiveWindowStop();
-  }
+  g_ssn_frame_timer = 0U;
   g_ssn_in_gap = 1U;
   g_ssn_low_us = 0U;
   g_ssn_no_spi_us = 0U;
@@ -272,7 +246,6 @@ static void MXT_SSN_EnterActive(void)
   g_ssn_low_us = 0U;
   g_ssn_no_spi_us = 0U;
   MXT_SSN_GapReset();
-  MXT_SSN_IcEnable(0U);
   MXT_SSN_MisoExtiEnable(0U);
   if (MXT_SSN_UseStreamTiming() == 0U) {
     MXT_TIM1_SsnGapPollStart();
@@ -300,6 +273,7 @@ static void MXT_SSN_StartFrameLow(void)
   g_ssn_no_spi_us = 0U;
   MXT_SSN_GapReset();
   MXT_SSN_MisoExtiEnable(0U);
+  MXT_TIM1_SsnGapPollStop();
   g_ssn_last_dma_pos = MXT_SPI_GetDmaWritePos();
   MXT_SPI_OnSsnActive();
   if ((g_spi_stream_enabled != 0U) && (g_spi_stream_mode != 0U)) {
@@ -308,7 +282,7 @@ static void MXT_SSN_StartFrameLow(void)
   g_ssn_active_evt = 1U;
   g_ssn_frame_enter_cnt++;
   g_ssn_frame_timer = 1U;
-  MXT_TIM1_SsnActiveWindowStart(SSN_FRAME_MAX_US);
+  g_ssn_hold_end_cyc = DWT->CYCCNT + (uint32_t)SSN_HOLD_LOW_US * g_ssn_cyc_per_us;
 }
 
 void MXT_SSN_OnMisoEdge(void)
@@ -389,13 +363,7 @@ static void MXT_SSN_GapPollTick(void)
 
   if (g_ssn_in_gap == 0U) {
     return;
-  }
-
-  if (__HAL_TIM_GET_COUNTER(&htim1) >= (65535U - SSN_GAP_POLL_US)) {
-    g_ssn_time_base_us += 65536U;
-  }
-
-  miso = SSN_MISO_HIGH() ? 1U : 0U;
+  }  miso = SSN_MISO_HIGH() ? 1U : 0U;
 
   if (MXT_SSN_UseStreamTiming() != 0U) {
     return;
@@ -428,8 +396,6 @@ void MXT_SSN_Init(void)
   g_ssn_frame_exit_cnt = 0U;
   g_ssn_tim_running = 0U;
   g_ssn_frame_timer = 0U;
-  g_ssn_time_base_us = 0U;
-  g_ssn_pa10_fall_us = 0U;
   MXT_SSN_GapReset();
   MXT_SSN_DwtInit();
   MXT_TIM1_SsnHwInit();
@@ -451,13 +417,10 @@ void MXT_SSN_ResetForStream(void)
   g_ssn_low_us = 0U;
   g_ssn_no_spi_us = 0U;
   g_ssn_frame_timer = 0U;
-  g_ssn_time_base_us = 0U;
-  g_ssn_pa10_fall_us = 0U;
   MXT_SSN_GapReset();
   g_ssn_last_dma_pos = MXT_SPI_GetDmaWritePos();
   MXT_TIM1_SsnActiveWindowStop();
   MXT_TIM1_SsnGapPollStop();
-  MXT_SSN_IcEnable(0U);
   MXT_SSN_MisoExtiEnable(0U);
   SSN_OUT_HIGH();
   if (MXT_SSN_UseStreamTiming() != 0U) {
@@ -525,8 +488,6 @@ void MXT_SSN_TimStart(void)
   MXT_TIM1_SsnPinGpioEnable();
   SSN_OUT_HIGH();
   g_ssn_tim_running = 1U;
-  g_ssn_time_base_us = 0U;
-  g_ssn_pa10_fall_us = 0U;
   if (MXT_SSN_UseStreamTiming() != 0U) {
     MXT_SSN_ListenBegin();
   } else {
@@ -540,7 +501,6 @@ void MXT_SSN_TimStop(void)
   g_ssn_frame_timer = 0U;
   MXT_TIM1_SsnActiveWindowStop();
   MXT_TIM1_SsnGapPollStop();
-  MXT_SSN_IcEnable(0U);
   MXT_SSN_MisoExtiEnable(0U);
   MXT_TIM1_SsnCounterStop();
   MXT_TIM1_SsnPinGpioEnable();
@@ -553,11 +513,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     return;
   }
 
-  if (g_ssn_frame_timer != 0U) {
-    MXT_SSN_EndActive();
-    return;
-  }
-
   if (g_ssn_in_gap != 0U) {
     MXT_SSN_GapPollTick();
   } else {
@@ -565,8 +520,24 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   }
 }
 
+static void MXT_SSN_FrameHoldService(void)
+{
+  if (g_ssn_frame_timer == 0U) {
+    return;
+  }
+  if (g_ssn_in_gap != 0U) {
+    return;
+  }
+  if ((int32_t)(DWT->CYCCNT - g_ssn_hold_end_cyc) >= 0) {
+    MXT_SSN_EndActive();
+  }
+}
+
 void MXT_SSN_Poll(void)
 {
+  MXT_SSN_FrameHoldService();
+
+
   if (g_ssn_stop_pullup_armed == 0U) {
     return;
   }

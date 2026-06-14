@@ -56,11 +56,23 @@ void MXT_TIM1_SsnGapPollStart(void)
   (void)HAL_TIM_Base_Start_IT(&htim1);
 }
 
-void MXT_TIM1_SsnActiveWindowStart(uint32_t low_us)
+void MXT_TIM1_SsnActiveWindowStart(uint32_t hold_us)
 {
-  (void)HAL_TIM_Base_Stop(&htim1);
+  uint32_t ticks;
+
+  /* 单次 UPDATE：帧内低电平维持 hold_us，到期 1 次中断 */
+  if (hold_us == 0U) {
+    hold_us = 1U;
+  }
+  if (hold_us > 65000U) {
+    hold_us = 65000U;
+  }
+  ticks = hold_us - 1U;
+
+  (void)HAL_TIM_Base_Stop_IT(&htim1);
   __HAL_TIM_DISABLE_IT(&htim1, TIM_IT_CC2);
-  __HAL_TIM_SET_AUTORELOAD(&htim1, (uint16_t)(low_us - 1U));
+  __HAL_TIM_SET_PRESCALER(&htim1, (uint32_t)(HAL_RCC_GetPCLK2Freq() / 1000000U) - 1U);
+  __HAL_TIM_SET_AUTORELOAD(&htim1, (uint16_t)ticks);
   __HAL_TIM_SET_COUNTER(&htim1, 0U);
   __HAL_TIM_CLEAR_FLAG(&htim1, TIM_FLAG_UPDATE);
   __HAL_TIM_ENABLE_IT(&htim1, TIM_IT_UPDATE);

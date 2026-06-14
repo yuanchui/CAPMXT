@@ -44,6 +44,6 @@
 "stmusbatmxt640\usbd_ioreq.o"
 "stmusbatmxt640\usbd_cdc.o"
 --strict --scatter "STMUSBATMXT640\STMUSBATMXT640.sct"
---summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
 --list "STMUSBATMXT640.map" -o STMUSBATMXT640\STMUSBATMXT640.axf

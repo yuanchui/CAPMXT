@@ -31,7 +31,7 @@ static void SPIUSB_ProcessByte(uint8_t b);
 static void SPIUSB_LineEnqueue(const char *s);
 static void SPIUSB_HexEnqueueByte(uint8_t b);
 
-/* 原始 hex 流：33B 帧缓�?+ 2 槽待�?+ 2×CDC ping-pong（无 RX 队列�?*/
+/* ?? hex ??33B ????+ 2 ????+ 2�CDC ping-pong?? RX ????*/
 static uint8_t g_spi_raw_line_buf[SPI_RAW_OUT_BYTES];
 static uint8_t g_spi_raw_slots[SPI_RAW_LINE_SLOTS][SPI_RAW_CDC_LINE_SIZE];
 static volatile uint16_t g_spi_raw_slot_len[SPI_RAW_LINE_SLOTS];
@@ -142,7 +142,11 @@ static void MXT_SPI_ProcessGapExtract(void)
 
   g_spi_gap_extract_pending = 0U;
   start_pos = g_spi_gap_ssn_snap;
-  wr = g_spi_gap_wr_snap;
+  /* ????????? DMA ?????? OnSsnGap ???? */
+  wr = MXT_SPI_DmaWritePos();
+  if (wr == start_pos) {
+    wr = g_spi_gap_wr_snap;
+  }
   MXT_SPI_RawExtractFrameAtGap(start_pos, wr);
 }
 
@@ -194,7 +198,7 @@ static uint16_t MXT_SPI_DrainDmaRingBudget(uint16_t budget)
 
   if (raw_fast != 0U) {
     if (MXT_SSN_IsSelected() != 0U) {
-      /* 帧内不做 drain/hex，GAP 出帧时按 ssn_pos 定长提取 */
+      /* ???? drain/hex?GAP ???? ssn_pos ???? */
       return budget;
     }
     MXT_SPI_RawDiscardGapDrain(budget);
@@ -232,7 +236,7 @@ void MXT_SPI_OnSsnActive(void)
 {
   uint16_t pos;
 
-  /* ISR 安全：仅对齐 DMA 读指针，主循�?ISR drain 负责收数 */
+  /* ISR ?????? DMA ????????ISR drain ???? */
   pos = MXT_SPI_GetDmaWritePos();
   g_spi_dma_last_pos = pos;
   g_spi_dma_ssn_pos = pos;
@@ -245,7 +249,7 @@ void MXT_SPI_OnSsnActive(void)
 void MXT_SPI_OnSsnGap(void)
 {
   if ((g_spi_stream_enabled != 0U) && (g_spi_stream_mode == 0U)) {
-    /* ISR 内只快照边界�?3B 拷贝/hex 留到主循�?GAP 阶段 */
+    /* ISR ????????3B ??/hex ??????GAP ?? */
     g_spi_gap_ssn_snap = g_spi_dma_ssn_pos;
     g_spi_gap_wr_snap = MXT_SPI_DmaWritePos();
     g_spi_gap_extract_pending = 1U;
@@ -288,7 +292,7 @@ static void MXT_SPI_CheckStreamStall(void)
   __HAL_SPI_CLEAR_OVRFLAG(&hspi1);
 
   if (MXT_SSN_IsSelected() != 0U) {
-    /* 帧内静默：软对齐，下一 SSN 进帧时硬复位 DMA */
+    /* ??????????? SSN ?????? DMA */
     g_spi_resync_pending = 1U;
     pos = MXT_SPI_GetDmaWritePos();
     g_spi_dma_last_pos = pos;
@@ -503,7 +507,7 @@ void MXT_ProcessSPICheck(void)
     uint32_t now = HAL_GetTick();
     if ((now - g_spi_last_overflow_report_ms) >= 1000U) {
       g_spi_last_overflow_report_ms = now;
-      /* 流模式禁�?USB_SendString，避免与 CDC 原始行交织产生乱�?*/
+      /* ??????USB_SendString???? CDC ??????????*/
       if (g_spi_stream_enabled == 0U) {
         USB_SendString("[WARN: SPI RX queue overflow]\r\n");
       }
@@ -726,7 +730,7 @@ void SPIUSB_ResetState(uint8_t mode)
   g_spi_raw_usb_drop = 0U;
   g_spi_raw_partial_drop = 0U;
 
-  /* START1/START3：启动后立即采集，每 640B 自动开始下一�?*/
+  /* START1/START3?????????? 640B ????????*/
   if (mode != 0U) {
     SPIUSB_Start1_HandlePageMarker();
   }

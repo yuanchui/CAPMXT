@@ -1,6 +1,6 @@
 stmusbatmxt640\mxt_msg.o: ..\USB_DEVICE\App\mxt\mxt_msg.c
 stmusbatmxt640\mxt_msg.o: ..\USB_DEVICE\App\mxt\mxt_msg.h
-stmusbatmxt640\mxt_msg.o: E:\rrr\ARM\ARMCC\Bin\..\include\stdint.h
+stmusbatmxt640\mxt_msg.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 stmusbatmxt640\mxt_msg.o: ..\USB_DEVICE\App\mxt\mxt_state.h
 stmusbatmxt640\mxt_msg.o: ..\USB_DEVICE\App\mxt\mxt_config.h
 stmusbatmxt640\mxt_msg.o: ..\USB_DEVICE\App\mxt\mxt_work.h
@@ -10,9 +10,9 @@ stmusbatmxt640\mxt_msg.o: ../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/I
 stmusbatmxt640\mxt_msg.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h
 stmusbatmxt640\mxt_msg.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h
 stmusbatmxt640\mxt_msg.o: ../USB_DEVICE/Target/usbd_conf.h
-stmusbatmxt640\mxt_msg.o: E:\rrr\ARM\ARMCC\Bin\..\include\stdio.h
-stmusbatmxt640\mxt_msg.o: E:\rrr\ARM\ARMCC\Bin\..\include\stdlib.h
-stmusbatmxt640\mxt_msg.o: E:\rrr\ARM\ARMCC\Bin\..\include\string.h
+stmusbatmxt640\mxt_msg.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
+stmusbatmxt640\mxt_msg.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+stmusbatmxt640\mxt_msg.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 stmusbatmxt640\mxt_msg.o: ../Core/Inc/main.h
 stmusbatmxt640\mxt_msg.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 stmusbatmxt640\mxt_msg.o: ../Core/Inc/stm32f1xx_hal_conf.h
@@ -27,7 +27,7 @@ stmusbatmxt640\mxt_msg.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
 stmusbatmxt640\mxt_msg.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/system_stm32f1xx.h
 stmusbatmxt640\mxt_msg.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 stmusbatmxt640\mxt_msg.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
-stmusbatmxt640\mxt_msg.o: E:\rrr\ARM\ARMCC\Bin\..\include\stddef.h
+stmusbatmxt640\mxt_msg.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
 stmusbatmxt640\mxt_msg.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc_ex.h
 stmusbatmxt640\mxt_msg.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio.h
 stmusbatmxt640\mxt_msg.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio_ex.h

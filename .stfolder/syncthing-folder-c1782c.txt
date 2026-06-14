@@ -1,0 +1,5 @@
+# This directory is a Syncthing folder marker.
+# Do not delete.
+
+folderID: 电容2.7版本
+created: 2026-06-14T17:40:25+08:00

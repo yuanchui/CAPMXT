@@ -2,7 +2,7 @@ stmusbatmxt640\system_stm32f1xx.o: ../Core/Src/system_stm32f1xx.c
 stmusbatmxt640\system_stm32f1xx.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 stmusbatmxt640\system_stm32f1xx.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h
 stmusbatmxt640\system_stm32f1xx.o: ../Drivers/CMSIS/Include/core_cm3.h
-stmusbatmxt640\system_stm32f1xx.o: E:\rrr\ARM\ARMCC\Bin\..\include\stdint.h
+stmusbatmxt640\system_stm32f1xx.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 stmusbatmxt640\system_stm32f1xx.o: ../Drivers/CMSIS/Include/cmsis_version.h
 stmusbatmxt640\system_stm32f1xx.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
 stmusbatmxt640\system_stm32f1xx.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
@@ -13,7 +13,7 @@ stmusbatmxt640\system_stm32f1xx.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx
 stmusbatmxt640\system_stm32f1xx.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_def.h
 stmusbatmxt640\system_stm32f1xx.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 stmusbatmxt640\system_stm32f1xx.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
-stmusbatmxt640\system_stm32f1xx.o: E:\rrr\ARM\ARMCC\Bin\..\include\stddef.h
+stmusbatmxt640\system_stm32f1xx.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
 stmusbatmxt640\system_stm32f1xx.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc_ex.h
 stmusbatmxt640\system_stm32f1xx.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio.h
 stmusbatmxt640\system_stm32f1xx.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio_ex.h
