@@ -50,5 +50,6 @@ stmusbatmxt640\mxt_bridge.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc
 stmusbatmxt640\mxt_bridge.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h
 stmusbatmxt640\mxt_bridge.o: ..\USB_DEVICE\App\mxt\mxt_touch.h
 stmusbatmxt640\mxt_bridge.o: ..\USB_DEVICE\App\mxt\mxt_cmd.h
+stmusbatmxt640\mxt_bridge.o: ..\USB_DEVICE\App\mxt\mxt_enc.h
 stmusbatmxt640\mxt_bridge.o: ../USB_DEVICE/App/usbd_cdc_if.h
 stmusbatmxt640\mxt_bridge.o: ../Core/Inc/gpio.h
