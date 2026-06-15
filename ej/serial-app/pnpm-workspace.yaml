@@ -1,0 +1,6 @@
+ignoredBuiltDependencies:
+  - '@serialport/bindings-cpp'
+  - electron
+  - electron-winstaller
+  - esbuild
+  - usb

@@ -20,8 +20,15 @@ extern CfgObjectMeta_t g_cfgwrite_objects[CFG_MAX_OBJECTS];
 extern volatile uint8_t g_cfgread_waiting_ack;
 extern volatile uint16_t g_cfgread_current_seq;
 extern volatile uint8_t g_cfgread_last_ack_status;
-extern uint8_t g_cfg_rx_buf[CFG_MAX_DATA_PER_FRAME + 128];
+extern uint8_t g_cfg_rx_buf[CFG_RX_BUF_SIZE];
 extern uint16_t g_cfg_rx_len;
+
+/* ---- ENC bootloader write ---- */
+extern volatile uint8_t g_encwrite_active;
+extern uint16_t g_enc_total_frames;
+extern uint16_t g_enc_next_seq;
+extern uint8_t g_enc_rx_buf[ENC_RX_BUF_SIZE];
+extern uint16_t g_enc_rx_len;
 
 /* ---- async control ---- */
 extern volatile uint8_t g_backup_busy;

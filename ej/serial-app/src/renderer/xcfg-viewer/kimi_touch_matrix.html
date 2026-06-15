@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>触摸阵列可视化 (32x20)</title>
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --surface: rgba(255, 255, 255, 0.72);
+      --surface-strong: rgba(255, 255, 255, 0.86);
+      --border: rgba(15, 23, 42, 0.10);
+      --text: rgba(15, 23, 42, 0.92);
+      --text-muted: rgba(15, 23, 42, 0.55);
+      --accent: #2f7cf6;
+      --accent-hover: #1f6fe8;
+      --error: #ef4444;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.10);
+      --shadow-sm: 0 6px 14px rgba(15, 23, 42, 0.08);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(1200px 700px at 20% 10%, rgba(47, 124, 246, 0.18), rgba(47, 124, 246, 0) 60%),
+                  radial-gradient(900px 600px at 80% 0%, rgba(147, 197, 253, 0.28), rgba(147, 197, 253, 0) 55%),
+                  var(--bg);
+      color: var(--text);
+    }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    label { font-size: 13px; color: var(--text-muted); }
+    input, select {
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.70);
+      border: 1px solid rgba(15, 23, 42, 0.14);
+      border-radius: 10px;
+      color: var(--text);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: rgba(47, 124, 246, 0.55);
+      box-shadow: 0 0 0 4px rgba(47, 124, 246, 0.18);
+    }
+    button {
+      padding: 9px 14px;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(47,124,246,0.98), rgba(47,124,246,0.90));
+      color: rgba(255,255,255,0.98);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 650;
+      box-shadow: 0 8px 18px rgba(47, 124, 246, 0.20);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.18s ease;
+    }
+    button:hover {
+      background: linear-gradient(180deg, rgba(31,111,232,0.98), rgba(31,111,232,0.90));
+      box-shadow: 0 10px 22px rgba(47, 124, 246, 0.24);
+    }
+    button:active { transform: translateY(1px); }
+    button:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+    canvas {
+      background: rgba(255, 255, 255, 0.55);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 960px;
+      height: auto;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+    .status { font-size: 13px; color: var(--text-muted); margin-top: 8px; white-space: pre-wrap; }
+    .status.error { color: rgba(220,38,38,0.95); }
+    .hoverTip {
+      position: fixed;
+      z-index: 9999;
+      pointer-events: none;
+      padding: 6px 8px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.88);
+      color: rgba(255,255,255,0.96);
+      font-size: 12px;
+      line-height: 1.25;
+      box-shadow: 0 10px 24px rgba(15,23,42,0.18);
+      border: 1px solid rgba(255,255,255,0.14);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transform: translate(10px, 12px);
+      display: none;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <div class="row">
+      <div>
+        <label>模式</label><br />
+        <select id="mode">
+          <option value="m">互电容 (Mutual)</option>
+          <option value="s">自电容 (Self)</option>
+          <option value="k">按键阵列 (Key)</option>
+          <option value="a">主动笔 (Stylus)</option>
+        </select>
+      </div>
+      <div>
+        <label>类型</label><br />
+        <select id="kind">
+          <option value="d">Delta/Deltas</option>
+          <option value="r">Reference/Refs</option>
+          <option value="s">Signals (仅 Key)</option>
+        </select>
+      </div>
+      <div>
+        <label>实例(instance)</label><br />
+        <input id="instance" type="number" value="0" min="0" style="width:80px" />
+      </div>
+      <div>
+        <label>帧数(frames)</label><br />
+        <input id="frames" type="number" value="1" min="1" style="width:80px" />
+      </div>
+      <div>
+        <label>格式(format)</label><br />
+        <input id="format" type="number" value="0" min="0" style="width:80px" />
+      </div>
+      <div id="mutualViewWrap">
+        <label>Mutual裁剪</label><br />
+        <span style="display:flex;gap:6px;align-items:center;">
+          <input id="cropW" type="number" value="32" min="1" max="32" style="width:64px" title="裁剪宽度" />
+          <span style="color:var(--text-muted);font-size:12px;">x</span>
+          <input id="cropH" type="number" value="20" min="1" max="20" style="width:64px" title="裁剪高度" />
+        </span>
+      </div>
+      <div id="flipWrap">
+        <label>翻转</label><br />
+        <span style="display:flex;gap:8px;align-items:center;font-size:12px;color:var(--text);">
+          <label style="display:flex;gap:6px;align-items:center;color:var(--text);"><input id="flipX" type="checkbox" />X</label>
+          <label style="display:flex;gap:6px;align-items:center;color:var(--text);"><input id="flipY" type="checkbox" />Y</label>
+        </span>
+      </div>
+      <div id="selfGroupWrap" style="display:none;">
+        <label>自容组</label><br />
+        <select id="selfGroup">
+          <option value="SCT">SCT</option>
+          <option value="SCH">SCH</option>
+          <option value="SCP">SCP</option>
+        </select>
+      </div>
+      <div style="align-self:flex-end">
+        <button id="btnCapture">采集一次并显示</button>
+      </div>
+      <div style="align-self:flex-end">
+        <button id="btnAuto">开始轮询</button>
+      </div>
+      <div>
+        <label>轮询间隔(ms)</label><br />
+        <input id="pollMs" type="number" value="200" min="50" style="width:100px" />
+      </div>
+    </div>
+    <div class="status" id="status">等待数据…</div>
+  </div>
+
+  <div class="panel" style="display:flex;gap:12px;align-items:flex-start;">
+    <div style="flex: 1; min-width: 640px;">
+      <canvas id="canvas" width="960" height="600"></canvas>
+      <div class="status" id="legend"></div>
+      <div class="status" id="mutualRangeControls" style="display:none;font-size:12px;align-items:center;gap:8px;">
+        <span style="color:var(--text-muted);">Mutual Refs 显示范围：</span>
+        <label style="display:inline-flex;align-items:center;gap:4px;">
+          <span>min</span>
+          <input id="mutualRangeMinRefs" type="number" value="4500" style="width:90px;" />
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:4px;">
+          <span>max</span>
+          <input id="mutualRangeMaxRefs" type="number" value="6000" style="width:90px;" />
+        </label>
+        <span style="color:var(--text-muted);">（仅 Mutual / Refs 生效）</span>
+      </div>
+    </div>
+    <div style="width: 360px; max-width: 40vw;">
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">收发历史</div>
+      <div id="history" style="font-size:12px;white-space:pre-wrap;max-height:600px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px;background:var(--bg);"></div>
+    </div>
+  </div>
+
+  <div id="hoverTip" class="hoverTip"></div>
+
+<script src="/xcfg-viewer/electron-bridge.js"></script>
+<script>
+  const W = 32;
+  const H = 20;
+
+  const statusEl = document.getElementById('status');
+  const legendEl = document.getElementById('legend');
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const mutualViewWrap = document.getElementById('mutualViewWrap');
+  const flipWrap = document.getElementById('flipWrap');
+  const cropWInput = document.getElementById('cropW');
+  const cropHInput = document.getElementById('cropH');
+  const flipXInput = document.getElementById('flipX');
+  const flipYInput = document.getElementById('flipY');
+  const selfGroupWrap = document.getElementById('selfGroupWrap');
+  const selfGroupSel = document.getElementById('selfGroup');
+  const mutualRangeControls = document.getElementById('mutualRangeControls');
+  const mutualRangeMinRefsInput = document.getElementById('mutualRangeMinRefs');
+  const mutualRangeMaxRefsInput = document.getElementById('mutualRangeMaxRefs');
+
+  let timer = null;
+  const historyEl = document.getElementById('history');
+  const history = [];
+  let lastTs = 0;
+
+  const hoverTipEl = document.getElementById('hoverTip');
+  let lastHoverKey = '';
+  // cache last paint layout for hit-testing
+  let lastPaint = { type: 'none' }; // {type:'mutual'|'selfcap', ...}
+  let lastMutualMatrix = null; // 用于在调整 Refs 色标最小/最大值时重新绘制
+
+  function _escapeHtml(s) {
+    return String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function pushHistory(entry) {
+    history.unshift(entry);
+    if (history.length > 80) history.pop();
+
+    historyEl.innerHTML = history.map((e, i) => {
+      const mark = e.updated ? 'UPDATED' : 'same';
+      const ok = e.ok ? 'OK' : 'ERR';
+      const summary = `[${e.at}] ${ok} ${mark} url=${e.url} ts=${e.ts} ms=${e.ms} ${e.note || ''}`.trim();
+      const hasRaw = !!e.raw;
+      const details = hasRaw
+        ? `<details style="margin-top:4px;"><summary style="cursor:pointer;color:var(--text);">raw</summary><div style="margin-top:4px;color:var(--text-muted);white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;">${_escapeHtml(e.raw)}</div></details>`
+        : '';
+      return `<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);"><div>${_escapeHtml(summary)}</div>${details}</div>`;
+    }).join('');
+  }
+
+  function setStatus(msg, isErr=false) {
+    statusEl.textContent = msg || '';
+    statusEl.classList.toggle('error', !!isErr);
+  }
+
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+  function parseSignedInt16(s) {
+    // Parse dumps that may be printed as unsigned 16-bit (e.g. 65535 -> -1).
+    const v = parseInt((s ?? '').toString().trim(), 10);
+    if (!Number.isFinite(v)) return NaN;
+    const u16 = v & 0xFFFF;
+    return (u16 & 0x8000) ? (u16 - 0x10000) : u16;
+  }
+
+  function _lerp(a, b, t) { return a + (b - a) * t; }
+  function _lerp3(c1, c2, t) {
+    return [
+      Math.round(_lerp(c1[0], c2[0], t)),
+      Math.round(_lerp(c1[1], c2[1], t)),
+      Math.round(_lerp(c1[2], c2[2], t)),
+    ];
+  }
+
+  function _srgbToLinear(u) {
+    // u: 0..1
+    return u <= 0.04045 ? (u / 12.92) : Math.pow((u + 0.055) / 1.055, 2.4);
+  }
+
+  function _linearToSrgb(u) {
+    // u: 0..1
+    return u <= 0.0031308 ? (u * 12.92) : (1.055 * Math.pow(u, 1 / 2.4) - 0.055);
+  }
+
+  function _mixSrgb(c1, c2, t) {
+    // perceptual-ish mix in linear space
+    const a = c1.map(v => _srgbToLinear(v / 255));
+    const b = c2.map(v => _srgbToLinear(v / 255));
+    const m = [
+      _linearToSrgb(_lerp(a[0], b[0], t)),
+      _linearToSrgb(_lerp(a[1], b[1], t)),
+      _linearToSrgb(_lerp(a[2], b[2], t)),
+    ];
+    return m.map(v => Math.round(clamp(v, 0, 1) * 255));
+  }
+
+  function colorFor(v, minV, maxV, opts) {
+    // Enhanced palette + non-linear mapping for better subtle detail.
+    // opts: { gamma, softClip, neutralCenter }
+    if (maxV <= minV) return 'rgb(0,0,0)';
+    const gamma = (opts && typeof opts.gamma === 'number') ? opts.gamma : 0.65;
+    const softClip = (opts && typeof opts.softClip === 'number') ? opts.softClip : 0.06;
+
+    // Normalize
+    let t = (v - minV) / (maxV - minV);
+    t = clamp(t, 0, 1);
+
+    // Soft clip extremes to emphasize mid-tone differences
+    // Map [0,1] -> [softClip, 1-softClip]
+    t = softClip + t * (1 - 2 * softClip);
+
+    // Gamma
+    t = Math.pow(clamp(t, 0, 1), gamma);
+
+    // Smooth gradient: deep blue -> cyan -> green -> yellow -> red
+    const stops = [
+      { p: 0.0, c: [20, 38, 98] },
+      { p: 0.25, c: [0, 160, 255] },
+      { p: 0.5, c: [0, 196, 140] },
+      { p: 0.75, c: [255, 208, 64] },
+      { p: 1.0, c: [255, 86, 96] },
+    ];
+
+    let a = stops[0], b = stops[stops.length - 1];
+    for (let i = 0; i < stops.length - 1; i++) {
+      if (t >= stops[i].p && t <= stops[i + 1].p) {
+        a = stops[i];
+        b = stops[i + 1];
+        break;
+      }
+    }
+
+    const tt = (t - a.p) / (b.p - a.p || 1);
+    const rgb = _mixSrgb(a.c, b.c, tt);
+    return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+  }
+
+  function _isDataRow(cols) {
+    // Expect cols[0] like HH:MM:SS.xxx or HH:MM:SS
+    if (!cols || cols.length < 2) return false;
+    const t = (cols[0] || '').trim();
+    return /^\d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(t);
+  }
+
+  function _parseSelfCap(header, dataCols) {
+    const idx = new Map();
+    for (let i = 0; i < header.length; i++) idx.set(header[i], i);
+
+    const timeKey = idx.has('time') ? 'time' : (idx.has('TIME(0-0)') ? 'TIME(0-0)' : null);
+    const timeStr = timeKey ? (dataCols[idx.get(timeKey)] || '').trim() : (dataCols[0] || '').trim();
+
+    // Self-cap sometimes doesn't have TIN; keep best-effort
+    const frameStr = idx.has('TIN') ? (dataCols[idx.get('TIN')] || '').trim() : (dataCols[1] || '').trim();
+
+    const group = (selfGroupSel && selfGroupSel.value) ? selfGroupSel.value : 'SCT';
+
+    const yVals = [];
+    for (let y = 0; y < H; y++) {
+      const key = `Y${y}_${group}_`;
+      let found = null;
+      for (const h of header) {
+        if (h.startsWith(key)) { found = h; break; }
+      }
+      if (!found) { yVals.push(0); continue; }
+      const v = parseSignedInt16(dataCols[idx.get(found)] || '0');
+      yVals.push(Number.isFinite(v) ? v : 0);
+    }
+
+    const xVals = [];
+    for (let x = 0; x < W; x++) {
+      const key = `X${x}_${group}_`;
+      let found = null;
+      for (const h of header) {
+        if (h.startsWith(key)) { found = h; break; }
+      }
+      if (!found) { xVals.push(0); continue; }
+      const v = parseSignedInt16(dataCols[idx.get(found)] || '0');
+      xVals.push(Number.isFinite(v) ? v : 0);
+    }
+
+    return { kind: 'selfcap', timeStr, frameStr, group, xVals, yVals };
+  }
+
+  function parseLatestCsv(content) {
+    // mxt-app stdout may include device logs + optional CSV header.
+    // We parse by locating the last valid data row.
+    const lines = (content || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (lines.length === 0) return null;
+
+    // Find header line if present (mutual) or self-cap
+    let header = null;
+    let headerType = null;
+    for (const line of lines) {
+      if (line.startsWith('time,TIN,')) {
+        header = line.split(',').map(s => s.trim()).filter(s => s.length);
+        headerType = 'mutual';
+      } else if (line.startsWith('TIME(0-0),')) {
+        header = line.split(',').map(s => s.trim()).filter(s => s.length);
+        headerType = 'selfcap';
+      }
+    }
+
+    // Find last data row
+    let dataCols = null;
+    for (let i = lines.length - 1; i >= 0; i--) {
+      const cols = lines[i].split(',');
+      if (_isDataRow(cols)) {
+        dataCols = cols;
+        break;
+      }
+    }
+    if (!dataCols) return null;
+
+    if (header && headerType === 'selfcap') {
+      return _parseSelfCap(header, dataCols);
+    }
+
+    const matrix = Array.from({ length: H }, () => Array.from({ length: W }, () => 0));
+
+    if (header && headerType === 'mutual') {
+      // Header-driven mapping
+      const idx = new Map();
+      for (let i = 0; i < header.length; i++) idx.set(header[i], i);
+
+      for (let x = 0; x < W; x++) {
+        for (let y = 0; y < H; y++) {
+          const prefix = `X${x}Y${y}_`;
+          let key = null;
+          for (const h of header) {
+            if (h.startsWith(prefix)) { key = h; break; }
+          }
+          if (!key) continue;
+          const ci = idx.get(key);
+          const v = parseSignedInt16(dataCols[ci] || '0');
+          matrix[y][x] = Number.isFinite(v) ? v : 0;
+        }
+      }
+
+      const timeStr = (dataCols[idx.get('time')] || '').trim();
+      const frameStr = (dataCols[idx.get('TIN')] || '').trim();
+      return { kind: 'mutual', matrix, timeStr, frameStr };
+    }
+
+    // No header: could be mutual 32x20 OR self-cap (SCT/SCH/SCP) depending on column count.
+    const timeStr = (dataCols[0] || '').trim();
+    const frameStr = (dataCols[1] || '').trim();
+    const base = 2;
+    const dataCount = Math.max(0, dataCols.length - base);
+
+    // Self-cap (no header) heuristic:
+    // Data layout from mxt-app for self-cap includes 3 groups (SCT, SCH, SCP), each group = Y(20) + X(32) = 52 values.
+    // Total = 156 values after time+TIN.
+    const selfGroupSize = (H + W);
+
+    // Full self-cap (3 groups)
+    if (dataCount === selfGroupSize * 3) {
+      const group = (selfGroupSel && selfGroupSel.value) ? selfGroupSel.value : 'SCT';
+      const groups = ['SCT', 'SCH', 'SCP'];
+      const gi = Math.max(0, groups.indexOf(group));
+      const start = base + gi * selfGroupSize;
+
+      const yVals = [];
+      for (let y = 0; y < H; y++) {
+        const v = parseSignedInt16(dataCols[start + y] || '0');
+        yVals.push(Number.isFinite(v) ? v : 0);
+      }
+      const xVals = [];
+      for (let x = 0; x < W; x++) {
+        const v = parseSignedInt16(dataCols[start + H + x] || '0');
+        xVals.push(Number.isFinite(v) ? v : 0);
+      }
+
+      return { kind: 'selfcap', timeStr, frameStr, group, xVals, yVals };
+    }
+
+    // Single self-cap group (>=52 values): treat first 52 as one group selected by UI
+    // Some mxt-app builds may output extra tail values; we ignore the rest.
+    if (dataCount >= selfGroupSize && dataCount < selfGroupSize * 3) {
+      const group = (selfGroupSel && selfGroupSel.value) ? selfGroupSel.value : 'SCT';
+      const start = base;
+
+      const yVals = [];
+      for (let y = 0; y < H; y++) {
+        const v = parseSignedInt16(dataCols[start + y] || '0');
+        yVals.push(Number.isFinite(v) ? v : 0);
+      }
+      const xVals = [];
+      for (let x = 0; x < W; x++) {
+        const v = parseSignedInt16(dataCols[start + H + x] || '0');
+        xVals.push(Number.isFinite(v) ? v : 0);
+      }
+
+      return { kind: 'selfcap', timeStr, frameStr, group, xVals, yVals };
+    }
+
+    // Mutual 32x20 heuristic
+    // NOTE: some builds prepend extra columns after time+TIN (e.g. "7,65526,27,23") before the 32x20 values.
+    // We detect by scanning for the first offset where the next W*H values look like mutual refs/deltas.
+    const need = W * H;
+
+    function _scoreMutualAt(offset) {
+      // sample a few points to decide whether this offset is likely the start of mutual data
+      const samples = [];
+      const total = dataCols.length;
+      if (offset + need > total) return -1;
+
+      // sample corners and some midpoints
+      const idxs = [
+        0,
+        H - 1,
+        (Math.floor(W / 2) * H + Math.floor(H / 2)),
+        (W - 1) * H,
+        (W - 1) * H + (H - 1),
+      ];
+
+      for (const i of idxs) {
+        const v = parseSignedInt16(dataCols[offset + i]);
+        if (!Number.isFinite(v)) return -1;
+        samples.push(v);
+      }
+
+      // for refs typical 5000-8000; for deltas typical small or negative presented as 655xx in uint16
+      // just ensure values are not tiny "frame-like" small integers for most samples.
+      let ok = 0;
+      for (const v of samples) {
+        if (Math.abs(v) >= 200 || v >= 1000) ok++;
+      }
+      return ok; // 0..samples.length
+    }
+
+    // base is after time + TIN
+    let start = base;
+    let bestScore = -1;
+    // try a small window of possible extra header columns (0..12)
+    for (let off = base; off <= base + 12; off++) {
+      const score = _scoreMutualAt(off);
+      if (score > bestScore) {
+        bestScore = score;
+        start = off;
+      }
+      if (score >= 4) break; // confident enough
+    }
+
+    const remaining = Math.max(0, dataCols.length - start);
+    if (remaining < need) {
+      return null;
+    }
+
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const idx = start + (x * H + y); // X-major, Y minor, matches X0Y0..X0Y19,X1Y0...
+        const v = parseSignedInt16(dataCols[idx] || '0');
+        matrix[y][x] = Number.isFinite(v) ? v : 0;
+      }
+    }
+
+    return { kind: 'mutual', matrix, timeStr, frameStr };
+  }
+
+  function _drawBarH(area, values, count, minV, maxV, label) {
+    const cellW = area.w / count;
+    for (let i = 0; i < count; i++) {
+      const v = values[i] ?? 0;
+      ctx.fillStyle = colorFor(v, minV, maxV);
+      ctx.fillRect(area.x + i * cellW, area.y, cellW, area.h);
+    }
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.font = '12px sans-serif';
+    ctx.fillText(label, area.x, area.y + area.h + 14);
+  }
+
+  function _drawBarV(area, values, count, minV, maxV, label) {
+    const cellH = area.h / count;
+    for (let i = 0; i < count; i++) {
+      const v = values[i] ?? 0;
+      ctx.fillStyle = colorFor(v, minV, maxV);
+      ctx.fillRect(area.x, area.y + i * cellH, area.w, cellH);
+    }
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.font = '12px sans-serif';
+    ctx.translate(area.x + 4, area.y - 6);
+    ctx.fillText(label, 0, 0);
+    ctx.restore();
+  }
+
+  function drawSelfCapThreeLines(selfData) {
+    // selfData: { SCT:{xVals,yVals,available}, SCH:{...}, SCP:{...}, timeStr }
+    // Layout: X shown as 3 full-length horizontal strips (top/mid/bottom). Y shown as 3 full-length vertical strips (left/mid/right).
+    const pad = 12;
+    const gap = 6;
+    const gridW = canvas.width - pad * 2;
+    const gridH = canvas.height - pad * 2;
+
+    // bar thickness
+    const xBarH = 18;
+    const yBarW = 18;
+
+    // positions
+    const xTop = { x: pad + yBarW + gap, y: pad, w: gridW - yBarW - gap, h: xBarH };
+    const xMid = { x: pad + yBarW + gap, y: pad + (gridH - xBarH) / 2, w: gridW - yBarW - gap, h: xBarH };
+    const xBot = { x: pad + yBarW + gap, y: pad + gridH - xBarH, w: gridW - yBarW - gap, h: xBarH };
+
+    const yLeft = { x: pad, y: pad + xBarH + gap, w: yBarW, h: gridH - xBarH - gap };
+    const yMid = { x: pad + (gridW - yBarW) / 2, y: pad + xBarH + gap, w: yBarW, h: gridH - xBarH - gap };
+    const yRight = { x: pad + gridW - yBarW, y: pad + xBarH + gap, w: yBarW, h: gridH - xBarH - gap };
+
+    let minV = Infinity, maxV = -Infinity;
+    for (const k of ['SCT','SCH','SCP']) {
+      const d = selfData[k];
+      if (!d || !d.available) continue;
+      for (const v of d.xVals) { if (v < minV) minV = v; if (v > maxV) maxV = v; }
+      for (const v of d.yVals) { if (v < minV) minV = v; if (v > maxV) maxV = v; }
+    }
+    if (!Number.isFinite(minV) || !Number.isFinite(maxV)) { minV = 0; maxV = 1; }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#0f1115';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    function drawGroup(areaX, areaY, key, label) {
+      const d = selfData[key];
+      if (!d || !d.available) {
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.fillRect(areaX.x, areaX.y, areaX.w, areaX.h);
+        ctx.fillRect(areaY.x, areaY.y, areaY.w, areaY.h);
+        ctx.fillStyle = 'rgba(255,255,255,0.35)';
+        ctx.font = '12px sans-serif';
+        ctx.fillText(label + ' (no data)', areaX.x, areaX.y + areaX.h + 14);
+        return;
+      }
+      _drawBarH(areaX, d.xVals, W, minV, maxV, `X(${W}) ${label}`);
+      _drawBarV(areaY, d.yVals, H, minV, maxV, `Y(${H}) ${label}`);
+    }
+
+    // X: top/mid/bot; Y: left/mid/right
+    drawGroup(xTop, yLeft, 'SCT', 'SCT');
+    drawGroup(xMid, yMid, 'SCH', 'SCH');
+    drawGroup(xBot, yRight, 'SCP', 'SCP');
+
+    legendEl.textContent = `Self-cap SCT/SCH/SCP  min=${minV}  max=${maxV}`;
+
+    // cache layout for hover
+    lastPaint = {
+      type: 'selfcap',
+      minV, maxV,
+      // areas
+      xBars: [
+        { key: 'SCT', area: xTop, label: 'X', values: (selfData.SCT && selfData.SCT.available) ? selfData.SCT.xVals : null },
+        { key: 'SCH', area: xMid, label: 'X', values: (selfData.SCH && selfData.SCH.available) ? selfData.SCH.xVals : null },
+        { key: 'SCP', area: xBot, label: 'X', values: (selfData.SCP && selfData.SCP.available) ? selfData.SCP.xVals : null },
+      ],
+      yBars: [
+        { key: 'SCT', area: yLeft, label: 'Y', values: (selfData.SCT && selfData.SCT.available) ? selfData.SCT.yVals : null },
+        { key: 'SCH', area: yMid, label: 'Y', values: (selfData.SCH && selfData.SCH.available) ? selfData.SCH.yVals : null },
+        { key: 'SCP', area: yRight, label: 'Y', values: (selfData.SCP && selfData.SCP.available) ? selfData.SCP.yVals : null },
+      ],
+    };
+
+    // Self-cap 模式不需要 Mutual Refs 范围控制
+    if (mutualRangeControls) mutualRangeControls.style.display = 'none';
+  }
+
+  function drawSelfCapBars(xVals, yVals, group) {
+    // legacy single-group view (kept for fallback)
+    const pad = 12;
+    const gridW = canvas.width - pad * 2;
+    const gridH = canvas.height - pad * 2;
+
+    const barH = Math.max(24, Math.floor(gridH * 0.12));
+    const barW = Math.max(24, Math.floor(gridW * 0.12));
+
+    const xArea = { x: pad + barW + 8, y: pad, w: gridW - barW - 8, h: barH };
+    const yArea = { x: pad, y: pad + barH + 8, w: barW, h: gridH - barH - 8 };
+
+    let minV = Infinity, maxV = -Infinity;
+    for (const v of xVals) { if (v < minV) minV = v; if (v > maxV) maxV = v; }
+    for (const v of yVals) { if (v < minV) minV = v; if (v > maxV) maxV = v; }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#0f1115';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    _drawBarH(xArea, xVals, W, minV, maxV, `X(${W}) ${group}`);
+    _drawBarV(yArea, yVals, H, minV, maxV, `Y(${H}) ${group}`);
+
+    legendEl.textContent = `Self-cap ${group}  min=${minV}  max=${maxV}`;
+  }
+
+  function _getMutualViewSettings() {
+    const cropW = Math.max(1, Math.min(W, parseInt(cropWInput.value || String(W), 10) || W));
+    const cropH = Math.max(1, Math.min(H, parseInt(cropHInput.value || String(H), 10) || H));
+    const flipX = !!flipXInput.checked;
+    const flipY = !!flipYInput.checked;
+    return { cropW, cropH, flipX, flipY };
+  }
+
+  function _applyMutualView(matrix) {
+    const { cropW, cropH, flipX, flipY } = _getMutualViewSettings();
+
+    // crop from origin (0,0)
+    let out = Array.from({ length: cropH }, (_, y) =>
+      Array.from({ length: cropW }, (_, x) => matrix[y]?.[x] ?? 0)
+    );
+
+    // flip after crop
+    if (flipX) {
+      out = out.map(row => row.slice().reverse());
+    }
+    if (flipY) {
+      out = out.slice().reverse();
+    }
+
+    return { matrix: out, cropW, cropH, flipX, flipY };
+  }
+
+  function _flatten2d(m) {
+    const out = [];
+    for (let y = 0; y < m.length; y++) {
+      const row = m[y] || [];
+      for (let x = 0; x < row.length; x++) {
+        const v = row[x];
+        if (Number.isFinite(v)) out.push(v);
+      }
+    }
+    return out;
+  }
+
+  function _quantile(sorted, q) {
+    if (!sorted.length) return 0;
+    const pos = (sorted.length - 1) * q;
+    const base = Math.floor(pos);
+    const rest = pos - base;
+    if (sorted[base + 1] === undefined) return sorted[base];
+    return sorted[base] + rest * (sorted[base + 1] - sorted[base]);
+  }
+
+  function _robustRange(values, lowQ, highQ) {
+    const v = values.slice().sort((a, b) => a - b);
+    const lo = _quantile(v, lowQ);
+    const hi = _quantile(v, highQ);
+    // avoid degenerate
+    if (hi <= lo) return { minV: lo, maxV: lo + 1 };
+    return { minV: lo, maxV: hi };
+  }
+
+  function _getMutualRange(m, kind) {
+    // kind: 'd' deltas (adaptive), 'r' refs (fixed 5000..7000), 's' signals (adaptive)
+    if (kind === 'r') {
+      // Mutual Refs：允许用户在底部输入 min/max，默认 4500..6000。
+      let minV = 4500;
+      let maxV = 6000;
+      if (mutualRangeMinRefsInput && mutualRangeMaxRefsInput) {
+        const userMin = parseFloat(mutualRangeMinRefsInput.value);
+        const userMax = parseFloat(mutualRangeMaxRefsInput.value);
+        if (Number.isFinite(userMin)) minV = userMin;
+        if (Number.isFinite(userMax)) maxV = userMax;
+        if (maxV <= minV) {
+          maxV = minV + 1;
+        }
+      }
+      return { minV, maxV, mode: 'fixedRefs' };
+    }
+
+    const flat = _flatten2d(m);
+    if (!flat.length) return { minV: 0, maxV: 1, mode: 'empty' };
+
+    // Adaptive: use robust quantiles to avoid outliers, then slightly pad.
+    const { minV, maxV } = _robustRange(flat, 0.05, 0.95);
+    const pad = Math.max(1, (maxV - minV) * 0.04);
+    return { minV: minV - pad, maxV: maxV + pad, mode: 'adaptive(p05..p95)' };
+  }
+
+  function drawMatrix(matrix) {
+    const pad = 12;
+    const view = _applyMutualView(matrix);
+    const m = view.matrix;
+    const viewW = view.cropW;
+    const viewH = view.cropH;
+
+    const axisPad = 22;
+    const availW = canvas.width - pad * 2 - axisPad;
+    const availH = canvas.height - pad * 2 - axisPad;
+
+    // square cells
+    const cellSize = Math.floor(Math.min(availW / viewW, availH / viewH));
+    const gridW = cellSize * viewW;
+    const gridH = cellSize * viewH;
+
+    // center grid
+    const offsetX = pad + axisPad + Math.floor((availW - gridW) / 2);
+    const offsetY = pad + axisPad + Math.floor((availH - gridH) / 2);
+
+    const cellW = cellSize;
+    const cellH = cellSize;
+
+    const kind = (document.getElementById('kind') && document.getElementById('kind').value) ? document.getElementById('kind').value : 'd';
+    const range = _getMutualRange(m, kind);
+    const minV = range.minV;
+    const maxV = range.maxV;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // background (light)
+    ctx.fillStyle = 'rgba(255,255,255,0.30)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // cells
+    const gamma = (kind === 'r') ? 0.80 : 0.65;
+    const softClip = (kind === 'r') ? 0.03 : 0.06;
+
+    for (let y = 0; y < viewH; y++) {
+      for (let x = 0; x < viewW; x++) {
+        const v = m[y][x];
+        ctx.fillStyle = colorFor(v, minV, maxV, { gamma, softClip });
+        ctx.fillRect(offsetX + x * cellW, offsetY + y * cellH, cellW, cellH);
+      }
+    }
+
+    // grid lines (light)
+    ctx.strokeStyle = 'rgba(15, 23, 42, 0.12)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= viewW; x++) {
+      const xx = offsetX + x * cellW;
+      ctx.beginPath();
+      ctx.moveTo(xx, offsetY);
+      ctx.lineTo(xx, offsetY + gridH);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= viewH; y++) {
+      const yy = offsetY + y * cellH;
+      ctx.beginPath();
+      ctx.moveTo(offsetX, yy);
+      ctx.lineTo(offsetX + gridW, yy);
+      ctx.stroke();
+    }
+
+    // axis / origin note
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.65)';
+    ctx.font = '12px sans-serif';
+    ctx.fillText('origin (0,0) at top-left; X→ right; Y↓ down', pad, 16);
+
+    // axis ticks (cell indices)
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.55)';
+    ctx.font = '11px sans-serif';
+
+    // X axis labels along top
+    for (let x = 0; x < viewW; x++) {
+      if (viewW > 16 && x % 2 === 1) continue;
+      const xx = offsetX + x * cellW + 2;
+      ctx.fillText(String(x), xx, offsetY - 6);
+    }
+
+    // Y axis labels along left
+    for (let y = 0; y < viewH; y++) {
+      if (viewH > 16 && y % 2 === 1) continue;
+      const yy = offsetY + y * cellH + 12;
+      ctx.fillText(String(y), offsetX - 18, yy);
+    }
+
+    // range.mode: 对 Refs 显示真实固定区间
+    let rangeLabel = range.mode;
+    if (kind === 'r') {
+      rangeLabel = `fixed(${minV.toFixed(0)}..${maxV.toFixed(0)})`;
+    }
+    legendEl.textContent = `min=${minV.toFixed(2)}  max=${maxV.toFixed(2)}  range=${rangeLabel}  view=${viewW}x${viewH}  flipX=${view.flipX ? 1 : 0}  flipY=${view.flipY ? 1 : 0}`;
+
+    // cache layout for hover (note: m is after crop+flip, coordinates are in view space)
+    lastPaint = {
+      type: 'mutual',
+      offsetX, offsetY,
+      cellW, cellH,
+      viewW, viewH,
+      gridW, gridH,
+      minV, maxV,
+      matrix: m,
+    };
+    lastMutualMatrix = matrix;
+  }
+
+  function _hideHoverTip() {
+    if (!hoverTipEl) return;
+    hoverTipEl.style.display = 'none';
+    lastHoverKey = '';
+  }
+
+  function _showHoverTip(text, clientX, clientY, key) {
+    if (!hoverTipEl) return;
+    if (key && key === lastHoverKey) {
+      // still update position for smooth following
+      hoverTipEl.style.left = clientX + 'px';
+      hoverTipEl.style.top = clientY + 'px';
+      return;
+    }
+    lastHoverKey = key || '';
+    hoverTipEl.textContent = text || '';
+    hoverTipEl.style.left = clientX + 'px';
+    hoverTipEl.style.top = clientY + 'px';
+    hoverTipEl.style.display = 'block';
+  }
+
+  function _hitTestMutual(px, py) {
+    if (!lastPaint || lastPaint.type !== 'mutual') return null;
+    const { offsetX, offsetY, cellW, cellH, viewW, viewH, matrix } = lastPaint;
+    const x = Math.floor((px - offsetX) / cellW);
+    const y = Math.floor((py - offsetY) / cellH);
+    if (x < 0 || y < 0 || x >= viewW || y >= viewH) return null;
+    const v = (matrix && matrix[y]) ? matrix[y][x] : undefined;
+    return { x, y, v };
+  }
+
+  function _hitTestBarH(area, count, px, py) {
+    if (!area) return null;
+    if (px < area.x || px >= area.x + area.w || py < area.y || py >= area.y + area.h) return null;
+    const idx = Math.floor((px - area.x) / (area.w / count));
+    return clamp(idx, 0, count - 1);
+  }
+
+  function _hitTestBarV(area, count, px, py) {
+    if (!area) return null;
+    if (px < area.x || px >= area.x + area.w || py < area.y || py >= area.y + area.h) return null;
+    const idx = Math.floor((py - area.y) / (area.h / count));
+    return clamp(idx, 0, count - 1);
+  }
+
+  function _hitTestSelfCap(px, py) {
+    if (!lastPaint || lastPaint.type !== 'selfcap') return null;
+    // priority: X bars then Y bars
+    for (const bar of (lastPaint.xBars || [])) {
+      if (!bar.values) continue;
+      const idx = _hitTestBarH(bar.area, W, px, py);
+      if (idx !== null) return { axis: 'X', group: bar.key, idx, v: bar.values[idx] };
+    }
+    for (const bar of (lastPaint.yBars || [])) {
+      if (!bar.values) continue;
+      const idx = _hitTestBarV(bar.area, H, px, py);
+      if (idx !== null) return { axis: 'Y', group: bar.key, idx, v: bar.values[idx] };
+    }
+    return null;
+  }
+
+  canvas.addEventListener('mouseleave', _hideHoverTip);
+  canvas.addEventListener('mousemove', (ev) => {
+    if (!lastPaint || lastPaint.type === 'none') { _hideHoverTip(); return; }
+    const r = canvas.getBoundingClientRect();
+    const px = (ev.clientX - r.left) * (canvas.width / r.width);
+    const py = (ev.clientY - r.top) * (canvas.height / r.height);
+
+    if (lastPaint.type === 'mutual') {
+      const hit = _hitTestMutual(px, py);
+      if (!hit) { _hideHoverTip(); return; }
+      const text = `Mutual  x=${hit.x}  y=${hit.y}  v=${hit.v}`;
+      const key = `m:${hit.x},${hit.y}:${hit.v}`;
+      _showHoverTip(text, ev.clientX, ev.clientY, key);
+      return;
+    }
+
+    if (lastPaint.type === 'selfcap') {
+      const hit = _hitTestSelfCap(px, py);
+      if (!hit) { _hideHoverTip(); return; }
+      const text = `Self-cap ${hit.group}  ${hit.axis}${hit.idx}  v=${hit.v}`;
+      const key = `s:${hit.group}:${hit.axis}${hit.idx}:${hit.v}`;
+      _showHoverTip(text, ev.clientX, ev.clientY, key);
+      return;
+    }
+
+    _hideHoverTip();
+  });
+
+  function _updateMutualRangeControlsVisibility() {
+    if (!mutualRangeControls) return;
+    const modeSel = document.getElementById('mode');
+    const kindSel = document.getElementById('kind');
+    const modeVal = modeSel ? modeSel.value : 'm';
+    const kindVal = kindSel ? kindSel.value : 'd';
+    if (modeVal === 'm' && kindVal === 'r') {
+      mutualRangeControls.style.display = 'flex';
+    } else {
+      mutualRangeControls.style.display = 'none';
+    }
+  }
+
+  // 当模式/类型切换时，更新 Refs 范围控制可见性，并根据 lastMutualMatrix 重新绘制
+  const modeSelEl = document.getElementById('mode');
+  const kindSelEl = document.getElementById('kind');
+  if (modeSelEl) {
+    modeSelEl.addEventListener('change', () => {
+      _updateMutualRangeControlsVisibility();
+      if (lastMutualMatrix) drawMatrix(lastMutualMatrix);
+    });
+  }
+  if (kindSelEl) {
+    kindSelEl.addEventListener('change', () => {
+      _updateMutualRangeControlsVisibility();
+      if (lastMutualMatrix) drawMatrix(lastMutualMatrix);
+    });
+  }
+
+  if (mutualRangeMinRefsInput) {
+    mutualRangeMinRefsInput.addEventListener('change', () => {
+      if (lastMutualMatrix) drawMatrix(lastMutualMatrix);
+    });
+  }
+  if (mutualRangeMaxRefsInput) {
+    mutualRangeMaxRefsInput.addEventListener('change', () => {
+      if (lastMutualMatrix) drawMatrix(lastMutualMatrix);
+    });
+  }
+
+  async function captureOnce() {
+    const body = {
+      mode: document.getElementById('mode').value,
+      kind: document.getElementById('kind').value,
+      instance: parseInt(document.getElementById('instance').value || '0', 10),
+      frames: parseInt(document.getElementById('frames').value || '1', 10),
+      format: parseInt(document.getElementById('format').value || '0', 10),
+    };
+
+    setStatus('正在采集…');
+    const r = await fetch('/api/diag/capture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.success) {
+      setStatus('采集失败: ' + (data.error || '未知错误') + (data.stderr ? ('\n' + data.stderr) : ''), true);
+      return;
+    }
+    // Also append to history (with raw)
+    try {
+      const parsed = parseLatestCsv(data.content || '');
+      const ts = data.ts || 0;
+      const updated = ts && ts !== lastTs;
+      lastTs = ts || lastTs;
+
+      const lines = (data.content || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      let lastLine = '';
+      for (let i = lines.length - 1; i >= 0; i--) {
+        const cols = lines[i].split(',');
+        if (_isDataRow(cols)) { lastLine = lines[i]; break; }
+      }
+      if (!lastLine) lastLine = lines.slice(-1)[0] || '';
+
+      const colsCount = (lastLine || '').split(',').length;
+      const preview = (() => {
+        const cols = (lastLine || '').split(',');
+        if (cols.length <= 14) return lastLine;
+        return cols.slice(0, 8).join(',') + ',..., ' + cols.slice(-6).join(',');
+      })();
+
+      if (!parsed) {
+        pushHistory({ at: nowStr(), ok: true, updated, url: '/api/diag/capture', ts, ms: 0, note: 'once parse_failed cols=' + colsCount, raw: preview + '\n\n' + lastLine });
+      } else if (parsed.kind === 'selfcap') {
+        const group = parsed.group || (selfGroupSel ? selfGroupSel.value : 'SCT');
+        pushHistory({ at: nowStr(), ok: true, updated, url: '/api/diag/capture', ts, ms: 0, note: `once selfcap(${group}) time=${parsed.timeStr} cols=${colsCount}`, raw: preview + '\n\n' + lastLine });
+      } else {
+        const flat0 = parsed.matrix[0] && parsed.matrix[0][0];
+        const flat1 = parsed.matrix[H-1] && parsed.matrix[H-1][W-1];
+        pushHistory({ at: nowStr(), ok: true, updated, url: '/api/diag/capture', ts, ms: 0, note: `once mutual time=${parsed.timeStr} frame=${parsed.frameStr} v00=${flat0} vEnd=${flat1} cols=${colsCount}`, raw: preview + '\n\n' + lastLine });
+      }
+    } catch (e) {
+      // ignore history errors
+    }
+
+    renderFromContent(data.content, data.ts);
+  }
+
+  function renderFromContent(content, ts) {
+    const parsed = parseLatestCsv(content);
+    if (!parsed) {
+      setStatus('未获取到可解析的 CSV 内容', true);
+      return;
+    }
+
+    if (parsed.kind === 'selfcap') {
+      selfGroupWrap.style.display = 'block';
+      // Build 3-line data; if we only have one group, fill the selected group and grey others.
+      const group = parsed.group || (selfGroupSel ? selfGroupSel.value : 'SCT');
+      const selfData = {
+        SCT: { available: group === 'SCT', xVals: group === 'SCT' ? parsed.xVals : new Array(W).fill(0), yVals: group === 'SCT' ? parsed.yVals : new Array(H).fill(0) },
+        SCH: { available: group === 'SCH', xVals: group === 'SCH' ? parsed.xVals : new Array(W).fill(0), yVals: group === 'SCH' ? parsed.yVals : new Array(H).fill(0) },
+        SCP: { available: group === 'SCP', xVals: group === 'SCP' ? parsed.xVals : new Array(W).fill(0), yVals: group === 'SCP' ? parsed.yVals : new Array(H).fill(0) },
+      };
+      setStatus(`Self-cap  time=${parsed.timeStr}  ts=${ts || ''}`);
+      drawSelfCapThreeLines(selfData);
+      return;
+    }
+
+    selfGroupWrap.style.display = 'none';
+    setStatus(`Mutual  time=${parsed.timeStr}  frame=${parsed.frameStr}  ts=${ts || ''}`);
+    // Mutual 模式下，根据 kind 决定是否显示 Refs 色标范围控制
+    if (mutualRangeControls) {
+      const kindSel = document.getElementById('kind');
+      const modeSel = document.getElementById('mode');
+      const modeVal = modeSel ? modeSel.value : 'm';
+      const kindVal = kindSel ? kindSel.value : 'd';
+      if (modeVal === 'm' && kindVal === 'r') {
+        mutualRangeControls.style.display = 'flex';
+      } else {
+        mutualRangeControls.style.display = 'none';
+      }
+    }
+    drawMatrix(parsed.matrix);
+  }
+
+  function nowStr() {
+    const d = new Date();
+    return d.toISOString().replace('T', ' ').replace('Z', '');
+  }
+
+  async function pollLatest() {
+    const started = performance.now();
+    const url = '/api/diag/latest?nocache=' + Date.now();
+
+    try {
+      const r = await fetch(url, { cache: 'no-store' });
+      const data = await r.json().catch(() => ({}));
+      const ms = Math.round(performance.now() - started);
+
+      if (!r.ok || !data.success) {
+        pushHistory({ at: nowStr(), ok: false, updated: false, url, ts: data.ts || 0, ms, note: data.error || 'http ' + r.status });
+        setStatus('读取 latest 失败', true);
+        return;
+      }
+
+      const ts = data.ts || 0;
+      const updated = ts && ts !== lastTs;
+      lastTs = ts || lastTs;
+
+      if (!data.content) {
+        pushHistory({ at: nowStr(), ok: true, updated, url, ts, ms, note: 'empty' });
+        setStatus('latest 为空（请先采集一次）');
+        return;
+      }
+
+      pushHistory({ at: nowStr(), ok: true, updated, url, ts, ms, note: '' });
+      // Always try render (content may change without ts in some cases)
+      renderFromContent(data.content, ts);
+    } catch (e) {
+      const ms = Math.round(performance.now() - started);
+      pushHistory({ at: nowStr(), ok: false, updated: false, url, ts: 0, ms, note: e.message });
+      setStatus('读取 latest 异常: ' + e.message, true);
+    }
+  }
+
+  document.getElementById('btnCapture').addEventListener('click', captureOnce);
+
+  async function captureAndRenderOnce(source) {
+    const started = performance.now();
+    const url = '/api/diag/capture';
+    const body = {
+      mode: document.getElementById('mode').value,
+      kind: document.getElementById('kind').value,
+      instance: parseInt(document.getElementById('instance').value || '0', 10),
+      frames: parseInt(document.getElementById('frames').value || '1', 10),
+      format: parseInt(document.getElementById('format').value || '0', 10),
+    };
+
+    try {
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        cache: 'no-store'
+      });
+      const data = await r.json().catch(() => ({}));
+      const ms = Math.round(performance.now() - started);
+
+      if (!r.ok || !data.success) {
+        pushHistory({ at: nowStr(), ok: false, updated: false, url, ts: data.ts || 0, ms, note: (source || '') + ' ' + (data.error || 'http ' + r.status) });
+        setStatus('采集失败: ' + (data.error || '未知错误'), true);
+        return;
+      }
+
+      const ts = data.ts || 0;
+      const updated = ts && ts !== lastTs;
+      lastTs = ts || lastTs;
+
+      const parsed = parseLatestCsv(data.content || '');
+      if (!parsed) {
+        const rawLine = (data.content || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean).slice(-3).join('\n');
+        pushHistory({ at: nowStr(), ok: true, updated, url, ts, ms, note: (source || '') + ' parse_failed', raw: rawLine });
+        setStatus('采集成功但解析失败（content 不是CSV数据行）', true);
+        return;
+      }
+
+      function extractLastDataLine(text) {
+        const lines = (text || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+        for (let i = lines.length - 1; i >= 0; i--) {
+          const cols = lines[i].split(',');
+          if (_isDataRow(cols)) return lines[i];
+        }
+        return lines.slice(-1)[0] || '';
+      }
+
+      function rawPreviewFromLine(line) {
+        const cols = (line || '').split(',');
+        if (cols.length <= 14) return line;
+        const head = cols.slice(0, 8).join(',');
+        const tail = cols.slice(-6).join(',');
+        return head + ',..., ' + tail;
+      }
+
+      if (parsed.kind === 'selfcap') {
+        selfGroupWrap.style.display = 'block';
+
+        const group = parsed.group || (selfGroupSel ? selfGroupSel.value : 'SCT');
+        const selfData = {
+          SCT: { available: group === 'SCT', xVals: group === 'SCT' ? parsed.xVals : new Array(W).fill(0), yVals: group === 'SCT' ? parsed.yVals : new Array(H).fill(0) },
+          SCH: { available: group === 'SCH', xVals: group === 'SCH' ? parsed.xVals : new Array(W).fill(0), yVals: group === 'SCH' ? parsed.yVals : new Array(H).fill(0) },
+          SCP: { available: group === 'SCP', xVals: group === 'SCP' ? parsed.xVals : new Array(W).fill(0), yVals: group === 'SCP' ? parsed.yVals : new Array(H).fill(0) },
+        };
+
+        const lastLine = extractLastDataLine(data.content || '');
+        pushHistory({
+          at: nowStr(),
+          ok: true,
+          updated,
+          url,
+          ts,
+          ms,
+          note: (source || '') + ` selfcap(${group}) time=${parsed.timeStr} vX0=${parsed.xVals[0]} vY0=${parsed.yVals[0]} cols=${(lastLine || '').split(',').length}`,
+          raw: rawPreviewFromLine(lastLine) + '\n\n' + lastLine,
+        });
+
+        setStatus(`Self-cap  time=${parsed.timeStr}  ts=${ts}`);
+        drawSelfCapThreeLines(selfData);
+        return;
+      }
+
+      selfGroupWrap.style.display = 'none';
+
+      // Mutual matrix summary + raw
+      const flat0 = parsed.matrix[0] && parsed.matrix[0][0];
+      const flat1 = parsed.matrix[H-1] && parsed.matrix[H-1][W-1];
+
+      const lastLine = extractLastDataLine(data.content || '');
+      pushHistory({
+        at: nowStr(),
+        ok: true,
+        updated,
+        url,
+        ts,
+        ms,
+        note: (source || '') + ` mutual time=${parsed.timeStr} frame=${parsed.frameStr} v00=${flat0} vEnd=${flat1} cols=${(lastLine || '').split(',').length}`,
+        raw: rawPreviewFromLine(lastLine) + '\n\n' + lastLine,
+      });
+
+      setStatus(`Mutual  time=${parsed.timeStr}  frame=${parsed.frameStr}  ts=${ts}`);
+      // Mutual 模式下，根据 kind 决定是否显示 Refs 色标范围控制
+      if (mutualRangeControls) {
+        const kindSel = document.getElementById('kind');
+        const modeSel = document.getElementById('mode');
+        const modeVal = modeSel ? modeSel.value : 'm';
+        const kindVal = kindSel ? kindSel.value : 'd';
+        if (modeVal === 'm' && kindVal === 'r') {
+          mutualRangeControls.style.display = 'flex';
+        } else {
+          mutualRangeControls.style.display = 'none';
+        }
+      }
+      drawMatrix(parsed.matrix);
+    } catch (e) {
+      const ms = Math.round(performance.now() - started);
+      pushHistory({ at: nowStr(), ok: false, updated: false, url, ts: 0, ms, note: (source || '') + ' ' + e.message });
+      setStatus('采集异常: ' + e.message, true);
+    }
+  }
+
+  document.getElementById('btnAuto').addEventListener('click', async () => {
+    const btn = document.getElementById('btnAuto');
+    if (timer) {
+      clearInterval(timer);
+      timer = null;
+      btn.textContent = '开始轮询';
+      return;
+    }
+    const ms = Math.max(50, parseInt(document.getElementById('pollMs').value || '200', 10));
+    btn.textContent = '停止轮询';
+    await captureAndRenderOnce('auto');
+    timer = setInterval(() => captureAndRenderOnce('auto'), ms);
+  });
+
+  // Initial render from bundled example? none.
+</script>
+</body>
+</html>

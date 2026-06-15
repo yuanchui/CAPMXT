@@ -34,6 +34,10 @@ uint8_t MXT_FindI2CAddress(void)
     }
     
     /* 检查 Bootloader 模式地址 */
+    if (MXT_I2C_Probe(MXT_I2C_ADDR_BL_MXT640) == 0) {
+        g_mxt_i2c_addr = MXT_I2C_ADDR_BL_MXT640;
+        return MXT_I2C_ADDR_BL_MXT640;
+    }
     if (MXT_I2C_Probe(MXT_I2C_ADDR_BL_HIGH) == 0) {
         g_mxt_i2c_addr = MXT_I2C_ADDR_BL_HIGH;
         return MXT_I2C_ADDR_BL_HIGH;

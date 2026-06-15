@@ -1,0 +1,3 @@
+# See repo root .gitignore for build artifact rules (node_modules, dist, release).
+
+/build/dev-signing.pfx

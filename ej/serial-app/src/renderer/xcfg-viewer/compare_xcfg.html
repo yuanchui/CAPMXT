@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>xcfg 配置比对</title>
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --surface: rgba(255, 255, 255, 0.92);
+      --surface-soft: rgba(255, 255, 255, 0.78);
+      --border: rgba(15, 23, 42, 0.12);
+      --text: rgba(15, 23, 42, 0.92);
+      --text-muted: rgba(15, 23, 42, 0.55);
+      --accent: #2f7cf6;
+      --accent-soft: rgba(47, 124, 246, 0.06);
+      --accent-hover: #1f6fe8;
+      --error: #ef4444;
+      --shadow: 0 14px 34px rgba(15, 23, 42, 0.12);
+      --shadow-sm: 0 8px 18px rgba(15, 23, 42, 0.10);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(1200px 700px at 18% 8%, rgba(47, 124, 246, 0.18), rgba(47, 124, 246, 0) 60%),
+                  radial-gradient(900px 600px at 82% 0%, rgba(147, 197, 253, 0.28), rgba(147, 197, 253, 0) 55%),
+                  var(--bg);
+      color: var(--text);
+    }
+    .shell {
+      width: 100%;
+      max-width: none; /* 宽度随窗口自适应 */
+      margin: 0 auto;
+    }
+    .header-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+    }
+    .header-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .back-link {
+      font-size: 13px;
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .back-link:hover { text-decoration: underline; }
+    .status {
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      max-width: 360px;
+      word-break: break-word;
+    }
+    .status.error { border-color: rgba(239,68,68,0.28); color: rgba(185,28,28,0.98); }
+    .status.ok { border-color: rgba(34,197,94,0.28); color: rgba(21,128,61,0.98); }
+
+    .card {
+      border-radius: var(--radius);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 12px 12px 10px;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .card-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .file-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    input[type="file"] { display: none; }
+    .file-label {
+      padding: 7px 18px;
+      border-radius: 999px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 210px; /* 无论是否已选择文件，都保持按钮较长 */
+      justify-content: center;
+      box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      transition: box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease, transform 0.12s ease;
+    }
+    .file-label span.tag {
+      font-size: 11px;
+      padding: 1px 7px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+    .file-label:hover {
+      border-color: rgba(47, 124, 246, 0.3);
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+      background: rgba(255,255,255,0.98);
+    }
+    .file-label:active { transform: translateY(1px); }
+    .file-name {
+      font-size: 12px;
+      color: var(--text-muted);
+      max-width: 220px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .hint {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .layout {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      align-items: stretch;
+      min-height: 260px;
+    }
+
+    .table-card {
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.96);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      max-height: calc(100vh - 150px);
+    }
+    .table-card-left {
+      flex: 0 0 800px; /* 默认左侧更宽，方便查看对象列表 */
+      min-width: 220px;
+      max-width: 60%;
+    }
+    .table-card-right {
+      flex: 1 1 auto;
+      min-width: 260px;
+    }
+    .table-header {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .table-header strong { color: var(--text); }
+    .table-scroll {
+      overflow: auto;
+      flex: 1;
+      min-height: 120px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th, td {
+      padding: 4px 8px;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border); /* 垂直分隔线 */
+      white-space: nowrap;
+    }
+    th:first-child,
+    td:first-child {
+      border-left: 1px solid var(--border);
+    }
+    th {
+      background: rgba(15,23,42,0.035);
+      font-weight: 600;
+      color: var(--text-muted);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    tr:hover td {
+      background: rgba(47,124,246,0.04);
+    }
+    .obj-row {
+      cursor: pointer;
+    }
+    .obj-row.selected td {
+      background: rgba(47,124,246,0.14);
+    }
+    .diff-row td {
+      background: rgba(239,68,68,0.035);
+    }
+    .diff {
+      color: #b91c1c;
+      font-weight: 600;
+    }
+    .only {
+      color: #7c3aed;
+      font-weight: 600;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 6px;
+      border-radius: 999px;
+      font-size: 11px;
+      border: 1px solid rgba(148,163,184,0.4);
+      color: var(--text-muted);
+      background: rgba(248,250,252,0.8);
+    }
+    .name-diff {
+      color: #92400e;
+      background: rgba(245,158,11,0.08);
+      font-weight: 500;
+    }
+    /* 高低位合并后认为等价的“伪差异”行（青色提示） */
+    .pseudo-row td {
+      background: rgba(34,211,238,0.10);
+    }
+    .pseudo-equal {
+      color: #0e7490;
+      font-weight: 600;
+    }
+    .split-handle {
+      flex: 0 0 6px;
+      cursor: col-resize;
+      background: rgba(148,163,184,0.6);
+      border-radius: 999px;
+      align-self: stretch;
+      margin: 0 1px;
+      position: relative;
+    }
+    .split-handle::before {
+      content: '';
+      position: absolute;
+      inset: 20% 1px 20% 1px;
+      border-radius: 999px;
+      background: rgba(226,232,240,0.9);
+    }
+    .split-handle.dragging {
+      background: rgba(59,130,246,0.9);
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="header-row">
+      <div>
+        <h1>xcfg 配置比对</h1>
+      </div>
+      <div style="text-align:right;">
+        <div id="globalStatus" class="status">请选择配置 1 / 配置 2 的 xcfg 文件进行比对。</div>
+        <a href="/" class="back-link">返回 xcfg 配置查看器首页</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">选择要比对的 xcfg 配置</div>
+      </div>
+      <div class="file-row">
+        <label class="file-label">
+          <input type="file" id="fileA" accept=".xcfg,.cfg">
+          <span class="tag">配置 1</span>
+          <span>选择 .xcfg</span>
+        </label>
+        <span id="fileAName" class="file-name"></span>
+      </div>
+      <div class="file-row">
+        <label class="file-label">
+          <input type="file" id="fileB" accept=".xcfg,.cfg">
+          <span class="tag">配置 2</span>
+          <span>选择 .xcfg</span>
+        </label>
+        <span id="fileBName" class="file-name"></span>
+      </div>
+
+   
+        主参考：
+        <label style="margin-right:8px;">
+          <input type="radio" name="mainSide" value="0" checked> 无
+        </label>
+        <label style="margin-right:8px;">
+          <input type="radio" name="mainSide" value="1"> 配置 1
+        </label>
+        <label>
+          <input type="radio" name="mainSide" value="2"> 配置 2
+        </label>
+
+    </div>
+
+    <div class="layout" style="margin-top:12px;">
+      <div class="table-card table-card-left" id="cardLeft">
+        <div class="table-header">
+          <span><strong>对象概览</strong> <span id="summaryObjects" class="pill">未加载</span></span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th rowspan="2">对象</th>
+                <th id="thObjGroupA" colspan="2">配置1</th>
+                <th id="thObjGroupB" colspan="2">配置2</th>
+                <th rowspan="2">异量</th>
+                <th rowspan="2">差异</th>
+              </tr>
+              <tr>
+                <th>ADD</th>
+                <th>S</th>
+                <th>ADD</th>
+                <th>S</th>
+              </tr>
+            </thead>
+            <tbody id="objTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="split-handle" id="splitHandle"></div>
+
+      <div class="table-card table-card-right" id="cardRight">
+        <div class="table-header">
+          <span><strong id="fieldTitle">寄存器详情</strong> <span id="summaryFields" class="pill">请选择对象</span></span>
+                </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>序号</th>
+                <th id="thFALen">配置 1：长度</th>
+                <th id="thFAName">配置 1：名称</th>
+                <th id="thFAVal">配置 1：设置值</th>
+                <th id="thFBLen">配置 2：长度</th>
+                <th id="thFBName">配置 2：名称</th>
+                <th id="thFBVal">配置 2：设置值</th>
+              </tr>
+            </thead>
+            <tbody id="fieldTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/xcfg-viewer/electron-bridge.js"></script>
+  <script>
+    function setGlobalStatus(msg, ok) {
+      const el = document.getElementById('globalStatus');
+      if (!el) return;
+      el.textContent = msg || '';
+      el.classList.toggle('ok', !!ok);
+      el.classList.toggle('error', !ok && !!msg);
+    }
+
+    function objectKey(obj) {
+      let id = obj.object_id;
+      if (id == null && obj.header) {
+        const m = obj.header.match(/T(\d+)/);
+        id = m ? parseInt(m[1], 10) : 0;
+      }
+      if (id == null) id = 0;
+      return id + '-' + (obj.instance != null ? obj.instance : 0);
+    }
+
+    function parseObjectDisplayName(obj) {
+      if (!obj) return '';
+      if (obj.header) return obj.header;
+      const id = obj.object_id != null ? obj.object_id : 0;
+      const inst = obj.instance != null ? obj.instance : 0;
+      return 'T' + id + ' INSTANCE ' + inst;
+    }
+
+    function buildObjectMap(cfg) {
+      const map = {};
+      if (!cfg || !cfg.objects) return map;
+      cfg.objects.forEach(o => { map[objectKey(o)] = o; });
+      return map;
+    }
+
+    let cfgA = null;
+    let cfgB = null;
+    let mapA = null;
+    let mapB = null;
+    let selectedKey = null;
+    // 主参考侧：0=无；1=配置1；2=配置2
+    let mainSide = 0;
+
+    // 识别某一侧是 2 字节寄存器，另一侧拆成两个 1 字节（低位 / 高位）且数值完全一致的情况。
+    // 返回一个 map: offset -> { role: 'base' | 'extra', combinedSide: 'A' | 'B' }
+    function detectHiLoPairs(byOffA, byOffB) {
+      const result = {};
+      const allOffs = Array.from(new Set([
+        ...Object.keys(byOffA || {}).map(Number),
+        ...Object.keys(byOffB || {}).map(Number),
+      ])).sort((a, b) => a - b);
+
+      allOffs.forEach(off => {
+        // 避免重复标记
+        if (result[off] || result[off + 1]) return;
+
+        const fA1 = byOffA[off];
+        const fB1 = byOffB[off];
+        const fA2 = byOffA[off + 1];
+        const fB2 = byOffB[off + 1];
+
+        // 情形 1：A 拆成两个 1 字节，B 是一个 2 字节
+        if (fA1 && fA2 && !fB2 && fB1) {
+          const lenA1 = Number(fA1.length) || 0;
+          const lenA2 = Number(fA2.length) || 0;
+          const lenB1 = Number(fB1.length) || 0;
+          if (lenA1 === 1 && lenA2 === 1 && lenB1 === 2) {
+            const low = Number(fA1.value) || 0;
+            const high = Number(fA2.value) || 0;
+            const combined = Number(fB1.value) || 0;
+            if (combined === (high << 8) + low) {
+              result[off] = { role: 'base', combinedSide: 'B' };
+              result[off + 1] = { role: 'extra', combinedSide: 'B' };
+              return;
+            }
+          }
+        }
+
+        // 情形 2：B 拆成两个 1 字节，A 是一个 2 字节
+        if (fB1 && fB2 && !fA2 && fA1) {
+          const lenB1 = Number(fB1.length) || 0;
+          const lenB2 = Number(fB2.length) || 0;
+          const lenA1 = Number(fA1.length) || 0;
+          if (lenB1 === 1 && lenB2 === 1 && lenA1 === 2) {
+            const low = Number(fB1.value) || 0;
+            const high = Number(fB2.value) || 0;
+            const combined = Number(fA1.value) || 0;
+            if (combined === (high << 8) + low) {
+              result[off] = { role: 'base', combinedSide: 'A' };
+              result[off + 1] = { role: 'extra', combinedSide: 'A' };
+              return;
+            }
+          }
+        }
+      });
+
+      return result;
+    }
+
+    function countFieldDiff(oA, oB) {
+      if (!oA && !oB) return 0;
+      const byOffA = {};
+      const byOffB = {};
+      if (oA && oA.fields) {
+        oA.fields.forEach(f => {
+          const off = f.offset != null ? f.offset : 0;
+          byOffA[off] = f;
+        });
+      }
+      if (oB && oB.fields) {
+        oB.fields.forEach(f => {
+          const off = f.offset != null ? f.offset : 0;
+          byOffB[off] = f;
+        });
+      }
+      const offs = Array.from(new Set([
+        ...Object.keys(byOffA).map(Number),
+        ...Object.keys(byOffB).map(Number),
+      ])).sort((a, b) => a - b);
+
+      // 与 renderFields 中一致：考虑高低位合并、主参考规则等
+      const hiLoMap = detectHiLoPairs(byOffA, byOffB);
+
+      let diff = 0;
+      offs.forEach(off => {
+        const hiInfo = hiLoMap[off] || null;
+        const fA = byOffA[off] || null;
+        const fB = byOffB[off] || null;
+        const missA = !fA;
+        const missB = !fB;
+
+        const lenA = fA && fA.length != null ? fA.length : '';
+        const lenB = fB && fB.length != null ? fB.length : '';
+        const nameA = fA && fA.name != null ? fA.name : '';
+        const nameB = fB && fB.name != null ? fB.name : '';
+        const valA = fA && fA.value != null ? String(fA.value) : '';
+        const valB = fB && fB.value != null ? String(fB.value) : '';
+
+        const diffLen = !missA && !missB && String(lenA) !== String(lenB);
+        const diffVal = !missA && !missB && String(valA) !== String(valB);
+
+        // 特判 1：一侧存在、另一侧不存在，且存在侧为 1 字节且数值为 0 → 视为“高字节 0”
+        const isZeroOnlyA = !missA && missB && Number(lenA) === 1 && Number(valA) === 0;
+        const isZeroOnlyB = !missB && missA && Number(lenB) === 1 && Number(valB) === 0;
+
+        // 特判 2：两侧都存在，长度不同但数值同为 0 → 只是“长度结构不同”
+        const isZeroLenDiffBoth = !missA && !missB &&
+          diffLen &&
+          Number(valA) === 0 &&
+          Number(valB) === 0;
+
+        let rowHasDiff = (!isZeroOnlyA && !isZeroOnlyB && !isZeroLenDiffBoth) &&
+          (missA || missB || diffLen || diffVal);
+
+        // 主参考缺少而另一侧存在：视为非异常（不计入差异）
+        const mainMissingReg =
+          (mainSide === 1 && missA && !missB) ||
+          (mainSide === 2 && missB && !missA);
+
+        // 高低位合并视为等价：不算差异行
+        if (hiInfo || mainMissingReg) {
+          rowHasDiff = false;
+        }
+
+        if (rowHasDiff) diff++;
+      });
+      return diff;
+    }
+
+    function renderObjects() {
+      const tbody = document.getElementById('objTbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      mapA = buildObjectMap(cfgA);
+      mapB = buildObjectMap(cfgB);
+
+      const keys = Array.from(new Set([
+        ...Object.keys(mapA || {}),
+        ...Object.keys(mapB || {})
+      ]));
+      keys.sort((a, b) => {
+        const pa = a.split('-').map(Number);
+        const pb = b.split('-').map(Number);
+        if (pa[0] !== pb[0]) return pa[0] - pb[0];
+        return pa[1] - pb[1];
+      });
+
+      const summaryEl = document.getElementById('summaryObjects');
+      if (!keys.length) {
+        if (summaryEl) summaryEl.textContent = '未加载';
+        selectedKey = null;
+        renderFields();
+        return;
+      }
+
+      let diffObjCount = 0;
+
+      keys.forEach(key => {
+        const oA = mapA[key];
+        const oB = mapB[key];
+        const hasA = !!oA;
+        const hasB = !!oB;
+
+        const tr = document.createElement('tr');
+        tr.className = 'obj-row';
+        tr.dataset.key = key;
+
+        const name = parseObjectDisplayName(oA || oB);
+        const addrA = hasA ? String(oA.object_address) : '';
+        const sizeA = hasA ? String(oA.object_size) : '';
+        const addrB = hasB ? String(oB.object_address) : '';
+        const sizeB = hasB ? String(oB.object_size) : '';
+
+        const addrDiff = hasA && hasB && addrA !== addrB;
+        const sizeDiff = hasA && hasB && sizeA !== sizeB;
+        const regDiffRaw = countFieldDiff(oA || null, oB || null);
+
+        // 主参考缺少而另一侧存在：视为非异常
+        const mainMissingObj =
+          (mainSide === 1 && !hasA && hasB) ||
+          (mainSide === 2 && !hasB && hasA);
+
+        // 对“异量”和“差异类型”列展示的寄存器差异数，应用主参考规则
+        const regDiffDisplay = mainMissingObj ? 0 : regDiffRaw;
+
+        let diffText = '';
+        if (!hasA || !hasB) {
+          if (mainMissingObj) {
+            diffText = '主参考无此对象';
+          } else {
+            diffText = '仅 ' + (hasA ? '配置 1' : '配置 2');
+          }
+        } else {
+          const parts = [];
+          if (addrDiff) parts.push('ADDR');
+          if (sizeDiff) parts.push('SIZE');
+          if (regDiffDisplay > 0) parts.push('寄存器');
+          diffText = parts.join(' / ');
+        }
+
+        if (!mainMissingObj && (!hasA || !hasB || addrDiff || sizeDiff || regDiffDisplay > 0)) {
+          diffObjCount++;
+          tr.classList.add('diff-row');
+        }
+
+        const tdName = document.createElement('td');
+        tdName.textContent = name;
+
+        const tdAAddr = document.createElement('td');
+        const tdASize = document.createElement('td');
+        const tdBAddr = document.createElement('td');
+        const tdBSize = document.createElement('td');
+        const tdRegDiff = document.createElement('td');
+        const tdDiff = document.createElement('td');
+
+        if (hasA) {
+          tdAAddr.textContent = addrA || '-';
+          tdASize.textContent = sizeA || '-';
+          if (addrDiff) tdAAddr.classList.add('diff');
+          if (sizeDiff) tdASize.classList.add('diff');
+        } else {
+          tdAAddr.innerHTML = '<span class="only">无</span>';
+          tdASize.innerHTML = '<span class="only">无</span>';
+        }
+
+        if (hasB) {
+          tdBAddr.textContent = addrB || '-';
+          tdBSize.textContent = sizeB || '-';
+          if (addrDiff) tdBAddr.classList.add('diff');
+          if (sizeDiff) tdBSize.classList.add('diff');
+        } else {
+          tdBAddr.innerHTML = '<span class="only">无</span>';
+          tdBSize.innerHTML = '<span class="only">无</span>';
+        }
+
+        tdRegDiff.textContent = String(regDiffDisplay);
+        if (regDiffDisplay > 0) tdRegDiff.classList.add('diff');
+
+        if (!hasA || !hasB) {
+          tdDiff.innerHTML = '<span class="only">' + (hasA ? '仅配置 1' : '仅配置 2') + '</span>';
+        } else if (diffText) {
+          tdDiff.innerHTML = '<span class="diff">' + diffText + '</span>';
+        } else {
+          tdDiff.textContent = '';
+        }
+
+        tr.appendChild(tdName);
+        tr.appendChild(tdAAddr);
+        tr.appendChild(tdASize);
+        tr.appendChild(tdBAddr);
+        tr.appendChild(tdBSize);
+        tr.appendChild(tdRegDiff);
+        tr.appendChild(tdDiff);
+
+        tr.addEventListener('click', () => {
+          selectedKey = key;
+          document.querySelectorAll('.obj-row').forEach(r => {
+            r.classList.toggle('selected', r === tr);
+          });
+          renderFields();
+        });
+
+        tbody.appendChild(tr);
+      });
+
+      if (summaryEl) {
+        const cntA = cfgA && cfgA.objects ? cfgA.objects.length : 0;
+        const cntB = cfgB && cfgB.objects ? cfgB.objects.length : 0;
+        summaryEl.textContent = '配置1 对象=' + cntA + '，配置2 对象=' + cntB + '，存在差异对象=' + diffObjCount;
+      }
+
+      if (!selectedKey && keys.length) {
+        selectedKey = keys[0];
+        const first = tbody.querySelector('.obj-row');
+        if (first) first.classList.add('selected');
+        renderFields();
+      } else {
+        renderFields();
+      }
+    }
+
+    function renderFields() {
+      const tbody = document.getElementById('fieldTbody');
+      const titleEl = document.getElementById('fieldTitle');
+      const sumEl = document.getElementById('summaryFields');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      if (!selectedKey || !mapA || !mapB) {
+        if (titleEl) titleEl.textContent = '寄存器详情';
+        if (sumEl) sumEl.textContent = '请选择对象';
+        return;
+      }
+
+      const oA = mapA[selectedKey] || null;
+      const oB = mapB[selectedKey] || null;
+      const name = parseObjectDisplayName(oA || oB);
+      if (titleEl) titleEl.textContent = '寄存器详情：' + name + '（序号=OFFSET）';
+
+      const byOffA = {};
+      const byOffB = {};
+      if (oA && oA.fields) {
+        oA.fields.forEach(f => {
+          const off = f.offset != null ? f.offset : 0;
+          byOffA[off] = f;
+        });
+      }
+      if (oB && oB.fields) {
+        oB.fields.forEach(f => {
+          const off = f.offset != null ? f.offset : 0;
+          byOffB[off] = f;
+        });
+      }
+
+      const offsets = Array.from(new Set([
+        ...Object.keys(byOffA).map(Number),
+        ...Object.keys(byOffB).map(Number),
+      ])).sort((a, b) => a - b);
+
+      // 识别“1+1 字节 vs 2 字节且数值一致”的高低位配对
+      const hiLoMap = detectHiLoPairs(byOffA, byOffB);
+
+      let diffCount = 0;
+
+      offsets.forEach(off => {
+        const hiInfo = hiLoMap[off] || null;
+        const fA = byOffA[off] || null;
+        const fB = byOffB[off] || null;
+        const missA = !fA;
+        const missB = !fB;
+
+        const lenA = fA && fA.length != null ? fA.length : '';
+        const lenB = fB && fB.length != null ? fB.length : '';
+        const nameA = fA && fA.name != null ? fA.name : '';
+        const nameB = fB && fB.name != null ? fB.name : '';
+        const valA = fA && fA.value != null ? String(fA.value) : '';
+        const valB = fB && fB.value != null ? String(fB.value) : '';
+
+        const diffLen = !missA && !missB && String(lenA) !== String(lenB);
+        const diffName = !missA && !missB && String(nameA) !== String(nameB);
+        const diffVal = !missA && !missB && String(valA) !== String(valB);
+
+        // 特判 1：一侧存在、另一侧不存在，且存在侧为 1 字节且数值为 0 → 视为“高字节 0”
+        const isZeroOnlyA = !missA && missB && Number(lenA) === 1 && Number(valA) === 0;
+        const isZeroOnlyB = !missB && missA && Number(lenB) === 1 && Number(valB) === 0;
+
+        // 特判 2：两侧都存在，长度不同但数值同为 0（例如 len=1,value=0 vs len=2,value=0）→ 只是“长度结构不同”
+        const isZeroLenDiffBoth = !missA && !missB &&
+          diffLen &&
+          Number(valA) === 0 &&
+          Number(valB) === 0;
+
+        // 名称差异只作为提示（橙色），不算真正的“差异”；
+        // 高字节 0 的 only 情况 & 零值长度差异（isZeroLenDiffBoth）也不算“报错级别差异”
+        let rowHasDiff = (!isZeroOnlyA && !isZeroOnlyB && !isZeroLenDiffBoth) &&
+          (missA || missB || diffLen || diffVal);
+
+        // 主参考缺少而另一侧存在：视为非异常（不计入差异）
+        const mainMissingReg =
+          (mainSide === 1 && missA && !missB) ||
+          (mainSide === 2 && missB && !missA);
+
+        // 高低位合并视为等价：不算差异行
+        if (hiInfo || mainMissingReg) {
+          rowHasDiff = false;
+        }
+        if (rowHasDiff) diffCount++;
+
+        const tr = document.createElement('tr');
+        if (rowHasDiff) tr.classList.add('diff-row');
+
+        const tdIdx = document.createElement('td');
+        tdIdx.textContent = off;
+
+        const tdLenA = document.createElement('td');
+        const tdNameA = document.createElement('td');
+        const tdValA = document.createElement('td');
+        const tdLenB = document.createElement('td');
+        const tdNameB = document.createElement('td');
+        const tdValB = document.createElement('td');
+
+        tdLenA.textContent = lenA || '-';
+        tdNameA.textContent = nameA || (fA ? '' : '—');
+        tdValA.textContent = valA || (fA ? '0' : '');
+        tdLenB.textContent = lenB || '-';
+        tdNameB.textContent = nameB || (fB ? '' : '—');
+        tdValB.textContent = valB || (fB ? '0' : '');
+
+        function mark(el, cond, only) {
+          if (!el) return;
+          if (only) {
+            el.classList.add('only');
+          } else if (cond) {
+            el.classList.add('diff');
+          }
+        }
+
+        if (missA) {
+          if (hiInfo && hiInfo.role === 'extra' && hiInfo.combinedSide === 'A') {
+            // B 为 2 字节合并，A 这一侧是“虚拟高/低位”：用 "-" 占位 + 青色提示
+            tdLenA.textContent = '-';
+            tdNameA.textContent = '-';
+            tdValA.textContent = '-';
+            tdLenA.classList.add('pseudo-equal');
+            tdNameA.classList.add('pseudo-equal');
+            tdValA.classList.add('pseudo-equal');
+          } else if (isZeroOnlyB) {
+            // 视为虚拟 0 高字节：用 "-" 橙色提示，不算差异
+            tdLenA.textContent = '-';
+            tdNameA.textContent = '-';
+            tdValA.textContent = '-';
+            tdLenA.classList.add('name-diff');
+            tdNameA.classList.add('name-diff');
+            tdValA.classList.add('name-diff');
+          } else {
+            tdLenA.textContent = '无';
+            tdNameA.textContent = '无此寄存器';
+            tdValA.textContent = '';
+            mark(tdLenA, false, true);
+            mark(tdNameA, false, true);
+          }
+        }
+        if (missB) {
+          if (hiInfo && hiInfo.role === 'extra' && hiInfo.combinedSide === 'B') {
+            // A 为 2 字节合并，B 这一侧是“虚拟高/低位”：用 "-" 占位 + 青色提示
+            tdLenB.textContent = '-';
+            tdNameB.textContent = '-';
+            tdValB.textContent = '-';
+            tdLenB.classList.add('pseudo-equal');
+            tdNameB.classList.add('pseudo-equal');
+            tdValB.classList.add('pseudo-equal');
+          } else if (isZeroOnlyA) {
+            tdLenB.textContent = '-';
+            tdNameB.textContent = '-';
+            tdValB.textContent = '-';
+            tdLenB.classList.add('name-diff');
+            tdNameB.classList.add('name-diff');
+            tdValB.classList.add('name-diff');
+          } else {
+            tdLenB.textContent = '无';
+            tdNameB.textContent = '无此寄存器';
+            tdValB.textContent = '';
+            mark(tdLenB, false, true);
+            mark(tdNameB, false, true);
+          }
+        }
+
+        // 真正的长度差异（值也不同）用红色；零值但长度不同（isZeroLenDiffBoth）用橙色
+        if (diffLen && !isZeroLenDiffBoth) {
+          mark(tdLenA, true, false);
+          mark(tdLenB, true, false);
+        } else if (isZeroLenDiffBoth) {
+          tdLenA.classList.add('name-diff');
+          tdLenB.classList.add('name-diff');
+        }
+        // 名称差异用 name-diff 高亮，不参与 diff 统计
+        if (!missA && !missB && diffName) {
+          tdNameA.classList.add('name-diff');
+          tdNameB.classList.add('name-diff');
+        }
+        mark(tdValA, diffVal, false);
+        mark(tdValB, diffVal, false);
+
+        // 对高低位配对行整体加青色背景提示
+        if (hiInfo) {
+          tr.classList.add('pseudo-row');
+          tdLenA.classList.add('pseudo-equal');
+          tdNameA.classList.add('pseudo-equal');
+          tdValA.classList.add('pseudo-equal');
+          tdLenB.classList.add('pseudo-equal');
+          tdNameB.classList.add('pseudo-equal');
+          tdValB.classList.add('pseudo-equal');
+        }
+
+        tr.appendChild(tdIdx);
+        tr.appendChild(tdLenA);
+        tr.appendChild(tdNameA);
+        tr.appendChild(tdValA);
+        tr.appendChild(tdLenB);
+        tr.appendChild(tdNameB);
+        tr.appendChild(tdValB);
+
+        tbody.appendChild(tr);
+      });
+
+      if (sumEl) {
+        const total = offsets.length;
+        sumEl.textContent = '总寄存器=' + total + '，存在差异=' + diffCount;
+      }
+    }
+
+    async function parseXcfg(content) {
+      const form = new FormData();
+      form.append('content', content);
+      const r = await fetch('/api/parse-xcfg', {
+        method: 'POST',
+        body: form
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || data.error) {
+        throw new Error(data.error || ('HTTP ' + r.status));
+      }
+      return data;
+    }
+
+    function updateHeaderNames() {
+      const nameA = (document.getElementById('fileAName')?.textContent || '').trim() || '配置 1';
+      const nameB = (document.getElementById('fileBName')?.textContent || '').trim() || '配置 2';
+      const thObjGroupA = document.getElementById('thObjGroupA');
+      const thObjGroupB = document.getElementById('thObjGroupB');
+      const thFALen = document.getElementById('thFALen');
+      const thFAName = document.getElementById('thFAName');
+      const thFAVal = document.getElementById('thFAVal');
+      const thFBLen = document.getElementById('thFBLen');
+      const thFBName = document.getElementById('thFBName');
+      const thFBVal = document.getElementById('thFBVal');
+      if (thObjGroupA) thObjGroupA.textContent = nameA;
+      if (thObjGroupB) thObjGroupB.textContent = nameB;
+      if (thFALen) thFALen.textContent =  '配置1：长度';
+      if (thFAName) thFAName.textContent =  '配置1：名称';
+      if (thFAVal) thFAVal.textContent =  '配置1：设置值';
+      if (thFBLen) thFBLen.textContent =  '配置2：长度';
+      if (thFBName) thFBName.textContent =  '配置2：名称';
+      if (thFBVal) thFBVal.textContent =  '配置2：设置值';
+    }
+
+    (function init() {
+      const fileA = document.getElementById('fileA');
+      const fileB = document.getElementById('fileB');
+      const nameAEl = document.getElementById('fileAName');
+      const nameBEl = document.getElementById('fileBName');
+      if (!fileA || !fileB) return;
+
+      async function handle(which, input, nameEl) {
+        const f = input.files[0];
+        if (!f) return;
+        nameEl.textContent = f.name;
+        setGlobalStatus('正在解析配置 ' + which + '：' + f.name + ' …', true);
+        try {
+          const text = await f.text();
+          const cfg = await parseXcfg(text);
+          if (which === 1) cfgA = cfg;
+          else cfgB = cfg;
+          // 重新读取当前主参考单选框的值，避免“先选主参考再选配置”时未生效
+          const checkedMain = document.querySelector('input[name="mainSide"]:checked');
+          mainSide = checkedMain ? (Number(checkedMain.value) || 0) : 0;
+          updateHeaderNames();
+          renderObjects();
+          if (cfgA && cfgB) {
+            setGlobalStatus('两份配置解析完成', true);
+          } else {
+            setGlobalStatus('配置 ' + which + ' 解析完成，请继续选择另一份配置。', true);
+          }
+        } catch (e) {
+          setGlobalStatus('解析配置 ' + which + ' 失败：' + e.message, false);
+        } finally {
+          input.value = '';
+        }
+      }
+
+      fileA.addEventListener('change', () => handle(1, fileA, nameAEl));
+      fileB.addEventListener('change', () => handle(2, fileB, nameBEl));
+
+      // 主参考切换
+      const mainRadios = document.querySelectorAll('input[name="mainSide"]');
+      mainRadios.forEach(r => {
+        r.addEventListener('change', (e) => {
+          const v = Number(e.target.value) || 0;
+          mainSide = v;
+          // 重新渲染以应用“主参考缺少寄存器视为非异常”的规则
+          renderObjects();
+        });
+      });
+
+      // 中间分割条左右拖动
+      const splitHandle = document.getElementById('splitHandle');
+      const leftCard = document.getElementById('cardLeft');
+      if (splitHandle && leftCard) {
+        let startX = 0;
+        let startWidth = 0;
+        splitHandle.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          startX = e.clientX;
+          startWidth = leftCard.getBoundingClientRect().width;
+          splitHandle.classList.add('dragging');
+          document.body.style.cursor = 'col-resize';
+          document.body.style.userSelect = 'none';
+          function onMove(ev) {
+            const dx = ev.clientX - startX;
+            let newW = startWidth + dx;
+            const minW = 220;
+            const maxW = window.innerWidth * 0.6;
+            if (newW < minW) newW = minW;
+            if (newW > maxW) newW = maxW;
+            leftCard.style.flex = '0 0 ' + newW + 'px';
+          }
+          function onUp() {
+            splitHandle.classList.remove('dragging');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+          }
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp);
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
+

@@ -11,6 +11,7 @@
 "stmusbatmxt640\usb_device.o"
 "stmusbatmxt640\usbd_desc.o"
 "stmusbatmxt640\usbd_cdc_if.o"
+"stmusbatmxt640\mxt_enc.o"
 "stmusbatmxt640\mxt_bridge.o"
 "stmusbatmxt640\mxt_cmd.o"
 "stmusbatmxt640\mxt_i2c.o"

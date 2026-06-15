@@ -1,0 +1,30 @@
+========================================
+Serial Terminal 升级说明
+版本: 1.0.1
+打包时间: 2026-06-15 06:33:50
+========================================
+
+【本包包含】
+- Serial Terminal 主程序
+- mxt-app CLI（WinUSB / 虚拟串口）
+- xcfg 配置查看器
+- xcfg 字段说明元数据（xcfg_viewer_metadata.json）
+- xcfg 说明配图（6 个文件）
+- libusb-1.0.dll（mxt-app 依赖）
+
+【更新说明】
+（打包前请在此填写本版本更新说明，留空则仅显示版本号与打包内容清单）
+
+- xcfg 配置查看器：同步最新字段说明与配图
+- mxt-app：支持 WinUSB 与 STM32 虚拟串口双驱动
+- 桥接模式切换改为 mode0/mode1 文本命令
+- 安装包自动递增版本号并附带本升级说明文件
+
+【xcfg 资源来源】
+  ..\linux_driver_mxt_sys\xcfg-viewer
+
+安装后路径:
+  程序目录\resources\UPGRADE_NOTES.txt
+  程序目录\resources\xcfg-viewer\xcfg_viewer_metadata.json
+  程序目录\resources\xcfg-viewer\metadata_images\
+  用户数据（首次运行复制）: %APPDATA%\serial-terminal\xcfg-viewer\

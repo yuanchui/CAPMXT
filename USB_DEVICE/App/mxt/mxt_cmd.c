@@ -66,6 +66,26 @@ void ProcessPendingCommand(void)
         USB_SendString(MXT_WORK_STR);
         USB_SendString("Type 'u' to enter diagnostic menu\r\n");
     }
+    else if (strcmp(cmd_str, "SPISTART1") == 0 || strcmp(cmd_str, "spistart1") == 0) {
+        if (!g_touch_inited) MXT_InitTouchScreen();
+        (void)MXT_EnableDebugCtrl2();
+        SPIUSB_ResetState(1U);
+        g_spi_check_requested = 1U;
+        g_spi_stream_enabled = 1U;
+        MXT_SSN_ResetForStream();
+        MXT_SPI_StartIT();
+        USB_SendString("INFO: SPI stream START1 (16x16 text)\r\n");
+    }
+    else if (strcmp(cmd_str, "SPISTART3") == 0 || strcmp(cmd_str, "spistart3") == 0) {
+        if (!g_touch_inited) MXT_InitTouchScreen();
+        (void)MXT_EnableDebugCtrl2();
+        SPIUSB_ResetState(2U);
+        g_spi_check_requested = 1U;
+        g_spi_stream_enabled = 1U;
+        MXT_SSN_ResetForStream();
+        MXT_SPI_StartIT();
+        USB_SendString("INFO: SPI stream START3 (cropped packets)\r\n");
+    }
     else if (strncmp(cmd_str, "SPISTART", 8) == 0 || strncmp(cmd_str, "spistart", 8) == 0) {
         const char *opt = cmd_str + 8;
         uint8_t ssn_only = 0U;
@@ -105,26 +125,6 @@ void ProcessPendingCommand(void)
                          (uint16_t)strlen("INFO: DEBUGCTRL2 enabled (Byte6=0x80 DBGOBJMODEEN)\r\n"));
             MXT_SSN_TimStart();
         }
-    }
-    else if (strcmp(cmd_str, "SPISTART1") == 0 || strcmp(cmd_str, "spistart1") == 0) {
-        if (!g_touch_inited) MXT_InitTouchScreen();
-        (void)MXT_EnableDebugCtrl2();
-        SPIUSB_ResetState(1U);
-        g_spi_check_requested = 1U;
-        g_spi_stream_enabled = 1U;
-        MXT_SSN_ResetForStream();
-        MXT_SPI_StartIT();
-        USB_SendString("INFO: SPI stream START1 (16x16 text)\r\n");
-    }
-    else if (strcmp(cmd_str, "SPISTART3") == 0 || strcmp(cmd_str, "spistart3") == 0) {
-        if (!g_touch_inited) MXT_InitTouchScreen();
-        (void)MXT_EnableDebugCtrl2();
-        SPIUSB_ResetState(2U);
-        g_spi_check_requested = 1U;
-        g_spi_stream_enabled = 1U;
-        MXT_SSN_ResetForStream();
-        MXT_SPI_StartIT();
-        USB_SendString("INFO: SPI stream START3 (cropped packets)\r\n");
     }
     else if (strcmp(cmd_str, "SPISTOP") == 0 || strcmp(cmd_str, "spistop") == 0) {
         g_spi_stream_enabled = 0U;

@@ -1,0 +1,2552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>maXTouch xcfg 配置查看器</title>
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --surface: rgba(255, 255, 255, 0.72);
+      --surface-strong: rgba(255, 255, 255, 0.86);
+      --border: rgba(15, 23, 42, 0.10);
+      --text: rgba(15, 23, 42, 0.92);
+      --text-muted: rgba(15, 23, 42, 0.55);
+      --accent: #2f7cf6;
+      --accent-hover: #1f6fe8;
+      --success: #22c55e;
+      --error: #ef4444;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.10);
+      --shadow-sm: 0 6px 14px rgba(15, 23, 42, 0.08);
+      --radius: 14px;
+      --doc-panel-width: 500px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(1200px 700px at 20% 10%, rgba(47, 124, 246, 0.18), rgba(47, 124, 246, 0) 60%),
+                  radial-gradient(900px 600px at 80% 0%, rgba(147, 197, 253, 0.28), rgba(147, 197, 253, 0) 55%),
+                  var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 18px;
+      min-height: 100vh;
+    }
+    .header-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      margin-bottom: 14px;
+    }
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 650;
+      margin: 0;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      flex-shrink: 0;
+    }
+    .status-box {
+      flex: 0 0 auto;
+      width: 280px;
+      max-height: 72px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+    .btn {
+      padding: 9px 14px;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      background: linear-gradient(180deg, rgba(47,124,246,0.98), rgba(47,124,246,0.90));
+      color: rgba(255,255,255,0.98);
+      box-shadow: 0 8px 18px rgba(47, 124, 246, 0.20);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.18s ease, border-color 0.18s ease;
+    }
+    .btn:hover {
+      background: linear-gradient(180deg, rgba(31,111,232,0.98), rgba(31,111,232,0.90));
+      box-shadow: 0 10px 22px rgba(47, 124, 246, 0.24);
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+
+    .btn-secondary {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .btn-secondary:hover {
+      border-color: rgba(47, 124, 246, 0.25);
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.10);
+    }
+
+    .btn-success {
+      background: linear-gradient(180deg, rgba(34,197,94,0.98), rgba(34,197,94,0.88));
+      box-shadow: 0 8px 18px rgba(34,197,94,0.18);
+    }
+    .btn-success:hover {
+      background: linear-gradient(180deg, rgba(22,163,74,0.98), rgba(22,163,74,0.88));
+      box-shadow: 0 10px 22px rgba(34,197,94,0.22);
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .file-label {
+      padding: 9px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      transition: box-shadow 0.12s ease, border-color 0.18s ease, transform 0.12s ease;
+    }
+    .file-label:hover {
+      border-color: rgba(47, 124, 246, 0.25);
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.10);
+    }
+    .file-label:active { transform: translateY(1px); }
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 16px;
+      align-items: stretch;
+      height: calc(100vh - 140px);
+      min-height: 420px;
+    }
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+      }
+    }
+    .tree-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .tree-header {
+      padding: 12px 14px;
+      font-weight: 650;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-strong);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .tree-body {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+    }
+    .tree-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      font-size: 13px;
+    }
+    .tree-item {
+      transition: background 0.12s ease, border-color 0.12s ease;
+    }
+    .tree-item:hover { background: rgba(15, 23, 42, 0.04); }
+    .tree-item.active {
+      background: rgba(47, 124, 246, 0.12);
+      border-left-color: var(--accent);
+    }
+    .tree-item.level-0 { padding-left: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .tree-item.level-0 .tree-item-name { flex: 1; min-width: 0; }
+    .tree-item.level-0 .tree-item-count {
+      flex-shrink: 0;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: rgba(15, 23, 42, 0.08);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .tree-item.level-1 { padding-left: 28px; font-size: 12px; color: var(--text-muted); }
+    .detail-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+    }
+    .detail-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+      background: var(--surface-strong);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .detail-header-main {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+    .detail-header-actions {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .detail-meta {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 5px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background: rgba(15, 23, 42, 0.035);
+      font-weight: 650;
+      color: var(--text-muted);
+    }
+    tr:hover td { background: rgba(47, 124, 246, 0.06); }
+
+    input.field-value {
+      width: 100%;
+      max-width: 140px;
+      padding: 4px 8px;
+      background: rgba(255, 255, 255, 0.70);
+      border: 1px solid rgba(15, 23, 42, 0.14);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 13px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    input.field-value:focus {
+      outline: none;
+      border-color: rgba(47, 124, 246, 0.55);
+      box-shadow: 0 0 0 4px rgba(47, 124, 246, 0.18);
+    }
+    input.field-value.alias-input { max-width: 160px; }
+    .merge-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: rgba(15, 23, 42, 0.04);
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .merge-toolbar input { padding: 4px 8px; border-radius: 8px; border: 1px solid var(--border); width: 140px; }
+    .detail-body {
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      min-height: 200px;
+      flex: 1;
+      min-height: 0;
+    }
+    .detail-table-wrap {
+      flex: 1;
+      min-width: 0;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .detail-table-wrap .merge-toolbar { flex-shrink: 0; }
+    .detail-table-wrap table { flex-shrink: 0; }
+    .resize-handle {
+      width: 6px;
+      flex-shrink: 0;
+      background: var(--border);
+      cursor: col-resize;
+      transition: background 0.15s;
+    }
+    .resize-handle:hover { background: var(--accent); }
+    .resize-handle.dragging { background: var(--accent); }
+    .desc-panel {
+      width: 280px;
+      min-width: 180px;
+      max-width: 50%;
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.02);
+    }
+    .desc-panel-header {
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .desc-editor-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 280px;
+    }
+    .desc-source-wrap,
+    .desc-preview-wrap {
+      flex: 1;
+      min-height: 240px;
+      display: flex;
+      flex-direction: column;
+    }
+    .desc-format-hint {
+      flex-shrink: 0;
+      padding: 6px 12px;
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--text-muted);
+      background: rgba(15, 23, 42, 0.04);
+      border-top: 1px solid var(--border);
+    }
+    .desc-format-hint kbd {
+      font-family: inherit;
+      background: rgba(15, 23, 42, 0.08);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 10px;
+    }
+    .desc-format-hint .hint-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+    .desc-format-hint .hint-row:last-child { margin-bottom: 0; }
+    .desc-format-hint .hint-format-list br { display: block; content: ''; margin-top: 2px; }
+    .desc-format-hint .hint-keywords-list { color: var(--accent); font-weight: 500; }
+    .desc-format-hint input.hint-keyword {
+      width: 120px;
+      padding: 3px 8px;
+      font-size: 11px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text);
+    }
+    .desc-format-hint input.hint-keyword::placeholder { color: var(--text-muted); }
+    .desc-format-hint .hint-preview {
+      margin-top: 6px;
+      padding: 6px 8px;
+      background: rgba(47, 124, 246, 0.06);
+      border-radius: 6px;
+      border-left: 3px solid var(--accent);
+      font-size: 11px;
+      color: var(--text);
+      min-height: 1.2em;
+    }
+    .desc-format-hint .hint-preview kbd { background: rgba(255,255,255,0.6); }
+    .desc-panel textarea {
+      flex: 1;
+      min-height: 220px;
+      padding: 10px 12px;
+      border: none;
+      font-size: 13px;
+      font-family: inherit;
+      resize: vertical;
+      background: rgba(255,255,255,0.5);
+      line-height: 1.5;
+    }
+    .desc-panel textarea:focus { outline: none; }
+    .desc-preview {
+      flex: 1;
+      min-height: 220px;
+      padding: 10px 12px;
+      overflow: auto;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text);
+    }
+    .desc-preview img { max-width: 100%; height: auto; border-radius: 4px; border: 1px solid var(--border); margin: 8px 0; }
+    .desc-preview h1 { font-size: 1.5em; margin: 0 0 12px 0; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+    .desc-preview h2 { font-size: 1.25em; margin: 16px 0 10px 0; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    .desc-preview h3, .desc-preview h4, .desc-preview h5, .desc-preview h6 { font-size: 1.1em; margin: 14px 0 8px 0; }
+    .desc-preview p { margin: 8px 0; }
+    .desc-preview code { background: rgba(15,23,42,0.08); padding: 0.15em 0.4em; border-radius: 3px; font-family: monospace; font-size: 85%; }
+    .desc-preview pre { background: rgba(15,23,42,0.06); padding: 12px; overflow: auto; border-radius: 6px; margin: 12px 0; border: 1px solid var(--border); font-size: 12px; }
+    .desc-preview pre code { background: none; padding: 0; }
+    .desc-preview blockquote { border-left: 3px solid var(--border); padding-left: 12px; margin: 8px 0; color: var(--text-muted); }
+    .desc-preview ul, .desc-preview ol { margin: 8px 0; padding-left: 2em; }
+    .desc-preview li { margin: 0.15em 0; }
+    .desc-preview hr { height: 1px; background: var(--border); border: 0; margin: 16px 0; }
+    .desc-preview a { color: var(--accent); text-decoration: none; }
+    .desc-preview mark { background: rgba(234,179,8,0.25); color: inherit; padding: 0.1em 0.3em; border-radius: 3px; }
+    .desc-preview c-red { color: #cf222e; font-weight: 600; }
+    .desc-preview c-blue { color: #0969da; font-weight: 600; }
+    .desc-preview c-green { color: #1a7f37; font-weight: 600; }
+    .desc-preview c-orange { color: #bc4c00; font-weight: 600; }
+    .desc-preview c-purple { color: #8250df; font-weight: 600; }
+    .desc-preview c-gray { color: var(--text-muted); }
+    .desc-preview .math { font-family: 'Times New Roman', Times, serif; font-style: italic; white-space: nowrap; }
+    .desc-preview .fraction { display: inline-block; text-align: center; vertical-align: middle; margin: 0 2px; font-size: 0.9em; }
+    .desc-preview .fraction-top { display: block; border-bottom: 1px solid currentColor; padding: 0 2px; }
+    .desc-preview .fraction-bottom { display: block; padding: 0 2px; }
+    .desc-preview table { border-collapse: collapse; margin: 12px 0; width: 100%; font-size: 12px; border: 1px solid var(--border); }
+    .desc-preview th, .desc-preview td { border: 1px solid var(--border); padding: 5px 8px; text-align: left; vertical-align: middle; }
+    .desc-preview th { background: rgba(15,23,42,0.06); font-weight: 600; }
+    .desc-preview tr:nth-child(2n) { background: rgba(15,23,42,0.02); }
+    .desc-preview .html-comment { color: var(--text-muted); font-size: 0.85em; font-style: italic; margin: 6px 0; padding: 4px 8px; background: rgba(15,23,42,0.04); border-left: 2px solid var(--border); border-radius: 0 4px 4px 0; }
+    .desc-toolbar { padding: 4px 8px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; }
+    .desc-view-toggle { display: flex; gap: 0; }
+    .desc-view-toggle button { padding: 4px 10px; font-size: 12px; border-radius: 0; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); cursor: pointer; }
+    .desc-view-toggle button:first-child { border-radius: 6px 0 0 6px; }
+    .desc-view-toggle button:last-child { border-radius: 0 6px 6px 0; border-left: none; }
+    .desc-view-toggle button.active { background: rgba(47,124,246,0.15); color: var(--accent); border-color: var(--accent); }
+    .desc-editor-wrap.desc-mode-source .desc-preview-wrap { display: none; }
+    .desc-editor-wrap.desc-mode-preview .desc-source-wrap { display: none; }
+    .alias-cell { vertical-align: top; padding: 4px 8px; }
+    .alias-cell .field-value { max-width: 120px; }
+    .desc-cell {
+      vertical-align: top;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      max-width: 180px;
+      max-height: 80px;
+      overflow: auto;
+      word-break: break-word;
+      white-space: normal;
+      line-height: 1.35;
+    }
+    .desc-cell:hover { background: rgba(47, 124, 246, 0.08); color: var(--text); }
+    .desc-cell.selected { background: rgba(47, 124, 246, 0.15); color: var(--accent); }
+    tr.selected-desc td { background: rgba(47, 124, 246, 0.08); }
+    .status {
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      word-break: break-word;
+    }
+    .status.success { border-color: rgba(34,197,94,0.25); color: rgba(22, 163, 74, 0.95); }
+    .status.error { border-color: rgba(239,68,68,0.25); color: rgba(220,38,38,0.95); }
+    .empty-state {
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .empty-state p { margin: 8px 0; }
+
+    /* 右侧 500px 配置文档面板：独立整高侧栏 */
+    .doc-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 18px;
+      right: 0;
+      bottom: 18px;
+      width: var(--doc-panel-width);
+      z-index: 5;
+    }
+    .doc-resize-grip {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 6px;
+      height: 100%;
+      cursor: col-resize;
+      background: transparent;
+    }
+    .doc-resize-grip:hover {
+      background: rgba(15, 23, 42, 0.06);
+    }
+    .layout.doc-collapsed + .doc-panel {
+      width: 26px;           /* 只保留箭头宽度 */
+      pointer-events: auto;  /* 仍可点击箭头 */
+      overflow: visible;     /* 允许箭头超出面板边界 */
+    }
+    .layout.doc-collapsed + .doc-panel .doc-panel-inner {
+      overflow: hidden;      /* 隐藏内部溢出内容 */
+    }
+    .layout.doc-collapsed + .doc-panel .doc-header,
+    .layout.doc-collapsed + .doc-panel .doc-body,
+    .layout.doc-collapsed + .doc-panel .doc-resize-grip {
+      display: none !important;  /* 强制隐藏所有内容区域 */
+    }
+    .layout.doc-collapsed + .doc-panel .doc-toggle {
+      display: flex;         /* 确保箭头可见 */
+    }
+    .doc-toggle {
+      position: absolute;
+      top: 50%;
+      left: -10px;
+      transform: translateY(-50%);
+      width: 26px;
+      height: 52px;
+      border-radius: 10px 0 0 10px;
+      border: 1px solid var(--border);
+      border-right: none;
+      background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.96));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .doc-panel-inner {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+    .doc-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: var(--surface-strong);
+    }
+    .doc-header-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .doc-header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .doc-header-actions .btn-secondary {
+      padding: 4px 10px;
+      font-size: 12px;
+      border-radius: 8px;
+      box-shadow: none;
+    }
+    .doc-body {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .doc-list {
+      flex: 0 0 auto;
+      max-height: 160px;
+      min-height: 80px;
+      overflow-y: auto;
+      border-bottom: 1px solid var(--border);
+      padding: 6px 8px;
+      background: rgba(15, 23, 42, 0.02);
+    }
+    .doc-item {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--text-muted);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+    .doc-item:hover {
+      background: rgba(47, 124, 246, 0.08);
+      color: var(--text);
+    }
+    .doc-item.active {
+      background: rgba(47, 124, 246, 0.15);
+      color: var(--accent);
+    }
+    .doc-empty {
+      padding: 6px 4px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .doc-editor {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .doc-editor-toolbar {
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .doc-current-title {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .doc-view-toggle {
+      display: flex;
+      gap: 0;
+      flex-shrink: 0;
+    }
+    .doc-view-toggle button {
+      padding: 3px 9px;
+      font-size: 11px;
+      border-radius: 0;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .doc-view-toggle button:first-child { border-radius: 6px 0 0 6px; }
+    .doc-view-toggle button:last-child { border-radius: 0 6px 6px 0; border-left: none; }
+    .doc-view-toggle button.active {
+      background: rgba(47,124,246,0.15);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    .doc-editor-wrap {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .doc-editor-wrap.doc-mode-preview textarea {
+      display: none;
+    }
+    .doc-editor-wrap.doc-mode-source .doc-preview {
+      display: none;
+    }
+    .doc-editor-wrap textarea {
+      flex: 1;
+      min-height: 160px;
+      border: none;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      resize: none;
+      background: rgba(255,255,255,0.5);
+      line-height: 1.5;
+    }
+    .doc-editor-wrap textarea:focus { outline: none; }
+    .doc-preview {
+      flex: 1;
+      min-height: 160px;
+      padding: 8px 10px;
+      overflow: auto;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <div class="header-row">
+    <h1>maXTouch xcfg 配置查看器</h1>
+    <div class="status-box" id="statusBox">
+      <div id="status"></div>
+    </div>
+    <div style="margin-bottom:12px;display:flex;flex-direction:column;gap:4px;align-items:flex-start;">
+      <a href="./kimi_touch_matrix.html" target="_blank" style="color:var(--accent);text-decoration:none;">打开：触摸阵列可视化(32x20)</a>
+      <a href="./compare_xcfg.html" target="_blank" style="color:var(--accent);text-decoration:none;font-size:13px;">打开：xcfg 配置比对</a>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <label class="file-label">
+      <input type="file" id="fileInput" accept=".xcfg,.cfg">
+      加载 xcfg 文件
+    </label>
+    <button class="btn btn-secondary" id="btnReadDevice">从设备读取</button>
+    <button class="btn btn-secondary" id="btnBackup">备份到NVM(B)</button>
+    <button class="btn btn-secondary" id="btnReset">复位(R)</button>
+    <button class="btn btn-secondary" id="btnCalibrate">校准(C)</button>
+    <button class="btn btn-secondary" id="btnMode0">发送 mode0</button>
+    <span style="display:flex;align-items:center;gap:6px;">
+      <span>读取对象 T</span>
+      <input type="number" id="objNumInput" placeholder="100" min="1" max="255" style="width:60px;padding:6px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);">
+      <button class="btn btn-secondary" id="btnReadObject">读取</button>
+    </span>
+
+    <button class="btn btn-success" id="btnSaveXcfg">保存 xcfg</button>
+    <button class="btn btn-secondary" id="btnLoadServerXcfg">加载服务器 xcfg</button>
+    <button class="btn btn-secondary" id="btnCopyNameToAlias" title="将字段“名称”批量填充到“别名”（默认仅填充空别名）">名称→别名</button>
+    <button class="btn" id="btnWriteDevice">写入设备</button>
+    <button class="btn btn-secondary" id="btnWriteObject" style="display:none">写入此对象</button>
+  </div>
+
+  <div class="layout" id="mainLayout" style="margin-right:calc(var(--doc-panel-width) + 18px);">
+    <div class="tree-panel">
+      <div class="tree-header">对象列表</div>
+      <div class="tree-body" id="treeBody">
+        <div class="empty-state" id="treeEmpty">
+          <p>请加载 xcfg 文件或从设备读取</p>
+        </div>
+      </div>
+    </div>
+    <div class="detail-panel">
+      <div class="detail-header" id="detailHeader">
+        <div class="detail-header-main">
+          <div><strong>选择左侧对象查看详情</strong></div>
+        </div>
+        <div class="detail-header-actions">
+          <button type="button" class="btn btn-secondary btn-obj-doc" style="display:none;">编辑对象说明</button>
+        </div>
+      </div>
+      <div class="detail-body">
+        <div class="detail-table-wrap">
+          <div class="empty-state" id="detailEmpty">
+            <p>选择对象后可编辑字段值</p>
+            <p>支持：序号、字段长度、名称、别名、描述、设置值</p>
+          </div>
+          <div id="mergeToolbar" class="merge-toolbar" style="display:none">
+            <span id="mergeToolbarLabel">已选 <strong id="mergeSelectedCount">0</strong> 行</span>
+            <span>合并别名：</span>
+            <input type="text" id="mergeAliasInput" placeholder="输入合并后的别名">
+            <button type="button" class="btn btn-secondary" id="btnApplyMergeAlias">应用</button>
+            <button type="button" class="btn btn-secondary" id="btnCancelMergeAlias">取消合并</button>
+          </div>
+          <table id="fieldTable" style="display:none">
+            <thead>
+              <tr>
+                <th style="width:40px">选择</th>
+                <th>序号</th>
+                <th>字段长度</th>
+                <th>名称</th>
+                <th>别名</th>
+                <th>描述</th>
+                <th>设置值</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="resize-handle" id="resizeHandle" title="拖动调整宽度"></div>
+        <div class="desc-panel" id="descPanel">
+          <div class="desc-panel-header" id="descPanelHeader">配置说明</div>
+          <div class="desc-toolbar">
+            <span class="desc-view-toggle">
+              <button type="button" id="btnDescSource" class="active">源代码</button>
+              <button type="button" id="btnDescPreview">预览</button>
+            </span>
+          </div>
+          <div class="desc-editor-wrap desc-mode-source" id="descEditorWrap">
+            <div class="desc-source-wrap">
+              <textarea id="descEditor" placeholder="选中一行或合并组以编辑描述，支持直接粘贴文字和图片…" title="支持 Markdown、HTML 表格、LaTeX 公式、颜色与高亮"></textarea>
+              <div class="desc-format-hint" id="descFormatHint">
+             
+                <div class="hint-row">
+
+                  <span class="hint-keywords-list">标题 粗体 斜体 图片 公式 表格 颜色 高亮 注释</span>
+                </div>
+                <div class="hint-row">
+                  <label>输入关键词预览:</label>
+                  <input type="text" class="hint-keyword" id="descHintKeyword" placeholder="输入关键词可查看语法示例" maxlength="20">
+                </div>
+                <div class="hint-preview" id="descHintPreview">输入上方关键词可查看语法示例</div>
+              </div>
+            </div>
+            <div class="desc-preview-wrap">
+              <div class="desc-preview" id="descPreview"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="doc-panel" id="docPanel">
+    <div class="doc-panel-inner">
+      <div class="doc-resize-grip" id="docResizeGrip" title="拖动调整右侧文档宽度"></div>
+      <div class="doc-toggle" id="btnDocToggle" title="收起/展开配置文档列表">»</div>
+      <div class="doc-header">
+        <div class="doc-header-title">配置文档列表</div>
+        <div class="doc-header-actions">
+          <button type="button" class="btn btn-secondary" id="btnNewDoc">新建文档</button>
+          <button type="button" class="btn btn-secondary" id="btnDeleteDoc">删除文档</button>
+        </div>
+      </div>
+      <div class="doc-body">
+        <div class="doc-list" id="docList"></div>
+        <div class="doc-editor">
+          <div class="doc-editor-toolbar">
+            <div class="doc-current-title" id="docCurrentTitle">未选择文档</div>
+            <div class="doc-view-toggle">
+              <button type="button" id="btnDocSource" class="active">源代码</button>
+              <button type="button" id="btnDocPreview">预览</button>
+            </div>
+          </div>
+          <div class="doc-editor-wrap doc-mode-source" id="docEditorWrap">
+            <textarea id="docEditor" placeholder="右侧固定 500px 区域，用于编写整体配置说明或操作手册，支持 Markdown 与图片粘贴…"></textarea>
+            <div class="doc-preview" id="docPreview"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <pre id="output" style="margin-top:12px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;white-space:pre-wrap;max-height:240px;overflow:auto;display:none"></pre>
+
+  <script src="/xcfg-viewer/electron-bridge.js"></script>
+  <script>
+    const METADATA_KEY = 'xcfg-viewer-metadata';
+    const UI_PREF_KEY = 'xcfg-viewer-ui';
+
+    const LAST_CONFIG_KEY = 'xcfg-viewer-last-config';
+    const NAME_TO_ALIAS_ONCE_KEY = 'xcfg-viewer-name-to-alias-once-done';
+    let serialAppMxtDevice = null;
+
+    async function refreshSerialAppConnection() {
+      if (!window.xcfgViewerAPI || typeof window.xcfgViewerAPI.getSerialAppConnection !== 'function') return;
+      try {
+        const res = await window.xcfgViewerAPI.getSerialAppConnection();
+        serialAppMxtDevice = (res && res.connected && res.mxtDevice) ? res.mxtDevice : null;
+        if (serialAppMxtDevice) {
+          const label = serialAppMxtDevice.startsWith('serial:')
+            ? ('串口 ' + serialAppMxtDevice.slice('serial:'.length))
+            : serialAppMxtDevice;
+          showStatus('Serial Terminal 已连接: ' + label + '（mxt-app 将临时接管此设备）', true);
+        }
+      } catch (e) {}
+    }
+
+    function withDevicePayload(extra) {
+      const body = Object.assign({}, extra || {});
+      if (serialAppMxtDevice && !body.device) body.device = serialAppMxtDevice;
+      return body;
+    }
+
+    function getUiPrefs() {
+      try {
+        const raw = localStorage.getItem(UI_PREF_KEY);
+        if (!raw) return { docPanelWidth: null, docCollapsed: false, docMode: 'source', descMode: 'source' };
+        const p = JSON.parse(raw);
+        return {
+          docPanelWidth: typeof p.docPanelWidth === 'number' ? p.docPanelWidth : null,
+          docCollapsed: !!p.docCollapsed,
+          docMode: p.docMode === 'preview' ? 'preview' : 'source',
+          descMode: p.descMode === 'preview' ? 'preview' : 'source'
+        };
+      } catch (e) {
+        return { docPanelWidth: null, docCollapsed: false, docMode: 'source', descMode: 'source' };
+      }
+    }
+
+    function saveUiPrefs(partial) {
+      const current = getUiPrefs();
+      const next = Object.assign({}, current, partial || {});
+      try {
+        localStorage.setItem(UI_PREF_KEY, JSON.stringify(next));
+      } catch (e) {}
+    }
+
+    var DESC_SYNTAX_HINTS = [
+      { keywords: ['标题'], syntax: '# 一级标题', example: '# 标题 或 ## 二级 或 ### 三级' },
+      { keywords: ['粗体'], syntax: '**粗体**', example: '**加粗文字**' },
+      { keywords: ['斜体'], syntax: '*斜体*', example: '*倾斜文字*' },
+      { keywords: ['图片'], syntax: '![alt](url)', example: '![说明](图片地址) 或直接粘贴图片' },
+      { keywords: ['公式'], syntax: '$公式$', example: '$F_{CLK} = 14\\mathrm{MHz}$ 或 \\frac{a}{b}' },
+      { keywords: ['表格'], syntax: '| A | B | 或 <table>', example: 'Markdown: | 列1 | 列2 | 换行 | --- | --- | 换行 | 1 | 2 |；HTML: <table>...</table>' },
+      { keywords: ['颜色'], syntax: '{{red|字}}', example: '{{red|红}} {{blue|蓝}} {{#ff00ff|自定义}}' },
+      { keywords: ['高亮'], syntax: '==高亮==', example: '==需要强调的文字==' },
+      { keywords: ['注释'], syntax: '<!-- 注释 -->', example: '<!-- 此处为注释，预览时显示为灰色块 -->' }
+    ];
+
+    function getDescTitle(md) {
+      if (!md || !md.trim()) return '';
+      var lines = md.trim().split(/\r?\n/);
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (!line) continue;
+        var m = line.match(/^#+\s+(.+)$/);
+        if (m) return m[1].trim().slice(0, 50);
+        return line.slice(0, 40);
+      }
+      return '';
+    }
+
+    function updateDescHintPreview() {
+      var input = document.getElementById('descHintKeyword');
+      var el = document.getElementById('descHintPreview');
+      if (!input || !el) return;
+      var kw = (input.value || '').trim().toLowerCase();
+      if (!kw) {
+        el.textContent = '输入上方关键词可查看语法示例';
+        return;
+      }
+      var matched = DESC_SYNTAX_HINTS.filter(function (h) {
+        return h.keywords.some(function (k) { return k.toLowerCase().indexOf(kw) !== -1 || kw.indexOf(k.toLowerCase()) !== -1; });
+      });
+      if (matched.length === 0) {
+        el.textContent = '未匹配到「' + kw + '」。关键词: 标题、粗体、斜体、图片、公式、表格、颜色、高亮、注释';
+        return;
+      }
+      el.innerHTML = matched.map(function (h) {
+        return '<strong>' + h.syntax + '</strong> &rarr; ' + h.example;
+      }).join('<br>');
+    }
+
+    function getMetadata() {
+      try {
+        const raw = localStorage.getItem(METADATA_KEY);
+        if (!raw) return { objectDescriptions: {}, fieldAliases: {}, fieldDescriptions: {} };
+        const o = JSON.parse(raw);
+        return {
+          objectDescriptions: o.objectDescriptions || {},
+          fieldAliases: o.fieldAliases || {},
+          fieldDescriptions: o.fieldDescriptions || {}
+        };
+      } catch (e) {
+        return { objectDescriptions: {}, fieldAliases: {}, fieldDescriptions: {} };
+      }
+    }
+
+    function saveMetadata(meta) {
+      try {
+        localStorage.setItem(METADATA_KEY, JSON.stringify(meta));
+        fetch('/api/metadata', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(meta)
+        }).then(r => r.json()).then(() => {}).catch(() => {});
+      } catch (e) {}
+    }
+
+    function loadMetadataFromServer() {
+      return fetch('/api/metadata').then(r => {
+        if (!r.ok) return null;
+        return r.json();
+      }).then(data => {
+        if (data && typeof data === 'object') {
+          const meta = {
+            objectDescriptions: data.objectDescriptions || {},
+            fieldAliases: data.fieldAliases || {},
+            fieldDescriptions: data.fieldDescriptions || {}
+          };
+          localStorage.setItem(METADATA_KEY, JSON.stringify(meta));
+        }
+      }).catch(() => {});
+    }
+
+    function objectKey(obj) {
+      let id = obj.object_id;
+      if (id == null && obj.header) {
+        const m = obj.header.match(/T(\d+)/);
+        id = m ? parseInt(m[1], 10) : 0;
+      }
+      if (id == null) id = 0;
+      return id + '-' + (obj.instance != null ? obj.instance : 0);
+    }
+
+    function fieldKey(obj, f) {
+      return objectKey(obj) + '-' + (f.offset != null ? f.offset : 0);
+    }
+
+    function copyFieldNamesToAliasesForConfig(cfg, options) {
+      const opts = options || {};
+      const overwrite = !!opts.overwrite;
+      if (!cfg || !Array.isArray(cfg.objects)) return 0;
+      const meta = getMetadata();
+      let changed = 0;
+      cfg.objects.forEach(obj => {
+        if (!obj || !Array.isArray(obj.fields)) return;
+        obj.fields.forEach(f => {
+          const name = ((f && f.name) || '').trim();
+          if (!name) return;
+          const k = fieldKey(obj, f);
+          const current = (meta.fieldAliases[k] || '').trim();
+          if (!overwrite && current) return;
+          if (current !== name) {
+            meta.fieldAliases[k] = name;
+            changed++;
+          }
+        });
+      });
+      if (changed > 0) {
+        saveMetadata(meta);
+      }
+      return changed;
+    }
+
+    function hasDoneNameToAliasOnce() {
+      try {
+        return localStorage.getItem(NAME_TO_ALIAS_ONCE_KEY) === '1';
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function markDoneNameToAliasOnce() {
+      try {
+        localStorage.setItem(NAME_TO_ALIAS_ONCE_KEY, '1');
+      } catch (e) {}
+    }
+
+    let configData = null;
+    let selectedObjIdx = -1;
+
+    const fileInput = document.getElementById('fileInput');
+    const treeBody = document.getElementById('treeBody');
+    const treeEmpty = document.getElementById('treeEmpty');
+    const detailHeader = document.getElementById('detailHeader');
+    const detailEmpty = document.getElementById('detailEmpty');
+    const fieldTable = document.getElementById('fieldTable');
+    const fieldTbody = fieldTable.querySelector('tbody');
+
+    fileInput.addEventListener('change', async (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const content = await f.text();
+      parseAndDisplay(content);
+      e.target.value = '';
+    });
+
+    async function parseAndDisplay(content) {
+      try {
+        const form = new FormData();
+        form.append('content', content);
+        const r = await fetch('/api/parse-xcfg', {
+          method: 'POST',
+          body: form
+        });
+        if (!r.ok) {
+          const err = await r.json();
+          showStatus(err.error || '解析失败', false);
+          return;
+        }
+        configData = await r.json();
+        let copied = 0;
+        if (!hasDoneNameToAliasOnce()) {
+          copied = copyFieldNamesToAliasesForConfig(configData, { overwrite: false });
+          markDoneNameToAliasOnce();
+        }
+        try {
+          localStorage.setItem(LAST_CONFIG_KEY, JSON.stringify(configData));
+        } catch (e) {}
+        renderTree();
+        if (copied > 0) {
+          showStatus('解析成功，已将 ' + copied + ' 个字段名称复制到别名', true);
+        } else {
+          showStatus('解析成功', true);
+        }
+      } catch (e) {
+        showStatus('解析失败: ' + e.message, false);
+      }
+    }
+
+    function renderTree() {
+      if (!configData || !configData.objects || configData.objects.length === 0) {
+        treeEmpty.style.display = 'block';
+        treeBody.innerHTML = '';
+        treeBody.appendChild(treeEmpty);
+        return;
+      }
+      treeEmpty.style.display = 'none';
+      treeBody.innerHTML = '';
+      configData.objects.forEach((obj, idx) => {
+        const nonZeroCount = (obj.fields || []).filter(f => Number(f.value) !== 0).length;
+        const div = document.createElement('div');
+        div.className = 'tree-item level-0' + (selectedObjIdx === idx ? ' active' : '');
+        div.dataset.idx = idx;
+        div.onclick = () => selectObject(idx);
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'tree-item-name';
+        nameSpan.textContent = obj.header;
+        const countSpan = document.createElement('span');
+        countSpan.className = 'tree-item-count';
+        countSpan.textContent = nonZeroCount;
+        countSpan.title = '设置值不为 0 的寄存器数量';
+        div.appendChild(nameSpan);
+        div.appendChild(countSpan);
+        treeBody.appendChild(div);
+      });
+    }
+
+    function selectObject(idx) {
+      selectedObjIdx = idx;
+      document.querySelectorAll('.tree-item').forEach(el => {
+        el.classList.toggle('active', parseInt(el.dataset.idx) === idx);
+      });
+      document.getElementById('btnWriteObject').style.display = (idx >= 0 && configData && configData.objects[idx]) ? 'inline-block' : 'none';
+      renderDetail(idx);
+    }
+
+    function updateMergeToolbarVisibility() {
+      const count = fieldTbody.querySelectorAll('.merge-check:checked').length;
+      document.getElementById('mergeSelectedCount').textContent = count;
+      document.getElementById('mergeToolbar').style.display = fieldTable.style.display === 'table' ? 'flex' : 'none';
+    }
+
+    let selectedDescKeys = [];
+
+    function renderDetail(idx) {
+      if (idx < 0 || !configData || !configData.objects[idx]) {
+        detailEmpty.style.display = 'block';
+        fieldTable.style.display = 'none';
+        document.getElementById('mergeToolbar').style.display = 'none';
+        selectedDescKeys = [];
+        updateDescPanel();
+        return;
+      }
+      const obj = configData.objects[idx];
+      const meta = getMetadata();
+      const okey = objectKey(obj);
+
+      detailEmpty.style.display = 'none';
+      fieldTable.style.display = 'table';
+      document.getElementById('mergeToolbar').style.display = 'flex';
+
+      detailHeader.innerHTML = `
+        <div class="detail-header-main">
+          <div><strong>${obj.header}</strong></div>
+          <div class="detail-meta">
+            OBJECT_ADDRESS=${obj.object_address} &nbsp; OBJECT_SIZE=${obj.object_size}
+          </div>
+        </div>
+        <div class="detail-header-actions">
+          <button type="button" class="btn btn-secondary btn-obj-doc" data-obj-key="${okey}">编辑对象说明</button>
+        </div>
+      `;
+
+      const objDocBtn = detailHeader.querySelector('.btn-obj-doc');
+      if (objDocBtn) {
+        objDocBtn.addEventListener('click', () => {
+          const key = 'OBJ:' + okey;
+          const metaNow = getMetadata();
+          if (!metaNow.objectDescriptions[key]) {
+            metaNow.objectDescriptions[key] = '# ' + (obj.header || ('对象 ' + okey)) + ' 说明\n\n';
+            saveMetadata(metaNow);
+          }
+          openDocEditorForKey(key, obj.header || ('对象 ' + okey));
+        });
+      }
+
+      // 按别名分组：相同别名的行在描述列合并为一个单元格
+      const groupByKey = {};
+      obj.fields.forEach((f, fi) => {
+        const fkey = fieldKey(obj, f);
+        const alias = (meta.fieldAliases[fkey] || '').trim();
+        const k = alias ? okey + '\t' + alias : fkey;
+        if (!groupByKey[k]) groupByKey[k] = [];
+        groupByKey[k].push(fi);
+      });
+      const groupList = Object.keys(groupByKey).map(k => ({ key: k, indices: groupByKey[k].sort((a, b) => a - b) }));
+      const firstInGroup = {};
+      const groupFkeys = {};
+      groupList.forEach(g => {
+        const fkeys = g.indices.map(fi => fieldKey(obj, obj.fields[fi]));
+        g.indices.forEach(fi => {
+          firstInGroup[fi] = (fi === g.indices[0]);
+          groupFkeys[fi] = fkeys;
+        });
+      });
+
+      fieldTbody.innerHTML = '';
+      selectedDescKeys = [];
+      updateDescPanel();
+
+      obj.fields.forEach((f, fi) => {
+        const fkey = fieldKey(obj, f);
+        const alias = meta.fieldAliases[fkey] || '';
+        const tr = document.createElement('tr');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'merge-check';
+        checkbox.dataset.objIdx = idx;
+        checkbox.dataset.fieldIdx = String(fi);
+        checkbox.addEventListener('change', updateMergeToolbarVisibility);
+
+        const valueInput = document.createElement('input');
+        valueInput.type = 'text';
+        valueInput.className = 'field-value';
+        valueInput.value = f.value;
+        valueInput.dataset.objIdx = idx;
+        valueInput.dataset.fieldIdx = fi;
+        valueInput.addEventListener('change', (e) => {
+          const v = e.target.value;
+          const num = /^0x/i.test(v) ? parseInt(v, 16) : parseInt(v, 10);
+          if (!isNaN(num)) {
+            configData.objects[idx].fields[fi].value = num;
+            updateTreeItemNonZeroCount(idx);
+          }
+        });
+
+        const fkeys = groupFkeys[fi] || [fkey];
+        const groupAlias = (meta.fieldAliases[fkeys[0]] || '').trim();
+        const descText = (meta.fieldDescriptions[fkeys[0]] || '').trim();
+        const descPreview = getDescTitle(descText) || (descText ? (descText.split('\n')[0].trim().slice(0, 30) + (descText.length > 30 ? '…' : '')) : '') || '点击编辑';
+
+        const aliasInput = document.createElement('input');
+        aliasInput.type = 'text';
+        aliasInput.className = 'field-value alias-input';
+        aliasInput.placeholder = '别名';
+        aliasInput.value = groupAlias;
+        aliasInput.dataset.descKeys = JSON.stringify(fkeys);
+        aliasInput.addEventListener('change', () => {
+          const m = getMetadata();
+          const v = aliasInput.value.trim();
+          fkeys.forEach(k => { if (v) m.fieldAliases[k] = v; else delete m.fieldAliases[k]; });
+          saveMetadata(m);
+          renderDetail(selectedObjIdx);
+        });
+        aliasInput.addEventListener('blur', () => {
+          const m = getMetadata();
+          const v = aliasInput.value.trim();
+          fkeys.forEach(k => { if (v) m.fieldAliases[k] = v; else delete m.fieldAliases[k]; });
+          saveMetadata(m);
+        });
+
+        tr.innerHTML = `
+          <td></td>
+          <td>${f.offset}</td>
+          <td>${f.length}</td>
+          <td>${f.name}</td>
+          ${firstInGroup[fi] ? `<td class="alias-cell" rowspan="${fkeys.length}"></td>` : ''}
+          ${firstInGroup[fi] ? `<td class="desc-cell" rowspan="${fkeys.length}" data-desc-keys="${escapeAttr(JSON.stringify(fkeys))}">${escapeHtml(descPreview)}</td>` : ''}
+          <td></td>
+        `;
+        tr.querySelector('td:first-child').appendChild(checkbox);
+        if (firstInGroup[fi]) {
+          const aliasTd = tr.querySelector('td.alias-cell');
+          if (aliasTd) aliasTd.appendChild(aliasInput);
+        }
+        tr.querySelector('td:last-child').appendChild(valueInput);
+
+        tr.dataset.descKeys = JSON.stringify(fkeys);
+        tr.addEventListener('click', (e) => {
+          if (e.target.closest('input') || e.target.classList.contains('desc-cell')) return;
+          try { selectDescKeys(JSON.parse(tr.dataset.descKeys || '[]')); } catch (err) {}
+        });
+
+        const descTd = tr.querySelector('.desc-cell');
+        if (descTd) {
+          descTd.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectDescKeys(fkeys);
+          });
+        }
+
+        fieldTbody.appendChild(tr);
+      });
+
+      refreshDescCellSelection();
+      updateMergeToolbarVisibility();
+    }
+
+    function escapeAttr(s) {
+      if (s == null) return '';
+      return String(s).replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function selectDescKeys(fkeys) {
+      selectedDescKeys = fkeys && fkeys.length ? fkeys : [];
+      refreshDescCellSelection();
+      updateDescPanel();
+    }
+
+    function refreshDescCellSelection() {
+      fieldTbody.querySelectorAll('.desc-cell').forEach(td => {
+        const keys = (() => { try { return JSON.parse(td.dataset.descKeys || '[]'); } catch (e) { return []; } })();
+        const selected = selectedDescKeys.length && keys.length && selectedDescKeys[0] === keys[0];
+        td.classList.toggle('selected', selected);
+      });
+      fieldTbody.querySelectorAll('tr').forEach(tr => {
+        const td = tr.querySelector('.desc-cell');
+        const keys = td ? (() => { try { return JSON.parse(td.dataset.descKeys || '[]'); } catch (e) { return []; } })() : [];
+        const selected = selectedDescKeys.length && keys.length && selectedDescKeys.some(k => keys.includes(k));
+        tr.classList.toggle('selected-desc', selected);
+      });
+    }
+
+    var MdParser = {
+      parseLatex: function(latex) {
+        var html = latex.trim().replace(/\s+/g, ' ');
+        html = html.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '<span class="fraction"><span class="fraction-top">$1</span><span class="fraction-bottom">$2</span></span>');
+        html = html.replace(/\\mathrm\{([^}]+)\}/g, '<span style="font-style:normal">$1</span>');
+        html = html.replace(/\\mathbf\{([^}]+)\}/g, '<b>$1</b>');
+        html = html.replace(/\\mathit\{([^}]+)\}/g, '<i>$1</i>');
+        var symbols = { '\\mu': 'μ', '\\Omega': 'Ω', '\\pi': 'π', '\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ', '\\delta': 'δ', '\\epsilon': 'ε', '\\theta': 'θ', '\\lambda': 'λ', '\\sigma': 'σ', '\\phi': 'φ', '\\psi': 'ψ', '\\omega': 'ω', '\\times': '×', '\\cdot': '·', '\\pm': '±', '\\geq': '≥', '\\leq': '≤', '\\neq': '≠', '\\approx': '≈', '\\rightarrow': '→', '\\leftarrow': '←', '\\infty': '∞', '\\sum': '∑', '\\int': '∫', '\\sqrt': '√', '\\circ': '°', '\\deg': '°', '\\prime': '′', '\\%': '%', '\\$': '$', '\\&': '&', '\\#': '#' };
+        for (var cmd in symbols) html = html.replace(new RegExp(cmd.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), symbols[cmd]);
+        html = html.replace(/\\sqrt\{([^}]+)\}/g, '√$1');
+        html = html.replace(/\^\{([^}]+)\}/g, '<sup>$1</sup>');
+        html = html.replace(/_\{([^}]+)\}/g, '<sub>$1</sub>');
+        html = html.replace(/\^([a-zA-Z0-9±∞])/g, '<sup>$1</sup>');
+        html = html.replace(/_([a-zA-Z0-9])/g, '<sub>$1</sub>');
+        html = html.replace(/[{}]/g, '');
+        return '<span class="math">' + html + '<' + '/span>';
+      },
+      parse: function(text) {
+        if (!text) return '';
+        var self = this;
+        var codeBlocks = [], inlineCodes = [], tables = [], htmlImages = [];
+        text = text.replace(/```(\w*)\n([\s\S]*?)```/g, function(m, lang, code) { codeBlocks.push({ lang: lang, code: self.escapeHtml(code) }); return '\x00CODE_BLOCK_' + (codeBlocks.length - 1) + '\x00'; });
+        text = text.replace(/`([^`]+)`/g, function(m, code) { inlineCodes.push(self.escapeHtml(code)); return '\x00INLINE_CODE_' + (inlineCodes.length - 1) + '\x00'; });
+        text = text.replace(/<table[\s\S]*?<\/table>/gi, function(m) {
+          var processed = m.replace(/\$(.+?)\$/g, function(match, latex) { return self.parseLatex(latex); });
+          tables.push(processed);
+          return '\x00TABLE_' + (tables.length - 1) + '\x00';
+        });
+        text = text.replace(/<img[^>]+>/gi, function(m) { htmlImages.push(m); return '\x00HTML_IMG_' + (htmlImages.length - 1) + '\x00'; });
+        text = text.replace(/<!--(.*?)-->/gs, function(m, content) {
+          var clean = content.replace(/<br\s*\/?>/gi, '\n').trim();
+          return '<span class="html-comment">' + self.escapeHtml(clean) + '<' + '/span>';
+        });
+        text = text.replace(/\$(.+?)\$/g, function(match, latex) { return self.parseLatex(latex); });
+        text = text.replace(new RegExp('<c\\s+(red|blue|green|orange|purple|gray)>(.*?)<' + '/c>', 'gi'), '<c-$1>$2<' + '/c-$1>');
+        text = text.replace(/\{\{(red|blue|green|orange|purple|gray)\|(.+?)\}\}/g, '<c-$1>$2<' + '/c-$1>');
+        text = text.replace(/\{\{#([0-9a-fA-F]{6})\|(.+?)\}\}/g, '<span style="color:#$1">$2<' + '/span>');
+        text = text.replace(/==(.+?)==/g, '<mark>$1<' + '/mark>');
+        text = text.replace(/^###### (.*$)/gim, '<h6>$1<' + '/h6>');
+        text = text.replace(/^##### (.*$)/gim, '<h5>$1<' + '/h5>');
+        text = text.replace(/^#### (.*$)/gim, '<h4>$1<' + '/h4>');
+        text = text.replace(/^### (.*$)/gim, '<h3>$1<' + '/h3>');
+        text = text.replace(/^## (.*$)/gim, '<h2>$1<' + '/h2>');
+        text = text.replace(/^# (.*$)/gim, '<h1>$1<' + '/h1>');
+        text = text.replace(/(^|\n)(\|.+\|\n\|[-:\s|]+\|\n(?:\|.+\|\n)*)/g, function(m, before, block) {
+          var rows = block.trim().split('\n');
+          if (rows.length < 2) return m;
+          var sep = rows[1];
+          if (!/^\|[-:\s|]+\|$/.test(sep)) return m;
+          var toCell = function(line) {
+            var cells = line.split('|').slice(1, -1).map(function(c) { return c.trim().replace(/^<(.*)>$/, '$1'); });
+            return cells.map(function(c) { return '<td>' + c.replace(/\$(.+?)\$/g, function(_, latex) { return self.parseLatex(latex); }) + '<' + '/td>'; }).join('');
+          };
+          var html = '<table><thead><tr>' + rows[0].split('|').slice(1, -1).map(function(c) { return '<th>' + c.trim() + '<' + '/th>'; }).join('') + '<' + '/tr><' + '/thead><tbody>';
+          for (var r = 2; r < rows.length; r++) html += '<tr>' + toCell(rows[r]) + '<' + '/tr>';
+          html += '<' + '/tbody><' + '/table>';
+          return before + html;
+        });
+        text = text.replace(/^\s*[-*+] (.*$)/gim, '<li>$1<' + '/li>');
+        text = text.replace(new RegExp('(<li>.*<' + '/li>\\n?)+', 'g'), function(m) { return '<ul>' + m + '<' + '/ul>'; });
+        text = text.replace(/^\s*\d+\. (.*$)/gim, '<li>$1<' + '/li>');
+        text = text.replace(new RegExp('(<li>.*<' + '/li>\\n?)+', 'g'), function(m) { return m.indexOf('<ul>') !== -1 ? m : '<ol>' + m + '<' + '/ol>'; });
+        text = text.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1<' + '/em><' + '/strong>');
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1<' + '/strong>');
+        text = text.replace(/\*(.*?)\*/g, '<em>$1<' + '/em>');
+        text = text.replace(/__(.*?)__/g, '<strong>$1<' + '/strong>');
+        text = text.replace(/_(.*?)_/g, '<em>$1<' + '/em>');
+        text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, function(m, alt, url) { return '<img src="' + url + '" alt="' + self.escapeHtml(alt) + '" title="' + self.escapeHtml(alt) + '">'; });
+        text = text.replace(/^> (.*$)/gim, '<blockquote>$1<' + '/blockquote>');
+        text = text.replace(new RegExp('<' + '/blockquote>\\n<blockquote>', 'g'), '<br>');
+        text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+        text = text.replace(/^---+$/gim, '<hr>');
+        text = text.replace(/\x00TABLE_(\d+)\x00/g, function(m, i) { return tables[i] || m; });
+        text = text.replace(/\x00HTML_IMG_(\d+)\x00/g, function(m, i) { return htmlImages[i] || m; });
+        text = text.replace(/\n\n/g, '<' + '/p><p>');
+        text = text.replace(/\n/g, '<br>');
+        text = '<p>' + text + '<' + '/p>';
+        text = text.replace(new RegExp('<p><' + '/p>', 'g'), '');
+        text = text.replace(new RegExp('<p>(<[hluo].*?)<' + '/p>', 'g'), '$1');
+        text = text.replace(new RegExp('<p>(<span class="html-comment">.*?)<' + '/p>', 'g'), '$1');
+        text = text.replace(new RegExp('<p>(<table.*?)<' + '/p>', 'g'), '$1');
+        text = text.replace(new RegExp('<p>(<div.*?)<' + '/p>', 'g'), '$1');
+        text = text.replace(new RegExp('<p>(<img.*?)<' + '/p>', 'g'), '$1');
+        text = text.replace(/\x00CODE_BLOCK_(\d+)\x00/g, function(m, i) { var b = codeBlocks[i]; return b ? '<pre><code>' + b.code + '<' + '/code><' + '/pre>' : m; });
+        text = text.replace(/\x00INLINE_CODE_(\d+)\x00/g, function(m, i) { return inlineCodes[i] !== undefined ? '<code>' + inlineCodes[i] + '<' + '/code>' : m; });
+        text = text.replace(new RegExp('<p>(<pre>.*<' + '/pre>)<' + '/p>', 'gs'), '$1');
+        return text;
+      },
+      escapeHtml: function(text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+    };
+
+    function renderMarkdownPreview(md) {
+      var el = document.getElementById('descPreview');
+      if (!el) return;
+      try {
+        var html = MdParser.parse(md || '') || '<p style="color:var(--text-muted);">无内容<' + '/p>';
+        el.innerHTML = html;
+        el.querySelectorAll('img').forEach(function (img) {
+          var src = img.getAttribute('src');
+          if (src && src.indexOf('/') === 0 && src.indexOf('//') !== 0 && src.indexOf('data:') !== 0) {
+            img.setAttribute('src', window.location.origin + src);
+          }
+        });
+      } catch (e) {
+        el.innerHTML = '<p style="color:var(--error);">预览解析失败</p>';
+      }
+    }
+
+    function refreshDescPreview() {
+      var editor = document.getElementById('descEditor');
+      var wrap = document.getElementById('descEditorWrap');
+      if (!editor || !wrap) return;
+      var md = editor.value;
+      if (wrap.classList.contains('desc-mode-preview')) {
+        renderMarkdownPreview(md);
+      } else {
+        var prevEl = document.getElementById('descPreview');
+        if (prevEl) prevEl.innerHTML = '';
+      }
+    }
+
+    function updateDescPanel() {
+      const editor = document.getElementById('descEditor');
+      const wrap = document.getElementById('descEditorWrap');
+      if (!editor) return;
+      if (!selectedDescKeys.length) {
+        editor.value = '';
+        editor.disabled = true;
+        document.getElementById('btnDescSource').disabled = true;
+        document.getElementById('btnDescPreview').disabled = true;
+        renderMarkdownPreview('');
+        var headerEl = document.getElementById('descPanelHeader');
+        if (headerEl) headerEl.textContent = '配置说明 (Markdown)';
+        return;
+      }
+      editor.disabled = false;
+      document.getElementById('btnDescSource').disabled = false;
+      document.getElementById('btnDescPreview').disabled = false;
+      const meta = getMetadata();
+      const text = meta.fieldDescriptions[selectedDescKeys[0]] || '';
+      if (editor.value !== text) editor.value = text;
+      var headerEl = document.getElementById('descPanelHeader');
+      if (headerEl) {
+        var title = getDescTitle(text);
+        headerEl.textContent = title ? ('配置说明: ' + title) : '配置说明 (Markdown)';
+      }
+      editor.oninput = () => { refreshDescPreview(); saveDescFromEditor(); };
+      editor.onblur = saveDescFromEditor;
+      refreshDescPreview();
+    }
+
+    function saveDescFromEditor() {
+      const editor = document.getElementById('descEditor');
+      if (!editor || !selectedDescKeys.length) return;
+      const meta = getMetadata();
+      const v = editor.value;
+      selectedDescKeys.forEach(k => {
+        if (v.trim()) meta.fieldDescriptions[k] = v;
+        else delete meta.fieldDescriptions[k];
+      });
+      saveMetadata(meta);
+      const preview = getDescTitle(v) || (v.trim() ? v.trim().split('\n')[0].trim().slice(0, 30) + (v.length > 30 ? '…' : '') : '') || '点击编辑';
+      fieldTbody.querySelectorAll('.desc-cell').forEach(td => {
+        try {
+          const keys = JSON.parse(td.dataset.descKeys || '[]');
+          if (keys[0] === selectedDescKeys[0]) td.textContent = preview;
+        } catch (e) {}
+      });
+      var headerEl = document.getElementById('descPanelHeader');
+      if (headerEl) {
+        var title = getDescTitle(v);
+        headerEl.textContent = title ? ('配置说明: ' + title) : '配置说明 (Markdown)';
+      }
+    }
+
+    document.getElementById('btnDescSource').addEventListener('click', () => {
+      const wrap = document.getElementById('descEditorWrap');
+      if (!wrap) return;
+      wrap.classList.remove('desc-mode-preview');
+      wrap.classList.add('desc-mode-source');
+      document.getElementById('btnDescSource').classList.add('active');
+      document.getElementById('btnDescPreview').classList.remove('active');
+      saveUiPrefs({ descMode: 'source' });
+    });
+    document.getElementById('btnDescPreview').addEventListener('click', () => {
+      const wrap = document.getElementById('descEditorWrap');
+      if (!wrap) return;
+      wrap.classList.remove('desc-mode-source');
+      wrap.classList.add('desc-mode-preview');
+      document.getElementById('btnDescSource').classList.remove('active');
+      document.getElementById('btnDescPreview').classList.add('active');
+      refreshDescPreview();
+      saveUiPrefs({ descMode: 'preview' });
+    });
+
+    // 根据上次记忆的模式初始化字段描述编辑区视图（源代码 / 预览）
+    (function initDescPanelMode() {
+      const prefs = getUiPrefs();
+      if (prefs.descMode !== 'preview') return;
+      const wrap = document.getElementById('descEditorWrap');
+      const btnS = document.getElementById('btnDescSource');
+      const btnP = document.getElementById('btnDescPreview');
+      if (!wrap || !btnS || !btnP) return;
+      wrap.classList.remove('desc-mode-source');
+      wrap.classList.add('desc-mode-preview');
+      btnS.classList.remove('active');
+      btnP.classList.add('active');
+      refreshDescPreview();
+    })();
+
+    var descHintInput = document.getElementById('descHintKeyword');
+    if (descHintInput) {
+      descHintInput.addEventListener('input', updateDescHintPreview);
+      descHintInput.addEventListener('keyup', updateDescHintPreview);
+    }
+
+    (function initDescImagePasteAndRename() {
+      const editor = document.getElementById('descEditor');
+      if (!editor) return;
+
+      let lastValue = editor.value || '';
+
+      async function tryRenameImage(oldName, newName) {
+        const r = await fetch('/api/rename-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ old: oldName, new: newName })
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || !data || !data.success) {
+          throw new Error((data && data.error) ? data.error : ('重命名失败: HTTP ' + r.status));
+        }
+        return data.url;
+      }
+
+      async function handleRenameOnInput() {
+        const newValue = editor.value || '';
+        if (newValue === lastValue) return;
+
+        // 仅在源代码模式下处理
+        const wrap = document.getElementById('descEditorWrap');
+        if (wrap && wrap.classList.contains('desc-mode-preview')) {
+          lastValue = newValue;
+          return;
+        }
+
+        const imgRe = /!\[\]\(\/metadata_images\/([^)]+)\)/g;
+        const oldLinks = [];
+        const newLinks = [];
+        let m;
+        while ((m = imgRe.exec(lastValue)) !== null) oldLinks.push(m[1]);
+        while ((m = imgRe.exec(newValue)) !== null) newLinks.push(m[1]);
+
+        // 简化策略：当且仅当“图片数量一致”且“只有一个文件名发生变化”时触发重命名
+        if (oldLinks.length === 0 || oldLinks.length !== newLinks.length) {
+          lastValue = newValue;
+          return;
+        }
+
+        const diffs = [];
+        for (let i = 0; i < oldLinks.length; i++) {
+          if (oldLinks[i] !== newLinks[i]) diffs.push({ old: oldLinks[i], new: newLinks[i] });
+        }
+        if (diffs.length !== 1) {
+          lastValue = newValue;
+          return;
+        }
+
+        const oldName = diffs[0].old;
+        const newName = diffs[0].new;
+        if (!oldName || !newName) {
+          lastValue = newValue;
+          return;
+        }
+
+        try {
+          await tryRenameImage(oldName, newName);
+          lastValue = newValue;
+        } catch (err) {
+          showStatus('图片重命名失败: ' + (err && err.message ? err.message : String(err)), false);
+          editor.value = lastValue;
+          editor.selectionStart = editor.selectionEnd = lastValue.length;
+          refreshDescPreview();
+          saveDescFromEditor();
+        }
+      }
+
+      editor.addEventListener('paste', async (e) => {
+        const items = e.clipboardData && e.clipboardData.items;
+        if (!items) return;
+
+        // 仅在源码模式下处理
+        const wrap = document.getElementById('descEditorWrap');
+        if (wrap && wrap.classList.contains('desc-mode-preview')) return;
+
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf('image/') !== 0) continue;
+          const file = items[i].getAsFile();
+          if (!file) continue;
+          e.preventDefault();
+
+          const ext = file.type === 'image/png' ? '.png' : file.type === 'image/jpeg' || file.type === 'image/jpg' ? '.jpg' : file.type === 'image/gif' ? '.gif' : '.webp';
+          const form = new FormData();
+          form.append('file', file, 'pasted-' + Date.now() + '-' + Math.floor(Math.random() * 9000 + 1000) + ext);
+
+          try {
+            const r = await fetch('/api/upload-image', { method: 'POST', body: form });
+            const data = await r.json().catch(() => ({}));
+            if (data.success && data.url) {
+              const insert = '![](' + data.url + ')';
+              const start = editor.selectionStart, end = editor.selectionEnd;
+              const text = editor.value;
+              editor.value = text.slice(0, start) + insert + text.slice(end);
+              editor.selectionStart = editor.selectionEnd = start + insert.length;
+              refreshDescPreview();
+              saveDescFromEditor();
+              lastValue = editor.value;
+            }
+          } catch (err) {}
+          break;
+        }
+      });
+
+      editor.addEventListener('input', async () => {
+        await handleRenameOnInput();
+        refreshDescPreview();
+        saveDescFromEditor();
+      });
+
+      editor.addEventListener('blur', () => {
+        lastValue = editor.value || '';
+        saveDescFromEditor();
+      });
+    })();
+
+    function escapeHtml(s) {
+      if (s == null) return '';
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    (function initResizeHandle() {
+      const handle = document.getElementById('resizeHandle');
+      const panel = document.getElementById('descPanel');
+      if (!handle || !panel) return;
+      let startX = 0, startW = 0;
+      handle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        startX = e.clientX;
+        startW = panel.offsetWidth;
+        handle.classList.add('dragging');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        function move(e) {
+          const dx = e.clientX - startX;
+          const newW = Math.max(180, Math.min(window.innerWidth * 0.5, startW - dx));
+          panel.style.width = newW + 'px';
+        }
+        function up() {
+          handle.classList.remove('dragging');
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+          document.removeEventListener('mousemove', move);
+          document.removeEventListener('mouseup', up);
+        }
+        document.addEventListener('mousemove', move);
+        document.addEventListener('mouseup', up);
+      });
+    })();
+
+    document.getElementById('btnApplyMergeAlias').addEventListener('click', () => {
+      if (selectedObjIdx < 0 || !configData) return;
+      const obj = configData.objects[selectedObjIdx];
+      const mergedAlias = (document.getElementById('mergeAliasInput').value || '').trim();
+      if (!mergedAlias) {
+        showStatus('请输入合并别名', false);
+        return;
+      }
+      const checked = fieldTbody.querySelectorAll('.merge-check:checked');
+      if (checked.length === 0) {
+        showStatus('请先勾选要合并的寄存器行', false);
+        return;
+      }
+      const meta = getMetadata();
+      checked.forEach(cb => {
+        const fi = parseInt(cb.dataset.fieldIdx, 10);
+        const f = obj.fields[fi];
+        if (f) {
+          meta.fieldAliases[fieldKey(obj, f)] = mergedAlias;
+        }
+      });
+      saveMetadata(meta);
+      checked.forEach(cb => {
+        const fi = parseInt(cb.dataset.fieldIdx, 10);
+        const f = obj.fields[fi];
+        const fkey = fieldKey(obj, f);
+        const aliasInput = fieldTbody.querySelector(`input.alias-input[data-field-key="${fkey}"]`);
+        if (aliasInput) aliasInput.value = mergedAlias;
+      });
+      document.getElementById('mergeAliasInput').value = '';
+      checked.forEach(cb => { cb.checked = false; });
+      updateMergeToolbarVisibility();
+      renderDetail(selectedObjIdx);
+      showStatus('已为 ' + checked.length + ' 个寄存器设置合并别名：' + mergedAlias, true);
+    });
+
+    // 取消合并：清除选中行的别名，从而取消分组合并
+    document.getElementById('btnCancelMergeAlias').addEventListener('click', () => {
+      if (selectedObjIdx < 0 || !configData) return;
+      const obj = configData.objects[selectedObjIdx];
+      const checked = fieldTbody.querySelectorAll('.merge-check:checked');
+      if (checked.length === 0) {
+        showStatus('请先勾选要取消合并的寄存器行', false);
+        return;
+      }
+      const meta = getMetadata();
+      checked.forEach(cb => {
+        const fi = parseInt(cb.dataset.fieldIdx, 10);
+        const f = obj.fields[fi];
+        if (f) {
+          const k = fieldKey(obj, f);
+          delete meta.fieldAliases[k];
+        }
+      });
+      saveMetadata(meta);
+      document.getElementById('mergeAliasInput').value = '';
+      checked.forEach(cb => { cb.checked = false; });
+      updateMergeToolbarVisibility();
+      renderDetail(selectedObjIdx);
+      showStatus('已取消 ' + checked.length + ' 行的合并别名', true);
+    });
+
+    document.getElementById('btnReadObject').addEventListener('click', async () => {
+      const num = parseInt(document.getElementById('objNumInput').value, 10);
+      if (!num || num < 1) {
+        showStatus('请输入对象号（如 100）', false);
+        return;
+      }
+      try {
+        const r = await fetch('/api/read-object', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(withDevicePayload({ object_type: num, instance: 0 }))
+        });
+        const data = await r.json();
+        if (data.success) {
+          const obj = {
+            header: data.object_name,
+            object_id: data.object_type,
+            instance: data.instance,
+            object_address: 0,
+            object_size: data.fields.length,
+            fields: data.fields
+          };
+          if (!configData) configData = { header: {}, application_header: {}, objects: [] };
+          const idx = configData.objects.findIndex(o => o.object_id === data.object_type && o.instance === data.instance);
+          if (idx >= 0) {
+            configData.objects[idx] = obj;
+            selectedObjIdx = idx;
+          } else {
+            configData.objects.push(obj);
+            selectedObjIdx = configData.objects.length - 1;
+          }
+          renderTree();
+          selectObject(selectedObjIdx);
+          document.getElementById('btnWriteObject').style.display = 'inline-block';
+          showStatus('已读取 T' + num, true);
+        } else {
+          showStatus('读取失败: ' + (data.error || '未知错误'), false);
+        }
+      } catch (e) {
+        showStatus('读取失败: ' + e.message, false);
+      }
+    });
+
+    document.getElementById('btnReadDevice').addEventListener('click', async () => {
+      try {
+        const r = await fetch('/api/read-device', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(withDevicePayload({}))
+        });
+        const data = await r.json();
+        if (data.success) {
+          configData = data.data;
+          try {
+            localStorage.setItem(LAST_CONFIG_KEY, JSON.stringify(configData));
+          } catch (e) {}
+          renderTree();
+          if (configData.objects && configData.objects.length > 0) {
+            selectObject(0);
+          }
+          showStatus('从设备读取成功', true);
+        } else {
+          showStatus('读取失败: ' + (data.error || '未知错误'), false);
+        }
+      } catch (e) {
+        showStatus('读取失败: ' + e.message, false);
+      }
+    });
+
+    document.getElementById('btnSaveXcfg').addEventListener('click', async () => {
+      if (!configData) {
+        showStatus('请先加载或读取配置', false);
+        return;
+      }
+
+      let name = window.prompt('请输入要保存到服务器的文件名（可不含扩展名 .xcfg）:', 'config');
+      if (name === null) {
+        return;
+      }
+      name = name.trim();
+      if (!name) {
+        showStatus('文件名不能为空', false);
+        return;
+      }
+
+      const pathInput = document.getElementById('savePathInput');
+      const path = pathInput ? pathInput.value.trim() : '';
+      const body = {
+        config: configData,
+        saveToServer: true,
+        name: name
+      };
+      if (path) {
+        body.path = path;
+      }
+
+      try {
+        const r = await fetch('/api/save-xcfg', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (!r.ok) {
+          showStatus('保存失败: HTTP ' + r.status, false);
+          return;
+        }
+        let data;
+        try {
+          data = await r.json();
+        } catch (e) {
+          showStatus('保存失败: 响应不是 JSON: ' + e.message, false);
+          return;
+        }
+
+        if (data.content) {
+          const blob = new Blob([data.content], { type: 'text/plain;charset=utf-8' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          const downloadName = (name && name.toLowerCase().endsWith('.xcfg')) ? name : (name + '.xcfg');
+          a.download = downloadName;
+          a.click();
+          URL.revokeObjectURL(a.href);
+        }
+
+        if (data.serverPath) {
+          showStatus('已保存到服务器: ' + data.serverPath, true);
+        } else if (data.path) {
+          showStatus(data.message || '已保存到 ' + data.path, true);
+        } else if (data.success) {
+          showStatus('xcfg 已保存', true);
+        } else {
+          showStatus(data.error || '保存失败', false);
+        }
+      } catch (e) {
+        showStatus('保存失败: ' + e.message, false);
+      }
+    });
+
+    document.getElementById('btnWriteObject').addEventListener('click', async () => {
+      if (selectedObjIdx < 0 || !configData || !configData.objects[selectedObjIdx]) {
+        showStatus('请先选择对象', false);
+        return;
+      }
+      const obj = configData.objects[selectedObjIdx];
+      const bytes = new Array(obj.object_size || obj.fields.length).fill(0);
+      obj.fields.forEach(f => {
+        const v = typeof f.value === 'number' ? f.value : parseInt(f.value, 0) || 0;
+        for (let i = 0; i < (f.length || 1); i++) {
+          if (f.offset + i < bytes.length) bytes[f.offset + i] = (v >> (i * 8)) & 0xFF;
+        }
+      });
+      try {
+        const r = await fetch('/api/write-object', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(withDevicePayload({
+            object_type: obj.object_id,
+            instance: obj.instance || 0,
+            data: bytes
+          }))
+        });
+        const data = await r.json();
+        if (data.success) {
+          showStatus('已写入 T' + obj.object_id, true);
+        } else {
+          showStatus('写入失败: ' + (data.error || '未知错误'), false);
+        }
+      } catch (e) {
+        showStatus('写入失败: ' + e.message, false);
+      }
+    });
+
+    document.getElementById('btnWriteDevice').addEventListener('click', async () => {
+      if (!configData) {
+        showStatus('请先加载或读取配置', false);
+        return;
+      }
+      try {
+        const r = await fetch('/api/write-device', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(withDevicePayload({ config: configData }))
+        });
+        const data = await r.json();
+        if (data.success) {
+          showStatus('配置已成功写入设备', true);
+        } else {
+          showStatus('写入失败: ' + (data.error || '未知错误'), false);
+        }
+      } catch (e) {
+        showStatus('写入失败: ' + e.message, false);
+      }
+    });
+
+    document.getElementById('btnLoadServerXcfg').addEventListener('click', async () => {
+      try {
+        const r = await fetch('/api/server-xcfg-list');
+        if (!r.ok) {
+          showStatus('获取服务器文件列表失败: HTTP ' + r.status, false);
+          return;
+        }
+        const data = await r.json();
+        if (data.error) {
+          showStatus('获取服务器文件列表失败: ' + data.error, false);
+          return;
+        }
+        const files = data.files || [];
+        if (!files.length) {
+          showStatus('服务器 xcfg 目录下暂无文件', false);
+          return;
+        }
+        const nameList = files.map((f, idx) => `${idx + 1}. ${f.name}`).join('\n');
+        const input = window.prompt('请选择要加载的服务器 xcfg 文件（输入序号或完整文件名）：\n' + nameList, '1');
+        if (input === null) return;
+        let chosenName = '';
+        const trimmed = input.trim();
+        const idx = parseInt(trimmed, 10);
+        if (!isNaN(idx) && idx >= 1 && idx <= files.length) {
+          chosenName = files[idx - 1].name;
+        } else {
+          chosenName = trimmed;
+        }
+        if (!chosenName) {
+          showStatus('未选择文件', false);
+          return;
+        }
+
+        const r2 = await fetch('/api/load-server-xcfg', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: chosenName })
+        });
+        if (!r2.ok) {
+          showStatus('加载服务器文件失败: HTTP ' + r2.status, false);
+          return;
+        }
+        const d2 = await r2.json();
+        if (!d2.success) {
+          showStatus('加载服务器文件失败: ' + (d2.error || '未知错误'), false);
+          return;
+        }
+        configData = d2.data;
+        let copied = 0;
+        if (!hasDoneNameToAliasOnce()) {
+          copied = copyFieldNamesToAliasesForConfig(configData, { overwrite: false });
+          markDoneNameToAliasOnce();
+        }
+        try {
+          localStorage.setItem(LAST_CONFIG_KEY, JSON.stringify(configData));
+        } catch (e) {}
+        renderTree();
+        if (configData.objects && configData.objects.length > 0) {
+          selectObject(0);
+        }
+        if (copied > 0) {
+          showStatus('已从服务器加载: ' + (d2.name || chosenName) + '，并复制 ' + copied + ' 个名称到别名', true);
+        } else {
+          showStatus('已从服务器加载: ' + (d2.name || chosenName), true);
+        }
+      } catch (e) {
+        showStatus('加载服务器文件失败: ' + e.message, false);
+      }
+    });
+
+    document.getElementById('btnCopyNameToAlias').addEventListener('click', async () => {
+      if (!configData) {
+        showStatus('请先加载或读取配置', false);
+        return;
+      }
+      const overwrite = window.confirm('是否覆盖已有别名？\n- 选择“确定”：用名称覆盖所有别名\n- 选择“取消”：仅填充空别名');
+      const copied = copyFieldNamesToAliasesForConfig(configData, { overwrite: overwrite });
+      markDoneNameToAliasOnce();
+      if (selectedObjIdx >= 0) renderDetail(selectedObjIdx);
+      showStatus('已完成：更新 ' + copied + ' 个别名' + (overwrite ? '（覆盖模式）' : '（仅填空）'), true);
+    });
+
+    function setOutput(text) {
+      const out = document.getElementById('output');
+      if (!out) return;
+      out.textContent = text || '';
+      out.style.display = text ? 'block' : 'none';
+      if (text) out.scrollTop = 0;
+    }
+
+    async function postJson(url, body) {
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(withDevicePayload(body || {}))
+      });
+      const data = await r.json().catch(() => ({}));
+      return { ok: r.ok, data };
+    }
+
+    document.getElementById('btnBackup').addEventListener('click', async () => {
+      try {
+        setOutput('');
+        const { ok, data } = await postJson('/api/backup', {});
+        if (ok && data.success) {
+          setOutput(data.stdout || '');
+          showStatus('备份完成', true);
+        } else {
+          setOutput((data.stdout || '') + (data.stderr ? ('\n' + data.stderr) : ''));
+          showStatus('备份失败: ' + (data.error || '未知错误'), false);
+        }
+      } catch (e) {
+        showStatus('备份失败: ' + e.message, false);
+      }
+    });
+
+    document.getElementById('btnReset').addEventListener('click', async () => {
+      try {
+        setOutput('');
+        const { ok, data } = await postJson('/api/reset', {});
+        if (ok && data.success) {
+          setOutput(data.stdout || '');
+          showStatus('复位完成', true);
+        } else {
+          setOutput((data.stdout || '') + (data.stderr ? ('\n' + data.stderr) : ''));
+          showStatus('复位失败: ' + (data.error || '未知错误'), false);
+        }
+      } catch (e) {
+        showStatus('复位失败: ' + e.message, false);
+      }
+    });
+
+    document.getElementById('btnCalibrate').addEventListener('click', async () => {
+      try {
+        setOutput('');
+        const { ok, data } = await postJson('/api/calibrate', {});
+        if (ok && data.success) {
+          setOutput(data.stdout || '');
+          showStatus('校准完成', true);
+        } else {
+          setOutput((data.stdout || '') + (data.stderr ? ('\n' + data.stderr) : ''));
+          showStatus('校准失败: ' + (data.error || '未知错误'), false);
+        }
+      } catch (e) {
+        showStatus('校准失败: ' + e.message, false);
+      }
+    });
+
+    document.getElementById('btnMode0').addEventListener('click', async () => {
+      try {
+        setOutput('');
+        const { ok, data } = await postJson('/api/send-command', { command: 'mode0' });
+        if (ok && data.success) {
+          setOutput(data.stdout || '');
+          showStatus('已发送指令: mode0', true);
+        } else {
+          setOutput((data.stdout || '') + (data.stderr ? ('\n' + data.stderr) : ''));
+          showStatus('发送失败: ' + (data.error || '未知错误'), false);
+        }
+      } catch (e) {
+        showStatus('发送失败: ' + e.message, false);
+      }
+    });
+
+    function updateTreeItemNonZeroCount(idx) {
+      if (!configData || !configData.objects[idx]) return;
+      const row = treeBody.querySelector('.tree-item.level-0[data-idx="' + idx + '"]');
+      const countSpan = row && row.querySelector('.tree-item-count');
+      if (countSpan) {
+        const obj = configData.objects[idx];
+        const nonZeroCount = (obj.fields || []).filter(f => Number(f.value) !== 0).length;
+        countSpan.textContent = nonZeroCount;
+      }
+    }
+
+    function showStatus(msg, success) {
+      const el = document.getElementById('status');
+      el.className = 'status ' + (success ? 'success' : 'error');
+      el.textContent = msg;
+      el.style.display = msg ? 'block' : 'none';
+      const box = document.getElementById('statusBox');
+      if (box && msg) box.scrollTop = box.scrollHeight;
+    }
+
+    // ---- 全局配置文档（Markdown）右侧面板 ----
+    let selectedDocKey = null;
+
+    function getGlobalDocs(meta) {
+      const docs = [];
+      if (!meta || !meta.objectDescriptions) return docs;
+      Object.keys(meta.objectDescriptions).forEach(k => {
+        if (k.indexOf('DOC:') === 0) {
+          const md = meta.objectDescriptions[k] || '';
+          const title = getDescTitle(md) || ('未命名文档 ' + k.substring(4));
+          docs.push({ key: k, title: title });
+        }
+      });
+      docs.sort((a, b) => a.key.localeCompare(b.key));
+      return docs;
+    }
+
+    function renderDocList() {
+      const listEl = document.getElementById('docList');
+      if (!listEl) return;
+      const meta = getMetadata();
+      const docs = getGlobalDocs(meta);
+      listEl.innerHTML = '';
+      if (!docs.length) {
+        const empty = document.createElement('div');
+        empty.className = 'doc-empty';
+        empty.textContent = '右侧为配置文档列表，点击「新建文档」开始编写 Markdown 说明。';
+        listEl.appendChild(empty);
+        return;
+      }
+      docs.forEach(d => {
+        const item = document.createElement('div');
+        item.className = 'doc-item' + (d.key === selectedDocKey ? ' active' : '');
+        item.dataset.key = d.key;
+        item.textContent = d.title;
+        item.title = d.title;
+        item.addEventListener('click', () => {
+          openDocEditorForKey(d.key, d.title);
+        });
+        listEl.appendChild(item);
+      });
+    }
+
+    function renderDocPreview() {
+      const wrap = document.getElementById('docEditorWrap');
+      const editor = document.getElementById('docEditor');
+      const preview = document.getElementById('docPreview');
+      if (!wrap || !editor || !preview) return;
+      if (wrap.classList.contains('doc-mode-preview')) {
+        preview.innerHTML = MdParser.parse(editor.value || '') || '<p style="color:var(--text-muted);">无内容<' + '/p>';
+      } else {
+        preview.innerHTML = '';
+      }
+    }
+
+    function saveDocFromEditor() {
+      if (!selectedDocKey) return;
+      const editor = document.getElementById('docEditor');
+      if (!editor) return;
+      const meta = getMetadata();
+      const v = editor.value || '';
+      if (v.trim()) {
+        meta.objectDescriptions[selectedDocKey] = v;
+      } else {
+        delete meta.objectDescriptions[selectedDocKey];
+      }
+      saveMetadata(meta);
+      const title = getDescTitle(v) || (v.trim() ? v.trim().split('\n')[0].trim().slice(0, 30) : '') || '未命名文档';
+      const header = document.getElementById('docCurrentTitle');
+      if (header) header.textContent = title;
+      renderDocList();
+    }
+
+    function openDocEditorForKey(key, titleHint) {
+      const editor = document.getElementById('docEditor');
+      const header = document.getElementById('docCurrentTitle');
+      const btnSource = document.getElementById('btnDocSource');
+      const btnPreview = document.getElementById('btnDocPreview');
+      const wrap = document.getElementById('docEditorWrap');
+      if (!editor || !header || !btnSource || !btnPreview || !wrap) return;
+      selectedDocKey = key;
+      const meta = getMetadata();
+      const text = meta.objectDescriptions[key] || '';
+      editor.disabled = false;
+      editor.value = text;
+      const title = titleHint || getDescTitle(text) || (text.trim() ? text.trim().split('\n')[0].trim().slice(0, 30) : '') || '未命名文档';
+      header.textContent = title;
+      btnSource.disabled = false;
+      btnPreview.disabled = false;
+      renderDocList();
+      renderDocPreview();
+    }
+
+    (function initDocPanel() {
+      const editor = document.getElementById('docEditor');
+      const btnNew = document.getElementById('btnNewDoc');
+      const btnDelete = document.getElementById('btnDeleteDoc');
+      const btnSource = document.getElementById('btnDocSource');
+      const btnPreview = document.getElementById('btnDocPreview');
+      const btnToggle = document.getElementById('btnDocToggle');
+      const layout = document.getElementById('mainLayout');
+      const grip = document.getElementById('docResizeGrip');
+      if (!editor || !btnNew || !btnDelete || !btnSource || !btnPreview || !btnToggle || !layout || !grip) return;
+
+      function updateDocLayoutMargin(widthOverride, collapsedOverride) {
+        const collapsed = typeof collapsedOverride === 'boolean' ? collapsedOverride : layout.classList.contains('doc-collapsed');
+        if (collapsed) {
+          layout.style.marginRight = '26px';
+          return;
+        }
+        let w;
+        if (typeof widthOverride === 'number') {
+          w = widthOverride;
+        } else {
+          w = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--doc-panel-width') || '500', 10);
+        }
+        layout.style.marginRight = 'calc(' + w + 'px + 10px)';
+      }
+
+      editor.disabled = true;
+      let lastEditorValue = '';
+
+      async function uploadPastedImage(file) {
+        const fd = new FormData();
+        fd.append('file', file, file.name || ('paste-' + Date.now() + '.png'));
+        const r = await fetch('/api/upload-image', { method: 'POST', body: fd });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || !data || !data.success || !data.url) {
+          throw new Error((data && data.error) ? data.error : ('上传失败: HTTP ' + r.status));
+        }
+        return data.url;
+      }
+
+      function insertTextAtCursor(text) {
+        const el = editor;
+        const start = el.selectionStart || 0;
+        const end = el.selectionEnd || 0;
+        const before = el.value.slice(0, start);
+        const after = el.value.slice(end);
+        el.value = before + text + after;
+        const pos = start + text.length;
+        el.selectionStart = el.selectionEnd = pos;
+        el.focus();
+        renderDocPreview();
+        saveDocFromEditor();
+        lastEditorValue = editor.value;
+      }
+
+      async function tryRenameImage(oldName, newName) {
+        const r = await fetch('/api/rename-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ old: oldName, new: newName })
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || !data || !data.success) {
+          throw new Error((data && data.error) ? data.error : ('重命名失败: HTTP ' + r.status));
+        }
+        return data.url;
+      }
+
+      async function handleImageRenameOnInput() {
+        const newValue = editor.value;
+        if (newValue === lastEditorValue) return;
+
+        // 匹配所有 ![](/metadata_images/xxx) 链接
+        const imgRe = /!\[\]\(\/metadata_images\/([^)]+)\)/g;
+        const oldLinks = [];
+        let m;
+        while ((m = imgRe.exec(lastEditorValue)) !== null) {
+          oldLinks.push(m[1]);
+        }
+        const newLinks = [];
+        while ((m = imgRe.exec(newValue)) !== null) {
+          newLinks.push(m[1]);
+        }
+
+        // 找出新增/修改的链接（新值里存在，旧值里不存在或不同）
+        const changes = [];
+        newLinks.forEach(newName => {
+          const oldName = oldLinks.find(n => n === newName);
+          if (!oldName) {
+            // 新增的链接，可能是粘贴上传，也可能是手动输入
+            // 若手动输入的文件名不存在，暂不处理（避免误操作）
+            changes.push({ old: null, new: newName });
+          }
+        });
+
+        // 找出被修改的链接（旧值里存在，新值里不存在或不同）
+        oldLinks.forEach(oldName => {
+          const newName = newLinks.find(n => n === oldName);
+          if (!newName) {
+            // 被删除的链接，暂不处理
+            return;
+          }
+          if (newName !== oldName) {
+            // 文件名被修改
+            changes.push({ old: oldName, new: newName });
+          }
+        });
+
+        if (!changes.length) {
+          lastEditorValue = newValue;
+          return;
+        }
+
+        // 对每个修改执行重命名
+        for (const change of changes) {
+          if (!change.old || !change.new) continue;
+          try {
+            await tryRenameImage(change.old, change.new);
+            // 重命名成功，无需更新编辑器内容（URL 路径相同）
+          } catch (err) {
+            showStatus('图片重命名失败: ' + (err && err.message ? err.message : String(err)), false);
+            // 回退编辑器内容到旧值
+            editor.value = lastEditorValue;
+            editor.selectionStart = editor.selectionEnd = lastEditorValue.length;
+            renderDocPreview();
+            saveDocFromEditor();
+            return;
+          }
+        }
+
+        lastEditorValue = newValue;
+      }
+
+      editor.addEventListener('paste', async (e) => {
+        const dt = e.clipboardData;
+        if (!dt || !dt.items || !dt.items.length) return;
+
+        // 仅在源码模式下处理（避免预览模式下误插入）
+        const wrap = document.getElementById('docEditorWrap');
+        if (wrap && wrap.classList.contains('doc-mode-preview')) return;
+
+        const items = Array.from(dt.items);
+        const imgItem = items.find(it => it.kind === 'file' && it.type && it.type.indexOf('image/') === 0);
+        if (!imgItem) return;
+
+        const file = imgItem.getAsFile();
+        if (!file) return;
+
+        e.preventDefault();
+        try {
+          showStatus('正在上传图片…', true);
+          const url = await uploadPastedImage(file);
+          const md = '![](' + url + ')\n';
+          insertTextAtCursor(md);
+          showStatus('图片已上传并插入', true);
+        } catch (err) {
+          showStatus('图片上传失败: ' + (err && err.message ? err.message : String(err)), false);
+        }
+      });
+
+      editor.addEventListener('input', async () => {
+        await handleImageRenameOnInput();
+        renderDocPreview();
+        saveDocFromEditor();
+      });
+      editor.addEventListener('blur', () => {
+        lastEditorValue = editor.value;
+        saveDocFromEditor();
+      });
+
+      btnNew.addEventListener('click', () => {
+        const meta = getMetadata();
+        const key = 'DOC:' + Date.now();
+        const initText = '# 新文档\n\n在此编写配置说明（Markdown）……\n';
+        meta.objectDescriptions[key] = initText;
+        saveMetadata(meta);
+        openDocEditorForKey(key, '新文档');
+        showStatus('已创建新文档', true);
+      });
+
+      btnDelete.addEventListener('click', () => {
+        if (!selectedDocKey || selectedDocKey.indexOf('DOC:') !== 0) {
+          showStatus('请先在右侧列表中选择要删除的文档', false);
+          return;
+        }
+        const meta = getMetadata();
+        if (meta.objectDescriptions[selectedDocKey]) {
+          delete meta.objectDescriptions[selectedDocKey];
+          saveMetadata(meta);
+        }
+        selectedDocKey = null;
+        editor.value = '';
+        editor.disabled = true;
+        const header = document.getElementById('docCurrentTitle');
+        if (header) header.textContent = '未选择文档';
+        renderDocList();
+        renderDocPreview();
+        showStatus('文档已删除', true);
+      });
+
+      btnSource.addEventListener('click', () => {
+        const wrap = document.getElementById('docEditorWrap');
+        if (!wrap) return;
+        wrap.classList.remove('doc-mode-preview');
+        wrap.classList.add('doc-mode-source');
+        btnSource.classList.add('active');
+        btnPreview.classList.remove('active');
+        saveUiPrefs({ docMode: 'source' });
+      });
+
+      btnPreview.addEventListener('click', () => {
+        const wrap = document.getElementById('docEditorWrap');
+        if (!wrap) return;
+        wrap.classList.remove('doc-mode-source');
+        wrap.classList.add('doc-mode-preview');
+        btnSource.classList.remove('active');
+        btnPreview.classList.add('active');
+        renderDocPreview();
+        saveUiPrefs({ docMode: 'preview' });
+      });
+
+      // 折叠/展开配置文档列表到右侧边界
+      btnToggle.addEventListener('click', () => {
+        const collapsed = layout.classList.toggle('doc-collapsed');
+        btnToggle.textContent = collapsed ? '«' : '»';
+        saveUiPrefs({ docCollapsed: collapsed });
+        updateDocLayoutMargin(null, collapsed);
+      });
+
+      // 右侧配置文档面板宽度左右拖动调整
+      grip.addEventListener('mousedown', (e) => {
+        if (layout.classList.contains('doc-collapsed')) return; // 折叠时不允许拖动
+        e.preventDefault();
+        const startX = e.clientX;
+        const docPanel = document.getElementById('docPanel');
+        const startWidth = docPanel ? docPanel.offsetWidth : parseInt(getComputedStyle(document.documentElement).getPropertyValue('--doc-panel-width') || '500', 10);
+        let lastWidth = startWidth;
+        function onMove(ev) {
+          const dx = startX - ev.clientX;
+          let newW = startWidth + dx;
+          const minW = 260;
+          const maxW = Math.max(minW, Math.min(window.innerWidth * 0.6, newW));
+          lastWidth = maxW;
+          document.documentElement.style.setProperty('--doc-panel-width', maxW + 'px');
+          updateDocLayoutMargin(maxW, false);
+        }
+        function onUp() {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+          saveUiPrefs({ docPanelWidth: lastWidth });
+        }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      });
+
+      // 使用上次保存的 UI 偏好初始化右侧配置文档面板状态
+      (function applyDocPanelPrefs() {
+        const prefs = getUiPrefs();
+        if (prefs.docPanelWidth && typeof prefs.docPanelWidth === 'number') {
+          document.documentElement.style.setProperty('--doc-panel-width', prefs.docPanelWidth + 'px');
+        }
+        if (prefs.docCollapsed) {
+          layout.classList.add('doc-collapsed');
+          btnToggle.textContent = '«';
+        } else {
+          btnToggle.textContent = '»';
+        }
+        updateDocLayoutMargin(prefs.docPanelWidth && typeof prefs.docPanelWidth === 'number' ? prefs.docPanelWidth : null, prefs.docCollapsed);
+        if (prefs.docMode === 'preview') {
+          const wrap = document.getElementById('docEditorWrap');
+          if (wrap) {
+            wrap.classList.remove('doc-mode-source');
+            wrap.classList.add('doc-mode-preview');
+            btnSource.classList.remove('active');
+            btnPreview.classList.add('active');
+            renderDocPreview();
+          }
+        }
+      })();
+
+      renderDocList();
+      renderDocPreview();
+    })();
+
+    // 页面加载后，优先从 Electron 传入或 localStorage 恢复配置，再拉取 metadata
+    setTimeout(function () {
+      function afterConfigReady() {
+        refreshSerialAppConnection().then(function () {
+          return loadMetadataFromServer();
+        }).then(function () {
+          if (configData != null && selectedObjIdx >= 0) {
+            renderTree();
+            renderDetail(selectedObjIdx);
+          }
+        });
+      }
+
+      function restoreFromLocalStorage() {
+        try {
+          const rawCfg = localStorage.getItem(LAST_CONFIG_KEY);
+          if (!rawCfg) return false;
+          const parsed = JSON.parse(rawCfg);
+          if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.objects)) return false;
+          configData = parsed;
+          renderTree();
+          if (configData.objects && configData.objects.length > 0) {
+            selectedObjIdx = 0;
+            selectObject(0);
+          }
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      if (window.xcfgViewerAPI && typeof window.xcfgViewerAPI.getInitialPayload === 'function') {
+        window.xcfgViewerAPI.getInitialPayload().then(function (res) {
+          const pending = res && res.pending;
+          if (pending && pending.content) {
+            parseAndDisplay(String(pending.content)).then(function () {
+              if (pending.fileName) showStatus('已加载: ' + pending.fileName, true);
+              if (window.xcfgViewerAPI.clearInitialPayload) window.xcfgViewerAPI.clearInitialPayload();
+              afterConfigReady();
+            }).catch(function () {
+              restoreFromLocalStorage();
+              afterConfigReady();
+            });
+            return;
+          }
+          restoreFromLocalStorage();
+          afterConfigReady();
+        }).catch(function () {
+          restoreFromLocalStorage();
+          afterConfigReady();
+        });
+        return;
+      }
+
+      restoreFromLocalStorage();
+      afterConfigReady();
+    }, 0);
+  </script>
+</body>
+</html>

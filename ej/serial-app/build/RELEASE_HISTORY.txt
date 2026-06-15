@@ -1,0 +1,16 @@
+--- 1.0.0 @ 2026-06-15 06:32:23 ---
+（打包前请在此填写本版本更新说明，留空则仅显示版本号与打包内容清单）
+
+- xcfg 配置查看器：同步最新字段说明与配图
+- mxt-app：支持 WinUSB 与 STM32 虚拟串口双驱动
+- 桥接模式切换改为 mode0/mode1 文本命令
+- 安装包自动递增版本号并附带本升级说明文件
+包含: - Serial Terminal 主程序; - mxt-app CLI（WinUSB / 虚拟串口）; - xcfg 配置查看器; - xcfg 字段说明元数据（xcfg_viewer_metadata.json）; - xcfg 说明配图（6 个文件）; - libusb-1.0.dll（mxt-app 依赖）
+--- 1.0.1 @ 2026-06-15 06:33:50 ---
+（打包前请在此填写本版本更新说明，留空则仅显示版本号与打包内容清单）
+
+- xcfg 配置查看器：同步最新字段说明与配图
+- mxt-app：支持 WinUSB 与 STM32 虚拟串口双驱动
+- 桥接模式切换改为 mode0/mode1 文本命令
+- 安装包自动递增版本号并附带本升级说明文件
+包含: - Serial Terminal 主程序; - mxt-app CLI（WinUSB / 虚拟串口）; - xcfg 配置查看器; - xcfg 字段说明元数据（xcfg_viewer_metadata.json）; - xcfg 说明配图（6 个文件）; - libusb-1.0.dll（mxt-app 依赖）

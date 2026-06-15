@@ -9,6 +9,8 @@
 #define MXT_I2C_ADDR_BL_LOW     0x24
 #define MXT_I2C_ADDR_BL_HIGH    0x25
 #define MXT_I2C_ADDR_BL_ALT     0x26
+/* mXT640UD-CC ADDR_SEL=High 时 Bootloader 常为 0x27（见 enc.txt / QTAN0051） */
+#define MXT_I2C_ADDR_BL_MXT640  0x27
 
 /* mxt-app protocol */
 #define REPORT_ID              0x01
@@ -51,14 +53,29 @@
 #define CFG_RESP_NACK_CMD          0xD4
 #define CFGREAD_DATA_CMD           0xE1
 #define CFGREAD_END_CMD            0xE2
-#define CFG_MAX_OBJECTS            96
+/*
+ * CFG_MAX_OBJECTS — MCU 侧 g_cfgwrite_objects[] / START 帧对象表槽位上限。
+ * 实际上传对象数由上位机在 D0 START 的 total_objects 字段声明，须 ≤ 本值。
+ */
+#define CFG_MAX_OBJECTS            128
 #define CFG_MAX_DATA_PER_FRAME    256
+#define CFG_RX_BUF_SIZE            (12U + (CFG_MAX_OBJECTS) * 4U + 16U)
 #define CFG_ACK_TIMEOUT_MS         30
 #define CFG_READBACK_DELAY_MS     200
 
 #define UNFREEZE_COMMAND          0x11
 #define FREEZE_COMMAND            0x22
 #define BACKUPNV_COMMAND         0x55
+
+/* ENCWRITE — Host 流式下发 .enc 切帧，MCU 边收边写 Bootloader I2C */
+#define ENC_PROTOCOL_VERSION       0x01
+#define ENC_START_CMD              0xB0
+#define ENC_FRAME_CMD              0xB1
+#define ENC_END_CMD                0xB2
+#define ENC_RESP_ACK_CMD           0xB3
+#define ENC_RESP_NACK_CMD          0xB4
+#define ENC_MAX_FRAME_BYTES        276U
+#define ENC_RX_BUF_SIZE            (ENC_MAX_FRAME_BYTES + 16U)
 
 #define STATUS_OK              0x00
 #define STATUS_ADDR_NACK       0x01

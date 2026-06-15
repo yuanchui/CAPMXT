@@ -1,0 +1,35 @@
+# =============================================================================
+# Build artifacts (compiled outputs) — do not commit
+# =============================================================================
+
+# --- ej/serial-app (Electron / Node) ---
+ej/serial-app/node_modules/
+ej/serial-app/dist/
+ej/serial-app/release/
+ej/serial-app/build/dev-signing.pfx
+ej/serial-app/.trae/
+
+# --- ej/linux_driver_mxt_sys/mxt-app (autotools / MinGW) ---
+ej/linux_driver_mxt_sys/mxt-app/.libs/
+ej/linux_driver_mxt_sys/mxt-app/**/.deps/
+ej/linux_driver_mxt_sys/mxt-app/**/*.lo
+ej/linux_driver_mxt_sys/mxt-app/**/*.o
+ej/linux_driver_mxt_sys/mxt-app/autom4te.cache/
+ej/linux_driver_mxt_sys/mxt-app/config.status
+ej/linux_driver_mxt_sys/mxt-app/config.log
+ej/linux_driver_mxt_sys/mxt-app/config.h
+ej/linux_driver_mxt_sys/mxt-app/stamp-h1
+ej/linux_driver_mxt_sys/mxt-app/libtool
+ej/linux_driver_mxt_sys/mxt-app/git-version
+ej/linux_driver_mxt_sys/mxt-app/libmaxtouch.la
+ej/linux_driver_mxt_sys/mxt-app/mxt-app
+ej/linux_driver_mxt_sys/mxt-app/mxt-app.exe
+ej/linux_driver_mxt_sys/mxt-app/Makefile
+ej/linux_driver_mxt_sys/mxt-app/lt-*
+
+# --- Python ---
+**/__pycache__/
+*.pyc
+
+# --- Syncthing merge leftovers ---
+*.sync-conflict-*

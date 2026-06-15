@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MutualCap 3D Export</title>
+    <style>
+        body { margin: 0; background: #0a0a0a; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; display: flex; height: 100vh; }
+        #sidebar { width: 280px; background: rgba(0,0,0,0.4); backdrop-filter: blur(10px); border-right: 1px solid rgba(255,255,255,0.05); padding: 24px; display: flex; flex-direction: column; gap: 32px; z-index: 10; }
+        #container { flex: 1; position: relative; background: #050505; }
+        h2 { font-size: 10px; font-weight: bold; color: #71717a; text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; }
+        .control-group { display: flex; flex-direction: column; gap: 12px; }
+        .toggle-btn { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); background: rgba(24,24,27,0.5); color: #71717a; cursor: pointer; transition: all 0.2s; font-size: 14px; font-weight: 500; }
+        .toggle-btn.active { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.3); color: #dbeafe; }
+        .toggle-switch { width: 32px; height: 16px; background: #3f3f46; border-radius: 999px; position: relative; transition: background 0.2s; }
+        .toggle-btn.active .toggle-switch { background: #3b82f6; }
+        .toggle-knob { width: 12px; height: 12px; background: #fff; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: transform 0.2s; }
+        .toggle-btn.active .toggle-knob { transform: translateX(16px); }
+        .info-card { padding: 16px; border-radius: 12px; background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.1); font-size: 10px; font-family: monospace; color: #a1a1aa; line-height: 1.6; }
+        #hud { position: absolute; top: 24px; right: 24px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); min-width: 180px; pointer-events: none; }
+        .hud-label { font-size: 10px; font-weight: bold; color: #71717a; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+        .touch-item { display: flex; justify-content: space-between; font-family: monospace; font-size: 12px; margin-bottom: 4px; }
+        .touch-coord { color: #fff; }
+        .touch-val { color: #3b82f6; }
+        #heatmap-grid { display: grid; grid-template-columns: repeat(16, 1fr); gap: 1px; background: rgba(24,24,27,0.5); padding: 2px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05); aspect-ratio: 1/1; }
+        .heatmap-cell { aspect-ratio: 1/1; cursor: pointer; transition: background 0.1s; }
+        .heatmap-cell:hover { opacity: 0.8; }
+        .active-count-display { font-size: 12px; color: #71717a; margin-top: 8px; }
+        .active-count-display span { color: #3b82f6; font-weight: bold; }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/examples/jsm/controls/OrbitControls": "https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js"
+            }
+        }
+    </script>
+</head>
+<body>
+    <aside id="sidebar">
+        <div style="flex: 1">
+            <h2>Signal Heatmap</h2>
+            <div id="heatmap-grid"></div>
+            <div style="margin-top: 8px; display: flex; justify-content: space-between; font-size: 8px; font-family: monospace; color: #71717a; text-transform: uppercase;">
+                <span>0%</span>
+                <span>100%</span>
+            </div>
+            <p style="font-size: 8px; color: #52525b; margin-top: 8px; font-style: italic;">* Click grid to toggle touches</p>
+            <div class="active-count-display">
+                Active Touches: <span id="active-count">0</span>
+            </div>
+        </div>
+    </aside>
+
+    <div id="container">
+        <div id="hud">
+            <div class="hud-label">Active Signals</div>
+            <div id="touch-list"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+
+        const GRID_SIZE = 16;
+        const SPACING = 2;
+        const TX_COLOR = 0x3b82f6;
+        const RX_COLOR = 0xef4444;
+        const FIELD_COLOR = 0x22c55e;
+        const FINGER_COLOR = 0xffa500;
+
+        let touches = [];
+        let data = [];
+
+        const container = document.getElementById('container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050505);
+
+        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(20, 25, 20);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const pointLight = new THREE.PointLight(0xffffff, 1);
+        pointLight.position.set(10, 20, 10);
+        scene.add(pointLight);
+
+        const bottomLight = new THREE.PointLight(0xffffff, 0.8);
+        bottomLight.position.set(-10, -20, -10);
+        scene.add(bottomLight);
+
+        const offset = (GRID_SIZE - 1) * SPACING / 2;
+
+        // Base Grid
+        const gridHelper = new THREE.GridHelper(GRID_SIZE * SPACING + 20, 20, 0x333333, 0x222222);
+        gridHelper.position.y = -6;
+        scene.add(gridHelper);
+
+        // Surface
+        const surfaceSegments = 63;
+        const surfaceGeo = new THREE.PlaneGeometry((GRID_SIZE - 1) * SPACING, (GRID_SIZE - 1) * SPACING, surfaceSegments, surfaceSegments);
+        surfaceGeo.rotateX(-Math.PI / 2);
+        const surfaceMat = new THREE.MeshStandardMaterial({ 
+            color: 0x00ffff, emissive: 0x00ffff, emissiveIntensity: 0.5, 
+            transparent: true, opacity: 0.4, wireframe: true, side: THREE.DoubleSide
+        });
+        const surfaceMesh = new THREE.Mesh(surfaceGeo, surfaceMat);
+        scene.add(surfaceMesh);
+
+        // Lines
+        for (let i = 0; i < GRID_SIZE; i++) {
+            const txGeo = new THREE.BoxGeometry(GRID_SIZE * SPACING, 0.1, 0.2);
+            const txMat = new THREE.MeshStandardMaterial({ color: TX_COLOR, side: THREE.DoubleSide });
+            const tx = new THREE.Mesh(txGeo, txMat);
+            tx.position.set(0, -0.5, i * SPACING - offset);
+            scene.add(tx);
+
+            const rxGeo = new THREE.BoxGeometry(0.2, 0.1, GRID_SIZE * SPACING);
+            const rxMat = new THREE.MeshStandardMaterial({ color: RX_COLOR, side: THREE.DoubleSide });
+            const rx = new THREE.Mesh(rxGeo, rxMat);
+            rx.position.set(i * SPACING - offset, 0.5, 0);
+            scene.add(rx);
+        }
+
+        const fingersGroup = new THREE.Group();
+        scene.add(fingersGroup);
+
+        const fieldLinesGroup = new THREE.Group();
+        scene.add(fieldLinesGroup);
+
+        function updateSimulation() {
+            // 1. Base grid with bowl effect
+            data = Array(GRID_SIZE).fill(0).map((_, r) => 
+                Array(GRID_SIZE).fill(0).map((_, c) => {
+                    const dr = r - (GRID_SIZE - 1) / 2;
+                    const dc = c - (GRID_SIZE - 1) / 2;
+                    const distFromCenter = Math.sqrt(dr * dr + dc * dc);
+                    const maxDist = Math.sqrt(Math.pow((GRID_SIZE - 1) / 2, 2) * 2);
+                    const bowlEffect = Math.pow(distFromCenter / maxDist, 2) * 4;
+                    return 100 - bowlEffect;
+                })
+            );
+
+            if (touches.length > 0) {
+                const rowCounts = Array(GRID_SIZE).fill(0);
+                const colCounts = Array(GRID_SIZE).fill(0);
+                touches.forEach(t => { rowCounts[t.row]++; colCounts[t.col]++; });
+
+                const pointsToRender = [];
+                const isMultiTouch = touches.length > 1;
+
+                touches.forEach(t => {
+                    let strength = 60;
+                    if (isMultiTouch) {
+                        let baseMultiStrength = 16;
+                        let proximityFactor = 1.0;
+                        touches.forEach(other => {
+                            if (other.id !== t.id) {
+                                const dr = Math.abs(t.row - other.row);
+                                const dc = Math.abs(t.col - other.col);
+                                const dist = Math.sqrt(dr * dr + dc * dc);
+                                if (dist < 5) proximityFactor *= (0.4 + (dist / 8.3));
+                            }
+                        });
+                        strength = (baseMultiStrength * proximityFactor) / (Math.max(rowCounts[t.row], colCounts[t.col]) * 0.75);
+                    }
+                    pointsToRender.push({ r: t.row, c: t.col, type: 'real', strength });
+                });
+
+                if (isMultiTouch) {
+                    for (let i = 0; i < touches.length; i++) {
+                        for (let j = i + 1; j < touches.length; j++) {
+                            const t1 = touches[i]; const t2 = touches[j];
+                            if (t1.row !== t2.row && t1.col !== t2.col) {
+                                pointsToRender.push({ r: t1.row, c: t2.col, type: 'ghost', strength: 40 });
+                                pointsToRender.push({ r: t2.row, c: t1.col, type: 'ghost', strength: 40 });
+                            }
+                        }
+                    }
+                }
+
+                for (let r = 0; r < GRID_SIZE; r++) {
+                    for (let c = 0; c < GRID_SIZE; c++) {
+                        let ghostDelta = 0; let realDelta = 0; let maxRealInfluence = 0;
+                        pointsToRender.forEach(p => {
+                            const distSq = Math.pow(r - p.r, 2) + Math.pow(c - p.c, 2);
+                            const influence = Math.exp(-distSq / 2);
+                            if (p.type === 'ghost') ghostDelta += p.strength * influence;
+                            else { realDelta += p.strength * influence; maxRealInfluence = Math.max(maxRealInfluence, influence); }
+                        });
+                        const combinedDelta = ghostDelta * (1 - Math.pow(maxRealInfluence, 1.5)) + realDelta;
+                        data[r][c] = Math.max(0, data[r][c] - combinedDelta);
+                    }
+                }
+
+                touches.forEach(t => {
+                    for (let c = 0; c < GRID_SIZE; c++) data[t.row][c] = Math.max(0, data[t.row][c] - 6);
+                    for (let r = 0; r < GRID_SIZE; r++) data[r][t.col] = Math.max(0, data[r][t.col] - 3);
+                });
+            }
+
+            updateUI();
+            update3D();
+        }
+
+        function updateUI() {
+            // Update Heatmap
+            const grid = document.getElementById('heatmap-grid');
+            grid.innerHTML = '';
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'heatmap-cell';
+                    const isTouch = touches.some(t => t.row === r && t.col === c);
+                    cell.style.backgroundColor = isTouch ? '#f59e0b' : 'rgba(59, 130, 246, ' + (data[r][c] / 100 * 0.8) + ')';
+                    cell.onclick = () => toggleTouch(r, c);
+                    grid.appendChild(cell);
+                }
+            }
+
+            // Update HUD
+            const list = document.getElementById('touch-list');
+            list.innerHTML = touches.length === 0 ? '<div style="font-size: 12px; color: #52525b; font-style: italic;">No touch detected</div>' : '';
+            touches.forEach(t => {
+                const item = document.createElement('div');
+                item.className = 'touch-item';
+                item.innerHTML = `<span class="touch-coord">P(${t.row},${t.col})</span><span class="touch-val">${data[t.row][t.col].toFixed(1)}%</span>`;
+                list.appendChild(item);
+            });
+
+            document.getElementById('active-count').innerText = touches.length;
+        }
+
+        function toggleTouch(r, c) {
+            const idx = touches.findIndex(t => t.row === r && t.col === c);
+            if (idx > -1) touches.splice(idx, 1);
+            else if (touches.length < 5) touches.push({ row: r, col: c, id: Math.random().toString(36).substr(2, 9) });
+            updateSimulation();
+        }
+
+        function update3D() {
+            // Update Surface
+            const positions = surfaceMesh.geometry.attributes.position;
+            for (let r = 0; r <= surfaceSegments; r++) {
+                for (let c = 0; c <= surfaceSegments; c++) {
+                    const rData = (r / surfaceSegments) * (GRID_SIZE - 1);
+                    const cData = (c / surfaceSegments) * (GRID_SIZE - 1);
+                    const r0 = Math.floor(rData); const r1 = Math.min(r0 + 1, GRID_SIZE - 1);
+                    const c0 = Math.floor(cData); const c1 = Math.min(c0 + 1, GRID_SIZE - 1);
+                    const dr = rData - r0; const dc = cData - c0;
+                    const val = data[r0][c0] * (1 - dr) * (1 - dc) + data[r0][c1] * (1 - dr) * dc + data[r1][c0] * dr * (1 - dc) + data[r1][c1] * dr * dc;
+                    positions.setY(r * (surfaceSegments + 1) + c, 1.5 + (100 - val) / 12);
+                }
+            }
+            positions.needsUpdate = true;
+
+            // Update Fingers
+            fingersGroup.clear();
+            touches.forEach(t => {
+                const group = new THREE.Group();
+                const tip = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), new THREE.MeshStandardMaterial({ color: FINGER_COLOR }));
+                const body = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.45, 4, 16), tip.material);
+                body.position.y = 2;
+                group.add(tip, body);
+                group.position.set(t.col * SPACING - offset, 1.5, t.row * SPACING - offset);
+                fingersGroup.add(group);
+            });
+
+            // Update Field Lines
+            fieldLinesGroup.clear();
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const opacity = (data[r][c] / 100) * 0.4;
+                    const txPos = new THREE.Vector3(c * SPACING - offset, -0.5, r * SPACING - offset);
+                    const rxPos = new THREE.Vector3(c * SPACING - offset, 0.5, r * SPACING - offset);
+                    const curve = new THREE.QuadraticBezierCurve3(txPos, new THREE.Vector3(c * SPACING - offset, 1, r * SPACING - offset), rxPos);
+                    const geometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(10));
+                    const line = new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: FIELD_COLOR, transparent: true, opacity }));
+                    fieldLinesGroup.add(line);
+                }
+            }
+        }
+
+        // 按钮已隐藏，但保留切换功能供后续扩展（默认始终显示）
+        // 如需动态切换，可通过键盘快捷键或右键菜单实现
+        // document.getElementById('toggle-field').onclick = function() { ... };
+        // document.getElementById('toggle-surface').onclick = function() { ... };
+
+        updateSimulation();
+
+        function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+    </script>
+</body>
+</html>

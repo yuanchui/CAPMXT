@@ -6,6 +6,7 @@
 #include "mxt_usb_io.h"
 #include "mxt_touch.h"
 #include "mxt_cmd.h"
+#include "mxt_enc.h"
 #include "usbd_cdc_if.h"
 #include "gpio.h"
 #include <stdio.h>
@@ -192,7 +193,7 @@ void ProcessBridgePacket(uint8_t *buf, uint32_t len)
     static uint8_t mode_switch_state = 0;
     static const uint8_t mode_switch_seq[4] = {0x02, 0x01, 0x10, 0x20};
     uint8_t mode_switched = 0;
-    if (g_cfg_rx_len == 0 && !g_cfgwrite_active && !g_cfgread_waiting_ack) {
+    if (g_cfg_rx_len == 0 && !g_cfgwrite_active && !g_cfgread_waiting_ack && !g_encwrite_active) {
         for (uint32_t i = 0; i < len; i++) {
             uint8_t b = buf[i];
             if (b == mode_switch_seq[mode_switch_state]) {
@@ -253,6 +254,58 @@ void ProcessBridgePacket(uint8_t *buf, uint32_t len)
         }
     }
     
+    /* ENC 帧流式重组（单帧最大 276B，缓冲仅 ~292B） */
+    if (as_binary && len > 0) {
+        uint8_t maybe_enc = (buf[0] == ENC_START_CMD || buf[0] == ENC_FRAME_CMD || buf[0] == ENC_END_CMD);
+        if ((g_enc_rx_len > 0 || maybe_enc) && g_cfg_rx_len == 0 && !g_cfgwrite_active) {
+            uint32_t copy_len = len;
+            uint32_t cap_left = (uint32_t)sizeof(g_enc_rx_buf) - g_enc_rx_len;
+            if (copy_len > cap_left) {
+                g_enc_rx_len = 0;
+                MXT_ENC_Abort();
+                CFG_SendResp(ENC_RESP_NACK_CMD, 0, STATUS_ADDR_NACK);
+                return;
+            }
+            memcpy(&g_enc_rx_buf[g_enc_rx_len], buf, copy_len);
+            g_enc_rx_len = (uint16_t)(g_enc_rx_len + copy_len);
+
+            if (g_enc_rx_len < 1) return;
+
+            uint16_t expected_len = 0;
+            uint8_t enc_cmd = g_enc_rx_buf[0];
+            if (enc_cmd == ENC_START_CMD) {
+                expected_len = 8;
+            } else if (enc_cmd == ENC_FRAME_CMD) {
+                if (g_enc_rx_len < 7) return;
+                uint16_t frame_len = g_enc_rx_buf[3] | ((uint16_t)g_enc_rx_buf[4] << 8);
+                if (frame_len < 2 || frame_len > ENC_MAX_FRAME_BYTES) {
+                    g_enc_rx_len = 0;
+                    MXT_ENC_Abort();
+                    CFG_SendResp(ENC_RESP_NACK_CMD, 0, STATUS_ADDR_NACK);
+                    return;
+                }
+                expected_len = (uint16_t)(9 + frame_len);
+            } else if (enc_cmd == ENC_END_CMD) {
+                expected_len = 7;
+            } else {
+                g_enc_rx_len = 0;
+            }
+
+            if (expected_len > 0) {
+                if (g_enc_rx_len < expected_len) return;
+                buf = g_enc_rx_buf;
+                len = expected_len;
+                if (g_enc_rx_len > expected_len) {
+                    uint16_t remain = (uint16_t)(g_enc_rx_len - expected_len);
+                    memmove(g_enc_rx_buf, &g_enc_rx_buf[expected_len], remain);
+                    g_enc_rx_len = remain;
+                } else {
+                    g_enc_rx_len = 0;
+                }
+            }
+        }
+    }
+
     /* CFG 帧是流式传输（USB CDC 会拆包），这里先做重组再进入原有校验流程 */
     if (as_binary && len > 0) {
         uint8_t maybe_cfg = (buf[0] == CFGWRITE_START_CMD || buf[0] == CFGWRITE_CHUNK_CMD || buf[0] == CFGWRITE_END_CMD ||
@@ -262,8 +315,9 @@ void ProcessBridgePacket(uint8_t *buf, uint32_t len)
             uint32_t copy_len = len;
             uint32_t cap_left = (uint32_t)sizeof(g_cfg_rx_buf) - g_cfg_rx_len;
             if (copy_len > cap_left) {
-                /* 重组溢出时丢弃本次缓存，等待下一帧重新同步 */
+                /* 重组溢出：帧过大（常见为 START 对象表超过 CFG_RX_BUF_SIZE） */
                 g_cfg_rx_len = 0;
+                CFG_SendResp(CFG_RESP_NACK_CMD, 0, STATUS_ADDR_NACK);
                 return;
             }
             memcpy(&g_cfg_rx_buf[g_cfg_rx_len], buf, copy_len);
@@ -496,6 +550,102 @@ void ProcessBridgePacket(uint8_t *buf, uint32_t len)
         g_cfgwrite_active = 0;
         g_cfgread_waiting_ack = 0;
         g_cfg_rx_len = 0;
+        return;
+    }
+
+    /* ==============================================================
+     * ENCWRITE: Host 流式下发 .enc 帧 → MCU 写 Bootloader @I2C
+     * ==============================================================
+     */
+    if (cmd == ENC_START_CMD) {
+        if (len != 8) {
+            CFG_SendResp(ENC_RESP_NACK_CMD, 0, STATUS_ADDR_NACK);
+            return;
+        }
+        if (!CFG_CheckCRC16LE(buf, 8)) {
+            CFG_SendResp(ENC_RESP_NACK_CMD, 0, STATUS_ADDR_NACK);
+            return;
+        }
+        if (buf[1] != ENC_PROTOCOL_VERSION) {
+            CFG_SendResp(ENC_RESP_NACK_CMD, 0, STATUS_ADDR_NACK);
+            return;
+        }
+
+        uint8_t bl_addr = buf[2];
+        uint8_t flags = buf[3];
+        uint16_t total_frames = buf[4] | ((uint16_t)buf[5] << 8);
+        uint8_t r = MXT_ENC_Start(bl_addr, flags, total_frames);
+        if (r == 0) {
+            CFG_SendResp(ENC_RESP_ACK_CMD, 0, STATUS_OK);
+        } else {
+            CFG_SendResp(ENC_RESP_NACK_CMD, 0, r);
+        }
+        return;
+    }
+
+    if (cmd == ENC_FRAME_CMD) {
+        if (!g_encwrite_active) {
+            uint16_t seq = (len >= 3) ? (buf[1] | ((uint16_t)buf[2] << 8)) : 0;
+            CFG_SendResp(ENC_RESP_NACK_CMD, seq, STATUS_ADDR_NACK);
+            return;
+        }
+        if (len < 9) {
+            CFG_SendResp(ENC_RESP_NACK_CMD, 0, STATUS_ADDR_NACK);
+            return;
+        }
+
+        uint16_t seq = buf[1] | ((uint16_t)buf[2] << 8);
+        uint16_t frame_len = buf[3] | ((uint16_t)buf[4] << 8);
+        uint16_t expected_len = (uint16_t)(9 + frame_len);
+        if (frame_len < 2 || expected_len != len || frame_len > ENC_MAX_FRAME_BYTES) {
+            CFG_SendResp(ENC_RESP_NACK_CMD, seq, STATUS_ADDR_NACK);
+            return;
+        }
+        if (!CFG_CheckCRC16LE(buf, expected_len)) {
+            CFG_SendResp(ENC_RESP_NACK_CMD, seq, STATUS_ADDR_NACK);
+            return;
+        }
+        if (seq != g_enc_next_seq) {
+            CFG_SendResp(ENC_RESP_NACK_CMD, seq, STATUS_ADDR_NACK);
+            return;
+        }
+
+        uint8_t r = MXT_ENC_SendFrame(&buf[5], frame_len, seq);
+        if (r == 0) {
+            g_enc_next_seq++;
+            CFG_SendResp(ENC_RESP_ACK_CMD, seq, STATUS_OK);
+        } else {
+            CFG_SendResp(ENC_RESP_NACK_CMD, seq, r);
+        }
+        return;
+    }
+
+    if (cmd == ENC_END_CMD) {
+        if (len != 7) {
+            CFG_SendResp(ENC_RESP_NACK_CMD, 0, STATUS_ADDR_NACK);
+            return;
+        }
+        if (!g_encwrite_active) {
+            CFG_SendResp(ENC_RESP_NACK_CMD, 0, STATUS_ADDR_NACK);
+            return;
+        }
+        if (!CFG_CheckCRC16LE(buf, 7)) {
+            CFG_SendResp(ENC_RESP_NACK_CMD, 0, STATUS_ADDR_NACK);
+            return;
+        }
+
+        uint16_t end_seq = buf[1] | ((uint16_t)buf[2] << 8);
+        if (end_seq != g_enc_next_seq) {
+            CFG_SendResp(ENC_RESP_NACK_CMD, end_seq, STATUS_ADDR_NACK);
+            return;
+        }
+
+        uint8_t r = MXT_ENC_End(end_seq);
+        if (r == 0) {
+            CFG_SendResp(ENC_RESP_ACK_CMD, end_seq, STATUS_OK);
+        } else {
+            CFG_SendResp(ENC_RESP_NACK_CMD, end_seq, r);
+        }
         return;
     }
 

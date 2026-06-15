@@ -17,8 +17,14 @@ volatile uint8_t g_cfgread_waiting_ack = 0;
 volatile uint16_t g_cfgread_current_seq = 0;
 volatile uint8_t g_cfgread_last_ack_status = STATUS_OK;
 
-uint8_t g_cfg_rx_buf[CFG_MAX_DATA_PER_FRAME + 128];
+uint8_t g_cfg_rx_buf[CFG_RX_BUF_SIZE];
 uint16_t g_cfg_rx_len = 0;
+
+volatile uint8_t g_encwrite_active = 0;
+uint16_t g_enc_total_frames = 0;
+uint16_t g_enc_next_seq = 1;
+uint8_t g_enc_rx_buf[ENC_RX_BUF_SIZE];
+uint16_t g_enc_rx_len = 0;
 
 volatile uint8_t g_backup_busy = 0;
 volatile uint32_t g_backup_busy_until_ms = 0;
