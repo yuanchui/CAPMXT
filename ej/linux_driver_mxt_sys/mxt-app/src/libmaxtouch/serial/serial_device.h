@@ -11,14 +11,19 @@ struct serial_conn_info {
   char path[128];
 };
 
+#define SERIAL_RX_CARRY_SIZE    512U
+
 struct serial_device {
   bool device_connected;
   bool bridge_chip;
+  bool is_tcp_proxy;
   int ep1_in_max_packet_size;
   bool bootloader;
   int address;
   int b_i2c_addr;
   bool sent_btlr_cmd;
+  uint8_t rx_carry[SERIAL_RX_CARRY_SIZE];
+  size_t rx_carry_len;
 #ifdef _WIN32
   void *handle;
 #else
@@ -41,3 +46,4 @@ bool serial_is_bootloader(struct mxt_device *mxt);
 int serial_read_chg(struct mxt_device *mxt, bool *value);
 int serial_find_bus_devices(struct mxt_device *mxt, bool *device_list);
 int serial_rediscover_device(struct mxt_device *mxt, bool *device_list);
+int serial_run_link_test(struct libmaxtouch_ctx *ctx, struct mxt_conn_info *conn);

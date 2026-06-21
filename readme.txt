@@ -166,12 +166,18 @@
   SPIDBG        -     打印 SSN/SPI 诊断信息
 
 3.6 SPISTART1 / SPISTART3 数据处理
-  每帧有效载荷 640 字节（20 行 × 40 字节/行，取每行前 33 字节中第 2~33 字节）。
-  640 字节收满后自动开始下一帧。
 
-  SPISTART1：32 字节/行 HEX 文本 + 帧号行首标记
-  SPISTART3：每 32 字节打包为一个 40 字节 Mode3 包：
-    AA 10 33 | LEN(40) | FRAME_ID | ROW_ID | DATA[32] | CRC16
+  SPISTART1（640B 裁剪路径）：
+    每帧有效载荷 640 字节（20 行 × 40 字节/行，取每行前 33 字节中第 2~33 字节）。
+    640 字节收满后自动开始下一帧；32 字节/行 HEX 文本 + 帧号行首标记。
+
+  SPISTART3（514B SSN 间隙提取，与 SPISTART 同路径）：
+    byte[0]       帧号 FRAME_ID（本帧 16 行 Mode3 包共用）
+    byte[1..512]  512B 有效数据（16 行 × 32B/行，16×16 矩阵）
+    byte[513]     帧尾标记（与 byte[0] 成对，不参与数据）
+
+    每 32 字节打包为一个 40 字节 Mode3 包（共 16 包/帧，ROW_ID=0..15）：
+    AA 10 33 | LEN(40) | FRAME_ID(=byte[0]) | ROW_ID | DATA[32] | CRC16
     DATA 内每 2 字节高低位交换
     CRC16-CCITT-FALSE，计算范围 packet[0..37]
 

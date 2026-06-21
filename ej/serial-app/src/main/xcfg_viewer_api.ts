@@ -12,6 +12,23 @@ export interface XcfgViewerDeps {
   getMxtAppPath: () => string | null;
   runMxtApp: MxtAppRunner;
   getDefaultMxtDevice?: () => string | undefined;
+  readChipInfoFromPort?: (portPath: string) => Promise<{
+    success: boolean;
+    chipInfo?: {
+      familyId: number;
+      variantId: number;
+      versionMajor: number;
+      versionMinor: number;
+      build: number;
+      matrixX: number;
+      matrixY: number;
+      numObjects: number;
+      rawLine?: string;
+    } | null;
+    formatted?: string;
+    iicAddr?: number | null;
+    error?: string;
+  }>;
 }
 
 const SUPPORTED_VIDPID = new Set<string>([
@@ -136,13 +153,31 @@ function rewriteMetadataImageUrls(metadata: Record<string, any>): Record<string,
 }
 
 function extractSupportedDevices(stdout: string): string[] {
-  const devices: string[] = [];
+  const usbDevices: string[] = [];
+  const serialDevices: string[] = [];
   for (const line of (stdout || '').split(/\r?\n/)) {
-    const m = line.trim().match(/^(usb:\d{3}-\d{3})\s+([0-9A-Fa-f]{4}:[0-9A-Fa-f]{4})\b/);
-    if (!m) continue;
-    if (SUPPORTED_VIDPID.has(m[2].toLowerCase())) devices.push(m[1]);
+    const trimmed = line.trim();
+    const usbMatch = trimmed.match(/^(usb:\d{3}-\d{3})\s+([0-9A-Fa-f]{4}:[0-9A-Fa-f]{4})\b/);
+    if (usbMatch) {
+      if (SUPPORTED_VIDPID.has(usbMatch[2].toLowerCase())) usbDevices.push(usbMatch[1]);
+      continue;
+    }
+    const serialMatch = trimmed.match(/^serial:(.+)$/i);
+    if (serialMatch) {
+      const port = serialMatch[1].trim();
+      if (port && !port.toLowerCase().startsWith('proxy:')) serialDevices.push(`serial:${port}`);
+    }
   }
-  return devices;
+  return serialDevices.length > 0 ? serialDevices : usbDevices;
+}
+
+function formatDeviceDetectError(message: string): string {
+  const text = (message || '').trim();
+  if (!text) return '枚举设备失败';
+  if (/WinUSB|LIBUSB|libusb/i.test(text)) {
+    return '未检测到 WinUSB 设备。请先在 Serial Terminal 主界面连接串口后再读取，或使用 Zadig 为该 USB 设备安装 WinUSB 驱动。';
+  }
+  return text;
 }
 
 async function autoDetectDevice(deps: XcfgViewerDeps): Promise<{ device: string | null; devices: string[]; error?: string }> {
@@ -152,13 +187,21 @@ async function autoDetectDevice(deps: XcfgViewerDeps): Promise<{ device: string 
   }
 
   const q = await deps.runMxtApp(['-q'], undefined, 10000);
-  if (!q.success) return { device: null, devices: [], error: q.stderr || q.stdout || '枚举设备失败' };
   const devices = extractSupportedDevices(q.stdout);
   if (devices.length === 1) return { device: devices[0], devices };
-  if (devices.length === 0) {
-    return { device: null, devices, error: `未找到支持的设备（支持 VID:PID: ${[...SUPPORTED_VIDPID].sort().join(', ')}）` };
+  if (devices.length > 1) {
+    const serialOnly = devices.filter((d) => d.toLowerCase().startsWith('serial:'));
+    if (serialOnly.length === 1) return { device: serialOnly[0], devices };
+    return { device: null, devices, error: '检测到多个设备，请指定 device 参数' };
   }
-  return { device: null, devices, error: '检测到多个支持的设备，请指定 device 参数' };
+  if (!q.success) {
+    return { device: null, devices: [], error: formatDeviceDetectError(q.stderr || q.stdout || '枚举设备失败') };
+  }
+  return {
+    device: null,
+    devices,
+    error: `未找到支持的设备（支持 VID:PID: ${[...SUPPORTED_VIDPID].sort().join(', ')}，或串口 bridge）`
+  };
 }
 
 async function runMxtAppAuto(
@@ -416,6 +459,30 @@ export async function handleXcfgViewerRequest(
     }
   }
 
+  if (pathname === '/api/read-chip-info' && method === 'POST') {
+    const body = req.body || {};
+    if (!deps.readChipInfoFromPort) return apiErr('当前环境不支持读取芯片信息', 501);
+    const device = String(body.device || '').trim() || deps.getDefaultMxtDevice?.() || '';
+    let portPath = '';
+    if (device.toLowerCase().startsWith('serial:')) {
+      portPath = device.slice('serial:'.length).trim();
+    } else if (device.toLowerCase().startsWith('winusb:')) {
+      portPath = device;
+    }
+    try {
+      const result = await deps.readChipInfoFromPort(portPath);
+      if (!result.success) return apiErr(result.error || '读取失败', 500);
+      return apiOk({
+        success: true,
+        chipInfo: result.chipInfo,
+        formatted: result.formatted,
+        iicAddr: result.iicAddr
+      });
+    } catch (e: any) {
+      return apiErr(e?.message || String(e), 500);
+    }
+  }
+
   if (pathname === '/api/read-device' && method === 'POST') {
     const body = req.body || {};
     const tmpPath = path.join(os.tmpdir(), `mxt_read_${Date.now()}.xcfg`);
@@ -426,7 +493,7 @@ export async function handleXcfgViewerRequest(
         if (!detected.device) return apiErr(detected.error || '未找到设备', detected.devices?.length ? 409 : 404, { devices: detected.devices });
         device = detected.device;
       }
-      const result = await deps.runMxtApp(['--save', tmpPath, '--format', '3'], device, 30000);
+      const result = await deps.runMxtApp(['--save', tmpPath, '--format', '3'], device, 120000);
       if (!result.success) return apiErr(result.stderr || result.stdout || `退出码 ${result.returncode}`, 500);
       const content = fs.readFileSync(tmpPath, 'utf-8');
       return apiOk({ success: true, data: parseXcfg(content), content });

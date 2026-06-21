@@ -94,7 +94,7 @@ host_triplet = @host@
 @MXT_OS_WINDOWS_TRUE@am__append_1 = -DMXT_OS_WINDOWS
 @MXT_OS_WINDOWS_FALSE@am__append_2 = -D_GNU_SOURCE=1
 # 确保生成控制台子系统可执行文件，使 printf/fprintf(stderr) 在 cmd 中有输出
-@MXT_OS_WINDOWS_TRUE@am__append_3 = -mconsole
+@MXT_OS_WINDOWS_TRUE@am__append_3 = -mconsole -lws2_32
 @MXT_OS_WINDOWS_FALSE@am__append_4 = -Wl,--gc-sections -Wl,--as-needed
 @DEBUG_FALSE@am__append_5 = -DNDEBUG
 bin_PROGRAMS = mxt-app$(EXEEXT)
@@ -121,8 +121,9 @@ bin_PROGRAMS = mxt-app$(EXEEXT)
 @HAVE_LIBUSB_TRUE@	src/libmaxtouch/usb/usb_device.c
 
 @HAVE_LIBUSB_TRUE@am__append_9 = -DHAVE_LIBUSB
-@MXT_OS_WINDOWS_TRUE@am__append_10 = src/mxt-app/bridge_win.c
-@MXT_OS_WINDOWS_FALSE@am__append_11 = src/mxt-app/bridge.c
+@HAVE_LIBUSB_TRUE@@MXT_OS_WINDOWS_TRUE@am__append_10 = -lws2_32
+@MXT_OS_WINDOWS_TRUE@am__append_11 = src/mxt-app/bridge_win.c
+@MXT_OS_WINDOWS_FALSE@am__append_12 = src/mxt-app/bridge.c
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -774,7 +775,7 @@ libmaxtouch_la_SOURCES = src/libmaxtouch/libmaxtouch.h \
 	src/libmaxtouch/serial/serial_device.c $(am__append_6) \
 	$(am__append_7) $(am__append_8)
 @HAVE_LIBUSB_TRUE@libmaxtouch_la_LIBS = @USBLIBS@
-@HAVE_LIBUSB_TRUE@libmaxtouch_la_LDFLAGS = -lusb-1.0
+@HAVE_LIBUSB_TRUE@libmaxtouch_la_LDFLAGS = -lusb-1.0 $(am__append_10)
 mxt_app_LDADD = libmaxtouch.la
 EXTRA_mxt_app_DEPENDENCIES = git-version
 mxt_app_SOURCES = src/mxt-app/mxt_app.h src/mxt-app/mxt_app.c \
@@ -786,7 +787,7 @@ mxt_app_SOURCES = src/mxt-app/mxt_app.h src/mxt-app/mxt_app.c \
 	src/mxt-app/buffer.c src/mxt-app/buffer.h \
 	src/mxt-app/self_cap.c src/mxt-app/signal.c \
 	src/mxt-app/freq_sweep.c src/mxt-app/freq_sweep.h \
-	$(am__append_10) $(am__append_11)
+	$(am__append_11) $(am__append_12)
 @ENABLE_MAN_TRUE@man1_MANS = man1/mxt-app.1
 @ENABLE_ODT_TRUE@man1_MANS = odt1/mxt-app.1
 all: config.h

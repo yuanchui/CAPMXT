@@ -14,8 +14,9 @@ static void SPIUSB_TxEnqueue(uint8_t b);
 static void SPIUSB_TxEnqueueBytes(const uint8_t *data, uint16_t len);
 static void SPIUSB_Start1_HandlePageMarker(void);
 static void SPIUSB_Start1_ProcessPayloadByte(uint8_t b);
-static void SPIUSB_Start3_ProcessCroppedByte(uint8_t b);
-static void SPIUSB_Start3_EmitRowPacket(void);
+static void SPIUSB_Start3_ProcessFrame(const uint8_t *frame, uint16_t len);
+static void MXT_SPI_Start3ExtractFrameAtGap(uint16_t start_pos, uint16_t wr);
+static void SPIUSB_Start3_EmitRowPacket(uint8_t frame_id, uint8_t row_id, const uint8_t *row_data);
 static void MXT_SPI_QueueRxMark(uint8_t mark);
 static void MXT_SPI_RestartAfterGap(void);
 static void MXT_SPI_TryRestartAfterGap(void);
@@ -210,7 +211,11 @@ static void MXT_SPI_ProcessGapExtract(void)
     wr = g_spi_gap_wr_snap;
   }
   if (wr != start_pos) {
-    MXT_SPI_RawExtractFrameAtGap(start_pos, wr);
+    if (g_spi_stream_mode == 2U) {
+      MXT_SPI_Start3ExtractFrameAtGap(start_pos, wr);
+    } else {
+      MXT_SPI_RawExtractFrameAtGap(start_pos, wr);
+    }
   }
 }
 
@@ -240,6 +245,37 @@ static void MXT_SPI_RawDiscardGapDrain(uint16_t budget)
   g_spi_dma_last_pos = rd;
 }
 
+static uint8_t MXT_SPI_UsesGapExtract(void)
+{
+  return ((g_spi_stream_enabled != 0U)
+          && ((g_spi_stream_mode == 0U) || (g_spi_stream_mode == 2U))) ? 1U : 0U;
+}
+
+static void MXT_SPI_Start3ExtractFrameAtGap(uint16_t start_pos, uint16_t wr)
+{
+  uint16_t pos;
+  uint16_t i;
+
+  pos = start_pos;
+  for (i = 0U; i < SPI_RAW_OUT_BYTES; i++) {
+    if (pos == wr) {
+      break;
+    }
+    g_spi_start3_frame_buf[i] = g_spi_dma_ring[pos];
+    pos = (uint16_t)((pos + 1U) % SPI_DMA_RING_SIZE);
+  }
+
+  g_spi_dma_last_pos = wr;
+  g_spi_raw_rx_count = 0U;
+
+  if (i < SPI_RAW_OUT_BYTES) {
+    g_spi_raw_partial_drop++;
+    return;
+  }
+
+  SPIUSB_Start3_ProcessFrame(g_spi_start3_frame_buf, i);
+}
+
 static uint16_t MXT_SPI_DrainDmaRingBudget(uint16_t budget)
 {
   uint16_t wr;
@@ -252,7 +288,7 @@ static uint16_t MXT_SPI_DrainDmaRingBudget(uint16_t budget)
     return budget;
   }
 
-  raw_fast = ((g_spi_stream_enabled != 0U) && (g_spi_stream_mode == 0U)) ? 1U : 0U;
+  raw_fast = MXT_SPI_UsesGapExtract();
 
   if (raw_fast != 0U) {
     if (MXT_SSN_IsSelected() != 0U) {
@@ -303,10 +339,9 @@ void MXT_SPI_OnSsnActive(void)
 
 void MXT_SPI_OnSsnGap(void)
 {
-  if ((g_spi_stream_enabled != 0U) && (g_spi_stream_mode == 0U)) {
-    /* ISR ????????3B ??/hex ??????GAP ?? */
+  if (MXT_SPI_UsesGapExtract() != 0U) {
     g_spi_gap_ssn_snap = g_spi_dma_ssn_pos;
-    g_spi_gap_wr_snap = MXT_SPI_DmaWritePos();
+    g_spi_gap_wr_snap = MXT_SPI_GetDmaWritePos();
     g_spi_gap_extract_pending = 1U;
     g_spi_gap_restart_pending = 1U;
   } else if (g_spi_stream_enabled != 0U) {
@@ -336,18 +371,25 @@ static void MXT_SPI_ApplyResyncIfNeeded(void)
 static void MXT_SPI_CheckStreamStall(void)
 {
   uint16_t pos;
+  uint32_t stall_ms;
 
   if ((g_spi_stream_enabled == 0U) || (g_spi_it_active == 0U)) {
     return;
   }
-  if ((HAL_GetTick() - g_spi_last_irq_ms) <= SPI_STREAM_STALL_MS) {
+
+  /* SSN 间隙无 SPI 为正常帧间空闲，勿用 25ms 阈值重启 DMA（会破坏 gap 提取） */
+  stall_ms = SPI_STREAM_STALL_MS;
+  if ((MXT_SPI_UsesGapExtract() != 0U) && (MXT_SSN_IsSelected() == 0U)) {
+    stall_ms = SPI_GAP_IDLE_STALL_MS;
+  }
+  if ((HAL_GetTick() - g_spi_last_irq_ms) <= stall_ms) {
     return;
   }
 
   __HAL_SPI_CLEAR_OVRFLAG(&hspi1);
 
   if (MXT_SSN_IsSelected() != 0U) {
-    /* ??????????? SSN ?????? DMA */
+    /* SSN 有效但长时间无 SPI：标记下次间隙重同步 */
     g_spi_resync_pending = 1U;
     pos = MXT_SPI_GetDmaWritePos();
     g_spi_dma_last_pos = pos;
@@ -488,6 +530,29 @@ void MXT_ProcessSPICheck(void)
     while (SPIUSB_RawFlushPending() != 0U) {
       /* 连续发送队列中的二进制帧 */
     }
+    (void)MSG_BufferFlush();
+    return;
+  }
+
+  if ((g_spi_stream_enabled != 0U) && (g_spi_stream_mode == 2U)) {
+    if (MXT_SSN_IsSelected() != 0U) {
+      MXT_SPI_CheckStreamStall();
+      SPIUSB_TryFlush();
+      return;
+    }
+
+    MXT_SPI_ProcessGapExtract();
+    MXT_SPI_TryRestartAfterGap();
+
+    if (g_spi_it_active == 0U) {
+      MXT_SPI_StartIT();
+    }
+    if (g_spi_it_active != 0U) {
+      (void)MXT_SPI_DrainDmaRingBudget(SPI_DRAIN_BUDGET_LOOP);
+      MXT_SPI_CheckStreamStall();
+    }
+
+    SPIUSB_TryFlush();
     (void)MSG_BufferFlush();
     return;
   }
@@ -702,7 +767,7 @@ void MXT_SPI_OnDmaProgress(void)
 
   g_spi_last_irq_ms = HAL_GetTick();
 
-  if ((g_spi_stream_enabled != 0U) && (g_spi_stream_mode == 0U)) {
+  if (MXT_SPI_UsesGapExtract() != 0U) {
     return;
   }
 
@@ -753,8 +818,6 @@ void SPIUSB_ResetState(uint8_t mode)
   g_spi_start1_row_bytes = 0U;
   g_spi_start1_src_row_bytes = 0U;
   g_spi_start3_frame_id = 0U;
-  g_spi_start3_row_id = 0U;
-  g_spi_start3_row_len = 0U;
   g_spi_rx_q_head = 0U;
   g_spi_rx_q_tail = 0U;
   g_spi_rx_overflow = 0U;
@@ -778,8 +841,8 @@ void SPIUSB_ResetState(uint8_t mode)
   g_spi_raw_usb_drop = 0U;
   g_spi_raw_partial_drop = 0U;
 
-  /* START1/START3?????????? 640B ????????*/
-  if (mode != 0U) {
+  /* START1 需要启动 640B 裁剪收集；START3 在 SSN 间隙按 514B 整帧打包 */
+  if (mode == 1U) {
     SPIUSB_Start1_HandlePageMarker();
   }
 }
@@ -795,13 +858,19 @@ void MXT_USB_ServiceTx(void)
     if (MXT_SSN_IsSelected() != 0U) {
       return;
     }
-    while (SPIUSB_RawFlushPending() != 0U) {
-      /* CDC 空闲时尽量排空 raw 队列 */
+    {
+      uint8_t flush_budget = 32U;
+      while ((SPIUSB_RawFlushPending() != 0U) && (flush_budget-- > 0U)) {
+        /* CDC 空闲时尽量排空 raw 队列，有上限避免主循环卡死 */
+      }
     }
     (void)MSG_BufferFlush();
     return;
   } else if (g_spi_tx_len > 0U) {
-    SPIUSB_TryFlush();
+    uint8_t flush_budget = 32U;
+    while ((g_spi_tx_len > 0U) && (flush_budget-- > 0U)) {
+      SPIUSB_TryFlush();
+    }
     return;
   }
   (void)MSG_BufferFlush();
@@ -822,12 +891,19 @@ static void SPIUSB_ProcessByte(uint8_t b)
 
 static void SPIUSB_TxEnqueue(uint8_t b)
 {
-  if (g_spi_tx_len >= (uint16_t)(sizeof(g_spi_tx_buf) - 1U)) {
+  uint8_t tries;
+
+  for (tries = 0U; tries < 8U; tries++) {
+    if (g_spi_tx_len < (uint16_t)(sizeof(g_spi_tx_buf) - 1U)) {
+      break;
+    }
     SPIUSB_TryFlush();
   }
 
   if (g_spi_tx_len < (uint16_t)sizeof(g_spi_tx_buf)) {
     g_spi_tx_buf[g_spi_tx_len++] = b;
+  } else {
+    g_spi_raw_usb_drop++;
   }
 }
 
@@ -885,10 +961,6 @@ static void SPIUSB_Start1_HandlePageMarker(void)
     g_spi_start3_frame_id++;
     SPIUSB_HexEnqueueByte(g_spi_start3_frame_id);
     SPIUSB_LineEnqueue("\r\n");
-  } else if (g_spi_stream_mode == 2U) {
-    g_spi_start3_frame_id++;
-    g_spi_start3_row_id = 0U;
-    g_spi_start3_row_len = 0U;
   }
 
   g_spi_start1_collecting = 1U;
@@ -918,8 +990,6 @@ static void SPIUSB_Start1_ProcessPayloadByte(uint8_t b)
         SPIUSB_LineEnqueue("\r\n");
         g_spi_start1_row_bytes = 0U;
       }
-    } else if (g_spi_stream_mode == 2U) {
-      SPIUSB_Start3_ProcessCroppedByte(b);
     }
   }
 
@@ -936,34 +1006,54 @@ static void SPIUSB_Start1_ProcessPayloadByte(uint8_t b)
   }
 }
 
-static void SPIUSB_Start3_ProcessCroppedByte(uint8_t b)
+static void SPIUSB_Start3_ProcessFrame(const uint8_t *frame, uint16_t len)
 {
-  if (g_spi_start3_row_len < sizeof(g_spi_start3_row_buf)) {
-    g_spi_start3_row_buf[g_spi_start3_row_len++] = b;
+  uint8_t frame_id;
+  uint8_t row_id;
+  const uint8_t *data;
+  uint16_t data_len;
+
+  if ((frame == NULL) || (len < 34U)) {
+    return;
   }
 
-  if (g_spi_start3_row_len >= 32U) {
-    SPIUSB_Start3_EmitRowPacket();
-    g_spi_start3_row_len = 0U;
-    g_spi_start3_row_id++;
+  /* byte[0]=帧号, byte[1..512]=16×32 数据, byte[513]=帧尾标记 */
+  frame_id = frame[0];
+  data = &frame[1];
+  data_len = (uint16_t)(len - 2U);
+  if (data_len > 512U) {
+    data_len = 512U;
+  }
+
+  for (row_id = 0U; row_id < 16U; row_id++) {
+    uint16_t offset = (uint16_t)row_id * 32U;
+
+    if ((offset + 32U) > data_len) {
+      break;
+    }
+    SPIUSB_Start3_EmitRowPacket(frame_id, row_id, &data[offset]);
   }
 }
 
-static void SPIUSB_Start3_EmitRowPacket(void)
+static void SPIUSB_Start3_EmitRowPacket(uint8_t frame_id, uint8_t row_id, const uint8_t *row_data)
 {
   uint8_t packet[40];
   uint16_t crc;
+
+  if (row_data == NULL) {
+    return;
+  }
 
   packet[0] = 0xAAU;
   packet[1] = 0x10U;
   packet[2] = 0x33U;
   packet[3] = 40U;
-  packet[4] = g_spi_start3_frame_id;
-  packet[5] = (uint8_t)(g_spi_start3_row_id & 0x0FU);
+  packet[4] = frame_id;
+  packet[5] = (uint8_t)(row_id & 0x0FU);
 
   for (uint8_t i = 0U; i < 32U; i += 2U) {
-    packet[6U + i] = g_spi_start3_row_buf[i + 1U];
-    packet[6U + i + 1U] = g_spi_start3_row_buf[i];
+    packet[6U + i] = row_data[i + 1U];
+    packet[6U + i + 1U] = row_data[i];
   }
 
   crc = CRC16_CCITT_FALSE(packet, 38U);

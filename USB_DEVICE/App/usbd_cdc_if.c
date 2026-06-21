@@ -178,6 +178,10 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
   {
     if (g_bridge_mode == BRIDGE_MODE_BINARY) {
       ProcessBridgePacket(Buf, *Len);
+    } else if ((*Len >= 1U) &&
+               (Buf[0] == CMD_FIND_IIC_ADDRESS || Buf[0] == CMD_READ_PINS)) {
+      /* mode1 下 mxt-app 可能先发 0xE0/0x82，再发 mode0 文本；单字节桥命令须立即处理 */
+      ProcessBridgePacket(Buf, *Len);
     } else {
       ProcessStringCommand(Buf, *Len);
     }

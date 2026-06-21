@@ -27,7 +27,7 @@ endif
 AM_LDFLAGS = -lm
 if MXT_OS_WINDOWS
 # 确保生成控制台子系统可执行文件，使 printf/fprintf(stderr) 在 cmd 中有输出
-AM_LDFLAGS += -mconsole
+AM_LDFLAGS += -mconsole -lws2_32
 else
 AM_LDFLAGS += -Wl,--gc-sections -Wl,--as-needed
 endif
@@ -117,6 +117,9 @@ libmaxtouch_la_SOURCES += \
 AM_CFLAGS += -DHAVE_LIBUSB
 libmaxtouch_la_LIBS = @USBLIBS@
 libmaxtouch_la_LDFLAGS = -lusb-1.0
+if MXT_OS_WINDOWS
+libmaxtouch_la_LDFLAGS += -lws2_32
+endif
 endif
 
 mxt_app_LDADD = libmaxtouch.la

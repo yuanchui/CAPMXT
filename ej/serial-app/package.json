@@ -1,6 +1,6 @@
 {
   "name": "serial-terminal",
-  "version": "1.0.1",
+  "version": "1.0.37",
   "description": "Serial Terminal - 串口通信终端应用程序",
   "author": {
     "name": "Yuanchu",
@@ -42,7 +42,10 @@
     "package:debug:dir:fast": "node build/run-package.js --win --dir --compression=store --buildMode=debug",
     "package:debug:dir:small": "node build/run-package.js --win --dir --compression=normal --buildMode=debug",
     "clean": "rimraf dist release",
-    "cert:dev": "powershell -NoProfile -ExecutionPolicy Bypass -File build/generate-dev-signing-cert.ps1"
+    "cert:dev": "powershell -NoProfile -ExecutionPolicy Bypass -File build/generate-dev-signing-cert.ps1",
+    "install:electron": "powershell -NoProfile -ExecutionPolicy Bypass -File build/install-electron.ps1",
+    "deploy:runtime-window": "node build/generate-runtime-window.js && node build/deploy-runtime-window/upload.js",
+    "setup:runtime-server": "node build/deploy-runtime-window/upload.js --setup-remote"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
@@ -95,10 +98,25 @@
         "to": "UPGRADE_NOTES.txt"
       },
       {
+        "from": "build/runtime-window.config.json",
+        "to": "runtime-window.config.json"
+      },
+      {
         "from": "CLI",
         "to": "CLI",
         "filter": [
-          "**/*"
+          "**/*",
+          "!**/.git*"
+        ]
+      }
+    ],
+    "extraFiles": [
+      {
+        "from": "CLI",
+        "to": "CLI",
+        "filter": [
+          "**/*",
+          "!**/.git*"
         ]
       }
     ],

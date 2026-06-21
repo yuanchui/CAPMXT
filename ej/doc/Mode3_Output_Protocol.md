@@ -29,9 +29,9 @@ AA 10 33 | LEN | FRAME_ID | LINE_ID | DATA[16 * 2] | CRC16
     - 再按 `g_stream_rot` 做 90° 旋转
     - 最终索引：`g_diag_buffer[src_y + src_x * g_matrix_y_size]`
 - **CRC16**：2 字节（大端，高字节在前）
-  - 多项式：`0xA001`
-  - 初值：`0xFFFF`
-  - 计算范围：**从包头 `AA` 开始，到 CRC16 之前的所有字节**（即不含 CRC 自身）
+  - 算法：**CRC16-CCITT-FALSE**（多项式 `0x1021`，初值 `0xFFFF`）
+  - 计算范围：**从包头 `AA` 开始，到 CRC16 之前的所有字节**（即 `packet[0..37]`，不含 CRC 自身）
+  - 与 CFG/ENC 等使用的 CRC16-Modbus（`0xA001`）不同，勿混用
 
 > 说明：在非 `CHGNO` 模式下，协议与原 Mode3 输出行为完全等价，未增加任何附加字段，确保兼容现有 `START MAP16L90X 10` 等旧协议。
 

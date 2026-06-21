@@ -10,4 +10,5 @@ uint8_t MXT_I2C_Probe(uint8_t addr);
 uint8_t MXT_FindI2CAddress(void);
 uint8_t MXT_GetI2CAddress(void);
 void MXT_SetI2CAddress(uint8_t addr);
+void MXT_I2C_RecoverBus(void);
 #endif

@@ -97,6 +97,7 @@ if test x$build_windows != xyes; then
 else
   AC_CHECK_FUNCS([bzero])
   AC_DEFINE([_WIN32_WINNT], [0x0600], [Target Vista+ for MinGW])
+  AC_DEFINE([WIN32_LEAN_AND_MEAN], [1], [Reduce Windows header surface for MinGW])
 fi
 
 AC_CONFIG_FILES([Makefile])

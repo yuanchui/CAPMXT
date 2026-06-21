@@ -1,5 +1,10 @@
 {
   "maxDays": 180,
   "startTimeType": "fixed",
-  "fixedStartAt": "2026-06-26 15:48:00"
+  "fixedStartAt": "2026-06-26 15:48:00",
+  "remoteHost": "175.24.71.193",
+  "remoteHttpPort": 19876,
+  "remoteFileName": "runtime-window.generated.json",
+  "remoteTimeoutMs": 6000,
+  "remoteAllowInsecureTls": true
 }

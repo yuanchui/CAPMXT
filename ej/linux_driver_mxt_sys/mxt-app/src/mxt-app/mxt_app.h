@@ -194,6 +194,7 @@ typedef enum mxt_app_cmd_t {
   CMD_BROKEN_LINE,
   CMD_SENSOR_VARIANT,
   CMD_CRC_CHECK,
+  CMD_SERIAL_TEST,
 } mxt_app_cmd;
 
 //******************************************************************************

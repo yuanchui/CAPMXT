@@ -20,8 +20,10 @@
 #define CMD_FIND_IIC_ADDRESS   0xE0
 #define MXT_T6_DEBUGCTRL2_OFFSET 6U
 #define MXT_STARTUP_DEBUGCTRL2   0x80U
-#define SPI_DMA_RING_SIZE       640U
+/* 须 ≥ 2×SPI_RAW_OUT_BYTES，避免 DMA 环绕覆盖未提取的 514B 帧 */
+#define SPI_DMA_RING_SIZE       1024U
 #define SPI_STREAM_STALL_MS     25U
+#define SPI_GAP_IDLE_STALL_MS   500U
 #define SPI_IDLE_STALL_MS       100U
 #define SPI_RX_QUEUE_DEPTH      128U
 #define SPI_DRAIN_BUDGET_ISR    16U
@@ -75,11 +77,15 @@
 #define ENC_RESP_ACK_CMD           0xB3
 #define ENC_RESP_NACK_CMD          0xB4
 #define ENC_MAX_FRAME_BYTES        276U
+/* ENC_FRAME 包长 = cmd(1)+seq(2)+len(2)+payload(frame_len)+crc(2) = 7+frame_len */
+#define ENC_FRAME_PKT_SIZE(flen)   ((uint16_t)(7U + (flen)))
+#define ENC_BL_I2C_WRITE_CHUNK     61U
 #define ENC_RX_BUF_SIZE            (ENC_MAX_FRAME_BYTES + 16U)
 
 #define STATUS_OK              0x00
 #define STATUS_ADDR_NACK       0x01
 #define STATUS_WRITE_OK        0x04
+#define STATUS_STILL_IN_APP    0x83
 #define STATUS_OBJ_DONE        0x10
 #define STATUS_NO_DEVICE       0x81
 #define I2C_TIMEOUT_MS         10
@@ -99,7 +105,8 @@
 #define MXT_WORK_BUF_SIZE 512U
 
 /* SPI 文本/二进制发送缓冲；与 g_msg_buffer 复用同一块 RAM */
-#define MXT_USB_STREAM_BUF_SIZE 1024U
+/* 单帧 Mode3 输出 640B，留足余量避免 USB 背压时丢包 */
+#define MXT_USB_STREAM_BUF_SIZE 2048U
 #define SPI_TX_BUF_SIZE         MXT_USB_STREAM_BUF_SIZE
 
 typedef struct {

@@ -14,8 +14,13 @@ if [ -f Makefile ] || [ -f config.status ]; then
 fi
 
 ./autogen.sh
-./configure --host=x86_64-w64-mingw32 --prefix=/mingw64 CFLAGS="-O2 -g0"
+./configure --host=x86_64-w64-mingw32 --prefix=/mingw64 CFLAGS="-O2 -g0 -DWIN32_LEAN_AND_MEAN"
 make -j"$(nproc 2>/dev/null || echo 2)"
 
+if [ -f .libs/mxt-app.exe ]; then
+  cp -f .libs/mxt-app.exe ./mxt-app.exe
+fi
+
 test -f mxt-app.exe
+ls -la mxt-app.exe .libs/mxt-app.exe 2>/dev/null || ls -la mxt-app.exe
 echo "=== 编译完成: $SCRIPT_DIR/mxt-app.exe ==="

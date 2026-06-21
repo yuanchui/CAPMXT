@@ -102,3 +102,10 @@ void MXT_SetI2CAddress(uint8_t addr)
     g_mxt_i2c_addr = addr;
 }
 
+void MXT_I2C_RecoverBus(void)
+{
+    (void)HAL_I2C_DeInit(&hi2c2);
+    HAL_Delay(5U);
+    (void)HAL_I2C_Init(&hi2c2);
+}
+

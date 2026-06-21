@@ -52,6 +52,7 @@ stmusbatmxt640\mxt_cmd.o: ..\USB_DEVICE\App\mxt\mxt_touch.h
 stmusbatmxt640\mxt_cmd.o: ..\USB_DEVICE\App\mxt\mxt_msg.h
 stmusbatmxt640\mxt_cmd.o: ..\USB_DEVICE\App\mxt\mxt_spi_stream.h
 stmusbatmxt640\mxt_cmd.o: ..\USB_DEVICE\App\mxt\mxt_bridge.h
+stmusbatmxt640\mxt_cmd.o: ..\USB_DEVICE\App\mxt\mxt_enc.h
 stmusbatmxt640\mxt_cmd.o: ../Core/Inc/spi.h
 stmusbatmxt640\mxt_cmd.o: ../Core/Inc/gpio.h
 stmusbatmxt640\mxt_cmd.o: ../USB_DEVICE/App/usbd_cdc_if.h

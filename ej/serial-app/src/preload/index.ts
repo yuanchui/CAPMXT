@@ -27,12 +27,41 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 停止监听串口数据
   stopSerialRead: (portPath: string) => 
     ipcRenderer.invoke('stop-serial-read', portPath),
-  // 监听串口数据事件
-  onSerialData: (callback: (portPath: string, data: number[]) => void) => {
-    ipcRenderer.on('serial-data', (_event: Electron.IpcRendererEvent, portPath: string, data: number[]) => callback(portPath, data));
-    // 返回清理函数
+  // 监听串口数据事件（主进程传 Buffer，渲染端转为 Uint8Array）
+  onSerialData: (callback: (portPath: string, data: Uint8Array) => void) => {
+    ipcRenderer.on('serial-data', (_event: Electron.IpcRendererEvent, portPath: string, data: Buffer | number[]) => {
+      const bytes = Buffer.isBuffer(data) ? new Uint8Array(data) : Uint8Array.from(data);
+      callback(portPath, bytes);
+    });
     return () => ipcRenderer.removeAllListeners('serial-data');
   },
+  // 主进程已组装的完整 Mode3 帧（Int16 × 256）
+  onSerialMatrixFrame: (callback: (portPath: string, payload: {
+    frameId: number;
+    ts: number;
+    min: number;
+    max: number;
+    mean: number;
+    data: ArrayBuffer;
+  }) => void) => {
+    ipcRenderer.on('serial-matrix-frame', (_event: Electron.IpcRendererEvent, portPath: string, payload: {
+      frameId: number;
+      ts: number;
+      min: number;
+      max: number;
+      mean: number;
+      data: Buffer;
+    }) => {
+      const buf = payload?.data;
+      const ab: ArrayBuffer = Buffer.isBuffer(buf)
+        ? buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer
+        : new ArrayBuffer(0);
+      callback(portPath, { ...payload, data: ab });
+    });
+    return () => ipcRenderer.removeAllListeners('serial-matrix-frame');
+  },
+  flushSerialStream: (portPath: string) => ipcRenderer.invoke('flush-serial-stream', portPath),
+  resumeSerialStream: (portPath: string) => ipcRenderer.invoke('resume-serial-stream', portPath),
   // 监听串口错误事件
   onSerialError: (callback: (portPath: string, error: string) => void) => {
     ipcRenderer.on('serial-error', (_event: Electron.IpcRendererEvent, portPath: string, error: string) => callback(portPath, error));
@@ -57,6 +86,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   cancelXcfgTransfer: (payload: { portPath: string }) =>
     ipcRenderer.invoke('cancel-xcfg-transfer', payload),
 
+  // 读取 MCU 芯片 Info Block（Family/Variant/Version 等）
+  readMcuChipInfo: (payload?: { portPath?: string }) =>
+    ipcRenderer.invoke('read-mcu-chip-info', payload || {}),
+
+  // 从已连接设备读取完整 xcfg（format 3）
+  readMcuXcfgFromDevice: (payload?: { portPath?: string }) =>
+    ipcRenderer.invoke('read-mcu-xcfg-from-device', payload || {}),
+
   // 流式上传 .enc 固件（MCU 边收边写 Bootloader I2C）
   flashEncFromMcu: (payload: { portPath: string; encFilePath: string; fileName?: string; bootloaderAddr?: number; skipEnterBootloader?: boolean }) =>
     ipcRenderer.invoke('flash-enc-from-mcu', payload),
@@ -66,8 +103,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('prepare-xcfg-binary', payload),
 
   // 导出 prepared.bin 反解析文本
-  exportPreparedBinaryTxt: (payload: { filePath?: string; binBase64?: string; outputPath?: string }) =>
+  exportPreparedBinaryTxt: (payload: { filePath?: string; binBase64?: string; preparedToken?: string; outputPath?: string }) =>
     ipcRenderer.invoke('export-prepared-binary-txt', payload),
+
+  // 导出 xcfg 文本到本地文件
+  saveXcfgContentDialog: (payload: { content: string; defaultName?: string; defaultDir?: string }) =>
+    ipcRenderer.invoke('save-xcfg-content-dialog', payload),
 
   // 打开系统对话框选择 xcfg（返回路径+内容）
   selectXcfgFile: () => ipcRenderer.invoke('select-xcfg-file'),
@@ -102,5 +143,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   }) => void) => {
     ipcRenderer.on('xcfg-transfer-progress', (_event: Electron.IpcRendererEvent, progress: any) => callback(progress));
     return () => ipcRenderer.removeAllListeners('xcfg-transfer-progress');
+  },
+  onSerialBridgeLog: (callback: (portPath: string, direction: 'tx' | 'rx' | 'info', text: string) => void) => {
+    ipcRenderer.on('serial-bridge-log', (_event: Electron.IpcRendererEvent, portPath: string, direction: 'tx' | 'rx' | 'info', text: string) => {
+      callback(portPath, direction, text);
+    });
+    return () => ipcRenderer.removeAllListeners('serial-bridge-log');
   },
 });

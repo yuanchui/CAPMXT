@@ -16133,6 +16133,9 @@ fi
 
 printf '%s\n' "#define _WIN32_WINNT 0x0600" >>confdefs.h
 
+
+printf '%s\n' "#define WIN32_LEAN_AND_MEAN 1" >>confdefs.h
+
 fi
 
 ac_config_files="$ac_config_files Makefile"

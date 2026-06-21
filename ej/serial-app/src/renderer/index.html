@@ -71,8 +71,8 @@
         .stat-item { display: flex; align-items: center; font-size: 13px; color: #374151; }
         .stat-label { font-weight: 500; margin-right: 4px; color: #6b7280; }
         .stat-value { font-weight: 600; color: #111827; }
-        #matrixScanFreqDisplay, #firstCellChangeFreqDisplay { cursor: pointer; user-select: none; transition: color 0.2s; }
-        #matrixScanFreqDisplay:hover, #firstCellChangeFreqDisplay:hover { color: #3b82f6; }
+        #frameRateDisplay, #matrixScanFreqDisplay, #firstCellChangeFreqDisplay { cursor: pointer; user-select: none; transition: color 0.2s; }
+        #frameRateDisplay:hover, #matrixScanFreqDisplay:hover, #firstCellChangeFreqDisplay:hover { color: #3b82f6; }
 
         .y-axis-settings, .matrix-highlight-settings, .data-format-controls, .refresh-rate-controls {
             display: flex; align-items: center; gap: 8px; font-size: 13px; color: #374151; margin-left: 15px; flex-wrap: wrap;
@@ -231,6 +231,12 @@
         }
         #matrixOverlayCanvas {
             z-index: 5;
+        }
+        #matrixHeatmapCanvas {
+            position: absolute;
+            z-index: 5;
+            pointer-events: none;
+            border-radius: 6px;
         }
         #matrix3dCanvas {
             position: absolute;
@@ -699,6 +705,10 @@
             <span class="stat-label">接收速率:</span>
             <span class="stat-value" id="recvSpeed">0.0 B/s</span>
         </div>
+        <div class="stat-item">
+            <span class="stat-label">帧率:</span>
+            <span class="stat-value" id="frameRateDisplay">N/A</span>
+        </div>
         <!--
         <div class="stat-item">
             <span class="stat-label">刷新频率:</span>
@@ -755,6 +765,7 @@
                 </div>
             </div>
             <div class="matrix-grid" id="matrixGrid"></div>
+            <canvas id="matrixHeatmapCanvas" width="256" height="256"></canvas>
             <canvas id="traceCanvas" width="1024" height="1024"></canvas>
             <canvas id="matrixOverlayCanvas" width="1024" height="1024"></canvas>
             <canvas id="matrix3dCanvas" width="1024" height="1024"></canvas>
@@ -969,6 +980,8 @@
         <div class="recv-log-controls" style="margin-bottom:8px;">
             <label for="recvLogFlushCharsInput" style="margin-bottom:0;">字符数</label>
             <input id="recvLogFlushCharsInput" class="mini-number" type="number" min="100" step="100" value="5000">
+            <label for="recvLogIdleFlushSecInput" style="margin-bottom:0;margin-left:8px;">空闲秒</label>
+            <input id="recvLogIdleFlushSecInput" class="mini-number" type="number" min="1" step="1" value="3">
         </div>
         <!-- <div class="data-format-docs">
             通过正则表达式提取 <code>row</code>、<code>col</code>、<code>value</code> 命名捕获组即可把任意 USB/串口数据写入矩阵。
@@ -1183,13 +1196,21 @@
         <input id="xcfgFileInput" type="file" accept=".xcfg,.bin,.enc" style="display:none;" />
         <div class="send-controls" style="gap:8px;">
             <button id="selectXcfgBtn" class="btn-secondary">选择 XCFG/BIN/ENC</button>
+            <button id="readChipInfoBtn" class="btn-secondary" disabled="disabled">读取芯片信息</button>
+            <button id="readXcfgFromDeviceBtn" class="btn-secondary" disabled="disabled">从设备读取 cfg</button>
+            <label class="custom-checkbox-wrapper" title="设备连接后自动从芯片读取 xcfg 并用于上传" style="margin:0;">
+                <input type="checkbox" id="xcfgAutoReadCheckbox">
+                <label for="xcfgAutoReadCheckbox">自动读取 cfg 上传</label>
+            </label>
             <button id="writeXcfgBtn" class="btn-primary" disabled="disabled">写入 test-V1 并自动备份</button>
             <button id="flashEncBtn" class="btn-primary" disabled="disabled" style="display:none;">上传 ENC 固件</button>
             <button id="stopXcfgBtn" class="btn-danger" disabled="disabled">停止传输</button>
-            <button id="exportPreparedTxtBtn" class="btn-secondary" disabled="disabled" style="display:none;">导出 TXT</button>
+            <button id="exportPreparedTxtBtn" class="btn-secondary" disabled="disabled">导出 TXT</button>
+            <button id="exportXcfgBtn" class="btn-secondary" disabled="disabled">导出 XCFG</button>
             <button id="openXcfgViewerFromModalBtn" type="button" class="btn-secondary">打开配置查看器</button>
         </div>
         <div id="xcfgSelectedName" style="font-size:12px;color:#6b7280;margin-top:6px;">未选择文件</div>
+        <div id="xcfgChipInfo" style="white-space:pre-wrap;font-size:12px;color:#1f2937;margin-top:4px;"></div>
         <div id="xcfgWriteResult" style="white-space:pre-wrap;font-size:12px;color:#374151;margin-top:6px;"></div>
     </div>
 </div>
@@ -1304,6 +1325,12 @@
 </div>
 
 <script type="module">
+    import { MatrixRenderLoop } from './lib/matrix_render_loop.ts';
+    import { RecvDisplayBuffer } from './lib/recv_display_buffer.ts';
+    import { MatrixStreamPipeline } from './lib/matrix_stream_pipeline.ts';
+    import { MatrixCanvas2D } from './lib/matrix_canvas_2d.ts';
+    import { int16ToMatrixRows } from './lib/matrix_compute.ts';
+
     const modalUrlParams = new URLSearchParams(window.location.search || '');
     const detachedPopupModal = modalUrlParams.get('popupModal') || '';
     const detachedPopupKey = modalUrlParams.get('popupKey') || '';
@@ -1325,6 +1352,14 @@
     let matrixUpdatePending = false;
     let lastMatrixUpdateTime = 0;
     let matrixUpdateInterval = 1000 / 60;
+    /** STOP 后为 true：丢弃串口残留与待渲染帧 */
+    let streamPipelinePaused = false;
+    let pendingMatrixRender = null;
+    let renderCoalesceScheduled = false;
+    let serialMatrixFrameListener = null;
+    let matrixCanvas2d = null;
+    let matrixStreamPipeline = null;
+    let lastMatrixCompute = null;
     
     const matrixCellCache = new Map();
     let dirtyMatrixCells = new Set();
@@ -1343,6 +1378,8 @@
     let preparedXcfgToken = null;
     let preparedXcfgPath = '';
     let xcfgTransferInProgress = false;
+    let xcfgAutoReadInProgress = false;
+    const XCFG_AUTO_READ_KEY = 'xcfg-auto-read-on-connect';
     let xcfgProgressListener = null;
     let deviceCheckInProgress = false;
 
@@ -1358,6 +1395,7 @@
     let recvDisplayMode = 'text';
     let mainDisplayBuffer = "";
     const MAX_DISPLAY_CHARS = 60000;
+    const recvDisplayBuffer = new RecvDisplayBuffer(131072, MAX_DISPLAY_CHARS);
     let importedCompareMatrix = null;
     const MATRIX_COMPARE_CACHE_KEY = 'matrixCompareReferenceMatrix';
     const MATRIX_COMPARE_TEXT_CACHE_KEY = 'matrixCompareReferenceText';
@@ -1415,6 +1453,8 @@
     let currentYAxisMaxSelection = 150;
     let recvLogEnabled = false;
     let recvLogFlushChars = 5000;
+    let recvLogIdleFlushMs = 3000;
+    let recvLogIdleTimer = null;
     let recvLogPendingBuffer = '';
     let recvLogWriteQueue = Promise.resolve();
     let recvLogFilePath = '';
@@ -1680,6 +1720,7 @@
     const RECV_DISPLAY_MODE_KEY = 'recvDisplayMode';
     const ENABLE_RECV_LOG_KEY = 'enableRecvLog';
     const RECV_LOG_FLUSH_CHARS_KEY = 'recvLogFlushChars';
+    const RECV_LOG_IDLE_FLUSH_SEC_KEY = 'recvLogIdleFlushSec';
     const GLOBAL_DECIMAL_PLACES_KEY = 'globalDecimalPlaces';
     const CACHE_VERSION_KEY = 'cacheVersion';
     const APP_CACHE_VERSION = '2026.03.23.1';
@@ -1748,18 +1789,18 @@
         // },
         {
             id: 'hex-mode3-frame', label: 'Mode3 帧 (AA1033)', type: 'binary',
-            description: '格式: AA 10 33 | LEN | 帧号 | 行号 | 16*2字节数据 | CRC16,跳过CRC校验,直接显示到矩阵。',
+            description: 'Mode3 帧: AA 10 33 | LEN=40 | FRAME_ID | ROW_ID(0~15) | DATA[16×int16 BE] | CRC16-CCITT-FALSE(BE)。有符号 int16 ÷100 显示。',
             valueRange: 255
         },
         {
             id: 'frame0-mode3-hexstr', label: 'FRAME0 Delta HEX文本 (AA 10 33)', type: 'regex',
-            description: '每行16点，包格式: AA 10 33 | LEN | frame | line | 32byte | CRC16；',
+            description: 'HEX 文本行: AA 10 33 | LEN=40 | FRAME_ID | ROW_ID | 32B DATA | CRC16-CCITT-FALSE；每行 16 点 int16 大端。',
             // 特殊解析：不走正则分组，见 processLineWithFormat(frame0-mode3-hexstr)
             valueRange: 65535
         },
         {
             id: 'frame0-mode3-binary', label: 'FRAME0 Delta (Mode3 二进制)', type: 'binary',
-            description: 'Mutual single: AA 10 33 | LEN | 帧号 | 行号 | 16*2字节数据 | CRC16-modbus，int16大端格式',
+            description: 'Mode3 互容差值(0x10): AA 10 33 | LEN=40(0x28) | FRAME_ID | ROW_ID(0~15) | DATA[16×int16 有符号大端] | CRC16-CCITT-FALSE(大端,计[0..37])。int16 直显，不缩放。',
             valueRange: 32767
         }
     ];
@@ -1815,6 +1856,11 @@
     const flashEncBtn = document.getElementById("flashEncBtn");
     const stopXcfgBtn = document.getElementById("stopXcfgBtn");
     const exportPreparedTxtBtn = document.getElementById("exportPreparedTxtBtn");
+    const exportXcfgBtn = document.getElementById("exportXcfgBtn");
+    const readChipInfoBtn = document.getElementById("readChipInfoBtn");
+    const readXcfgFromDeviceBtn = document.getElementById("readXcfgFromDeviceBtn");
+    const xcfgAutoReadCheckbox = document.getElementById("xcfgAutoReadCheckbox");
+    const xcfgChipInfo = document.getElementById("xcfgChipInfo");
     const xcfgSelectedName = document.getElementById("xcfgSelectedName");
     const xcfgWriteResult = document.getElementById("xcfgWriteResult");
     const xcfgCurrentDir = document.getElementById("xcfgCurrentDir");
@@ -1862,6 +1908,7 @@
     const matrixPointChartCanvas = document.getElementById("matrixPointChartCanvas");
     const enableRecvLogCheckbox = document.getElementById("enableRecvLogCheckbox");
     const recvLogFlushCharsInput = document.getElementById("recvLogFlushCharsInput");
+    const recvLogIdleFlushSecInput = document.getElementById("recvLogIdleFlushSecInput");
     const openRecvLogFolderBtn = document.getElementById("openRecvLogFolderBtn");
     const recvLogStatus = document.getElementById("recvLogStatus");
     const recvDisplayModeSelect = document.getElementById("recvDisplayMode");
@@ -1875,11 +1922,24 @@
     const convertValueCheckbox = document.getElementById("convertValueCheckbox");
     const recvCountEl = document.getElementById("recvCount");
     const recvSpeedEl = document.getElementById("recvSpeed");
+    const frameRateDisplay = document.getElementById("frameRateDisplay");
     const matrixScanFreqDisplay = document.getElementById("matrixScanFreqDisplay");
+
+    function updateScanFreqDisplay(scanFreq) {
+        const text = `${scanFreq.toFixed(2)} Hz`;
+        if (frameRateDisplay) frameRateDisplay.textContent = text;
+        if (matrixScanFreqDisplay) matrixScanFreqDisplay.textContent = text;
+    }
+
+    function resetScanFreqDisplay() {
+        if (frameRateDisplay) frameRateDisplay.textContent = "N/A";
+        if (matrixScanFreqDisplay) matrixScanFreqDisplay.textContent = "N/A";
+    }
     const firstCellChangeFreqDisplay = document.getElementById("firstCellChangeFreqDisplay");
     const renderFpsDisplay = document.getElementById("renderFpsDisplay");
     const frameIdDisplay = document.getElementById("frameIdDisplay");
     const matrixGrid = document.getElementById("matrixGrid");
+    const matrixHeatmapCanvas = document.getElementById("matrixHeatmapCanvas");
     const matrix3dCanvas = document.getElementById("matrix3dCanvas");
     const matrix3dViewToggle = document.getElementById("matrix3dViewToggle");
     const matrix3dRenderModeSelect = document.getElementById("matrix3dRenderModeSelect");
@@ -2025,57 +2085,117 @@
         }
     }
     
-    function scheduleMatrixUpdate(data, format = null) {
-        if (!data || data.length !== MATRIX_SIZE) return;
-        
-        currentMatrixData = cloneMatrix(data);
-        
-        // 如果选中了"减去20并取绝对值"复选框，处理数据
+    function prepareMatrixFromRaw(data) {
+        if (!data || data.length !== MATRIX_SIZE) return null;
+        const prepared = cloneMatrix(data);
         if (matrixSubtract20Enabled) {
             for (let r = 0; r < MATRIX_SIZE; r++) {
                 for (let c = 0; c < MATRIX_SIZE; c++) {
-                    if (currentMatrixData[r] && currentMatrixData[r][c] !== null && currentMatrixData[r][c] !== undefined) {
-                        const value = normalizeCellValue(currentMatrixData[r][c]);
-                        if (value !== null) {
-                            currentMatrixData[r][c] = Math.abs(value - 20);
-                        }
+                    if (prepared[r] && prepared[r][c] !== null && prepared[r][c] !== undefined) {
+                        const value = normalizeCellValue(prepared[r][c]);
+                        if (value !== null) prepared[r][c] = Math.abs(value - 20);
                     }
                 }
             }
         }
-        
-        // 自动 Min/Max：每次矩阵数据更新时重新计算当前 16x16 的最大/最小值
-        recomputeMatrix3dRangeFromCurrentData(true);
-        // “当前解析”下方：当前帧 Min/Max；定格时额外显示第三层（差值）Min/Max
-        updateMatrixMinMaxHelpTexts();
-        updateMatrixCompareSnr();
+        return prepared;
+    }
 
+    /** STOP / 断开：清空整条 streaming 管线 */
+    async function flushStreamPipeline() {
+        streamPipelinePaused = true;
+        pendingMatrixRender = null;
+        renderCoalesceScheduled = false;
+        matrixRenderLoop.stop();
+        recvDisplayBuffer.pause();
+        matrixStreamPipeline?.pause();
+        matrixCanvas2d?.clear();
+        lastMatrixCompute = null;
+        mode3Buffer = new Uint8Array(0);
+        partialLineBuffer = "";
+        matrixScanInProgress = false;
+        matrixDataLines = [];
+        lastMode3LineId = null;
+        lastMode3LineSwitchTime = 0;
+        if (currentPortPath && window.electronAPI?.flushSerialStream) {
+            try { await window.electronAPI.flushSerialStream(currentPortPath); } catch (_) {}
+        }
+    }
+
+    function resumeStreamPipeline() {
+        streamPipelinePaused = false;
+        recvDisplayBuffer.resume();
+        matrixRenderLoop.resume();
+        matrixStreamPipeline?.resume();
+        if (currentPortPath && window.electronAPI?.resumeSerialStream) {
+            window.electronAPI.resumeSerialStream(currentPortPath).catch(() => {});
+        }
+    }
+
+    function handleMatrixFrameReady(values, meta, compute) {
+        if (streamPipelinePaused) return;
+        lastMatrixCompute = compute;
+        const currentTime = performance.now();
+        if (lastScanStartTime !== 0) {
+            const dt = currentTime - lastScanStartTime;
+            if (dt > 0) {
+                updateScanFreqDisplay(1000 / dt);
+            }
+        }
+        lastScanStartTime = currentTime;
+        matrixRenderLoop.submitFrame(values, meta);
+    }
+
+    function applyPreparedMatrix(prepared, format = null, frameMeta = null, computeResult = null) {
+        if (!prepared || streamPipelinePaused) return;
+        const stats = computeResult || lastMatrixCompute;
+        currentMatrixData = prepared;
+        recomputeMatrix3dRangeFromCurrentData(true);
+        updateMatrixMinMaxHelpTexts();
+        if (stats && matrixMinMaxText) {
+            matrixMinMaxText.textContent = `当前帧 Min/Max/Mean/σ: ${Math.round(stats.min)} / ${Math.round(stats.max)} / ${stats.mean.toFixed(1)} / ${stats.stddev.toFixed(1)}`;
+        }
+        updateMatrixCompareSnr();
         for (let r = 0; r < MATRIX_SIZE; r++) {
             for (let c = 0; c < MATRIX_SIZE; c++) {
                 dirtyMatrixCells.add(`${r}-${c}`);
             }
         }
-        
-        if (matrixUpdatePending) return;
-        
-        const now = performance.now();
-        const timeSinceLastUpdate = now - lastMatrixUpdateTime;
-        
-        if (timeSinceLastUpdate < matrixUpdateInterval) {
-            setTimeout(() => {
-                matrixUpdatePending = false;
-                scheduleMatrixUpdate(currentMatrixData, format);
-            }, matrixUpdateInterval - timeSinceLastUpdate);
-            matrixUpdatePending = true;
-            return;
+        if (frameMeta && frameIdDisplay) {
+            frameIdDisplay.textContent = String(frameMeta.frameId);
         }
-        
-        matrixUpdatePending = true;
+        if (matrixCanvas2d) {
+            matrixCanvas2d.drawMatrix(prepared, stats ?? undefined, { showValues: true });
+        }
+        performMatrixUpdate(currentMatrixData, format);
+        updateFPSCounter();
+    }
+
+    const matrixRenderLoop = new MatrixRenderLoop({
+        onFrame: (matrix, meta) => {
+            if (streamPipelinePaused) return;
+            const prepared = prepareMatrixFromRaw(matrix);
+            if (!prepared) return;
+            matrixHistory.push({ scanNumber: matrixScanCounter, matrix: cloneMatrix(prepared) });
+            if (matrixHistory.length > MAX_HISTORY_SCANS) matrixHistory.shift();
+            matrixScanCounter++;
+            updateAllOpenTrendModals();
+            applyPreparedMatrix(prepared, getActiveDataFormat(), meta, lastMatrixCompute);
+        }
+    });
+
+    function scheduleMatrixUpdate(data, format = null) {
+        if (!data || data.length !== MATRIX_SIZE || streamPipelinePaused) return;
+        pendingMatrixRender = { data: cloneMatrix(data), format };
+        if (renderCoalesceScheduled) return;
+        renderCoalesceScheduled = true;
         requestAnimationFrame(() => {
-            performMatrixUpdate(currentMatrixData, format);
-            matrixUpdatePending = false;
-            lastMatrixUpdateTime = performance.now();
-            updateFPSCounter();
+            renderCoalesceScheduled = false;
+            const job = pendingMatrixRender;
+            pendingMatrixRender = null;
+            if (!job || streamPipelinePaused) return;
+            const prepared = prepareMatrixFromRaw(job.data);
+            if (prepared) applyPreparedMatrix(prepared, job.format);
         });
     }
     
@@ -2361,6 +2481,9 @@
         if (matrix3dViewEnabled) {
             updateMatrix3DFromData(data);
         }
+        if (matrixCanvas2d && currentMatrixData) {
+            matrixCanvas2d.drawMatrix(currentMatrixData, lastMatrixCompute ?? undefined, { showValues: true });
+        }
         dirtyMatrixCells.clear();
     }
 
@@ -2407,6 +2530,10 @@
         matrixGrid.appendChild(fragment);
     }
 
+    if (frameRateDisplay) {
+        frameRateDisplay.addEventListener('dblclick', (e) => handleFrequencyDoubleClick('scanFreq', e));
+        frameRateDisplay.title = '双击查看趋势图';
+    }
     if (matrixScanFreqDisplay) {
         matrixScanFreqDisplay.addEventListener('dblclick', (e) => handleFrequencyDoubleClick('scanFreq', e));
         matrixScanFreqDisplay.title = '双击查看趋势图';
@@ -2416,7 +2543,33 @@
         firstCellChangeFreqDisplay.title = '双击查看趋势图';
     }
 
+    function initMatrixVisualizationPipeline() {
+        const heatCanvas = document.getElementById('matrixHeatmapCanvas');
+        if (heatCanvas && matrixGrid) {
+            try {
+                matrixCanvas2d = new MatrixCanvas2D({
+                    canvas: heatCanvas,
+                    anchorGrid: matrixGrid,
+                    getCellColor: (value, min, max) => {
+                        if (matrixHighlightEnabled && typeof getMatrixCellColor2D === 'function') {
+                            return getMatrixCellColor2D(value);
+                        }
+                        const t = max > min ? (value - min) / (max - min) : 0.5;
+                        const hue = 220 - Math.max(0, Math.min(1, t)) * 220;
+                        return `hsl(${hue}, 78%, ${58 - t * 18}%)`;
+                    }
+                });
+                matrixCanvas2d.drawMatrix(createEmptyMatrix(0), { min: 0, max: 1 });
+            } catch (err) {
+                console.warn('[matrix2d] Canvas 初始化失败', err);
+            }
+        }
+        matrixStreamPipeline = new MatrixStreamPipeline(handleMatrixFrameReady);
+        matrixStreamPipeline.setReferenceMatrix(importedCompareMatrix);
+    }
+
     initializeMatrixGrid();
+    initMatrixVisualizationPipeline();
 
     // ========= 触摸轨迹画布初始化 =========
     let traceCtx = traceCanvas && traceCanvas.getContext ? traceCanvas.getContext('2d') : null;
@@ -2475,6 +2628,7 @@
         }
 
         redrawTraceCanvas();
+        if (matrixCanvas2d) matrixCanvas2d.resize();
     }
 
     function clearTraceCanvasAndData() {
@@ -3337,6 +3491,7 @@
             const savedMatrix = JSON.parse(savedMatrixText);
             if (!Array.isArray(savedMatrix) || savedMatrix.length !== MATRIX_SIZE || !savedMatrix.every(row => Array.isArray(row) && row.length === MATRIX_SIZE)) return false;
             importedCompareMatrix = cloneMatrix(savedMatrix);
+            matrixStreamPipeline?.setReferenceMatrix(importedCompareMatrix);
             const savedInputText = localStorage.getItem(MATRIX_COMPARE_TEXT_CACHE_KEY) || '';
             if (matrixCompareInput && savedInputText) matrixCompareInput.value = savedInputText;
             setMatrixCompareImportStatus('已自动加载上次导入的参考矩阵');
@@ -3623,6 +3778,33 @@
         const ss = String(now.getSeconds()).padStart(2, '0');
         return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
     }
+    function formatRecvLogPayload(bytesArray) {
+        const text = decoder.decode(bytesArray);
+        if (!text) return '';
+        let printable = 0;
+        for (let i = 0; i < text.length; i++) {
+            const code = text.charCodeAt(i);
+            if (code === 0x09 || code === 0x0a || code === 0x0d || (code >= 0x20 && code < 0x7f)) printable++;
+        }
+        if (text.length > 0 && printable / text.length >= 0.85) {
+            return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+        }
+        return bytesArray.reduce((s, b, i) => s + (i ? ' ' : '') + HEX_LOOKUP[b], '');
+    }
+    function clearRecvLogIdleFlushTimer() {
+        if (recvLogIdleTimer) {
+            clearTimeout(recvLogIdleTimer);
+            recvLogIdleTimer = null;
+        }
+    }
+    function scheduleRecvLogIdleFlush() {
+        if (!recvLogEnabled) return;
+        clearRecvLogIdleFlushTimer();
+        recvLogIdleTimer = setTimeout(() => {
+            recvLogIdleTimer = null;
+            if (recvLogPendingBuffer) flushRecvLogBuffer();
+        }, recvLogIdleFlushMs);
+    }
     function queueRecvLogText(text, kind = 'RECV') {
         if (!recvLogEnabled || !text) return;
         const payload = String(text).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
@@ -3637,15 +3819,16 @@
         if (recvLogPendingBuffer.length >= recvLogFlushChars) {
             flushRecvLogBuffer();
         } else {
-            // updateRecvLogStatus(`日志已启用，待写入 ${recvLogPendingBuffer.length} / ${recvLogFlushChars} 字符`);
+            scheduleRecvLogIdleFlush();
         }
     }
     async function flushRecvLogBuffer(force = false) {
         if (!recvLogEnabled && !force) return;
+        clearRecvLogIdleFlushTimer();
         const text = recvLogPendingBuffer;
         if (!text) return;
         const normalizedText = text
-            .replace(/(?!^)(\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\] \[(?:RECV|CMD)\])/g, '\n$1')
+            .replace(/(?!^)(\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\] \[(?:RECV|CMD|MXT|ENC|XCFG)\])/g, '\n$1')
             .replace(/\n{3,}/g, '\n\n');
         recvLogPendingBuffer = '';
         recvLogWriteQueue = recvLogWriteQueue.then(async () => {
@@ -3669,8 +3852,9 @@
     function updateRecvLogUiState() {
         if (enableRecvLogCheckbox) enableRecvLogCheckbox.checked = recvLogEnabled;
         if (recvLogFlushCharsInput) recvLogFlushCharsInput.value = String(recvLogFlushChars);
+        if (recvLogIdleFlushSecInput) recvLogIdleFlushSecInput.value = String(Math.max(1, Math.round(recvLogIdleFlushMs / 1000)));
         if (!recvLogEnabled) updateRecvLogStatus('日志未启用');
-        else updateRecvLogStatus(`日志已启用，待写入 ${recvLogPendingBuffer.length} / ${recvLogFlushChars} 字符`);
+        else updateRecvLogStatus(`日志已启用，待写入 ${recvLogPendingBuffer.length} / ${recvLogFlushChars} 字符，空闲 ${Math.round(recvLogIdleFlushMs / 1000)}s 自动落盘`);
     }
     function applyMatrixCompareSplitRatio(ratio = matrixCompareSplitRatio) {
         if (!matrixCompareLayout) return;
@@ -3696,8 +3880,24 @@
             document.addEventListener('mouseup', onUp);
         });
     }
+    function appendToReceiveDisplay(text, prefix = '[TX] ') {
+        if (!text) return;
+        const normalized = String(text).replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n+$/, '');
+        const line = `${prefix}${normalized}\n`;
+        mainDisplayBuffer += line;
+        if (mainDisplayBuffer.length > MAX_DISPLAY_CHARS) {
+            mainDisplayBuffer = mainDisplayBuffer.slice(-MAX_DISPLAY_CHARS);
+        }
+        if (recvText) {
+            recvText.textContent = mainDisplayBuffer;
+            if (autoScroll && autoScroll.checked) {
+                recvText.scrollTop = recvText.scrollHeight;
+            }
+        }
+    }
     function logButtonCommand(commandText) {
         if (!commandText) return;
+        appendToReceiveDisplay(commandText, '[TX] ');
         queueRecvLogText(`${commandText}\n`, 'CMD');
     }
 
@@ -4870,11 +5070,10 @@
 
         if (matrix3dViewEnabled) {
             matrix3dCanvas.style.display = 'block';
-            // 允许 OrbitControls 监听鼠标事件（CSS 默认 pointer-events:none）
             matrix3dCanvas.style.pointerEvents = 'auto';
             resizeMatrix3DCanvas();
-            
-            // 保留 matrixGrid 的尺寸对齐：用 visibility 隐藏，而不是 display:none
+            // 2D Canvas 热力图始终可见；DOM 网格仅用于交互层
+            if (matrixHeatmapCanvas) matrixHeatmapCanvas.style.display = 'block';
             matrixGrid.style.visibility = 'hidden';
             matrixGrid.style.pointerEvents = 'none';
             traceCanvas.style.display = 'none';
@@ -4883,22 +5082,23 @@
             ensureMatrix3DInitialized().then(() => {
                 if (!matrix3dViewEnabled) return;
                 startMatrix3DLoop();
-                // 未连接状态也要立刻渲染一个“空矩阵”基准面
                 const seed = currentMatrixData ?? createEmptyMatrix(null);
                 if (!currentMatrixData) currentMatrixData = seed;
                 updateMatrix3DFromData(seed);
+                if (matrixCanvas2d && currentMatrixData) {
+                    matrixCanvas2d.drawMatrix(currentMatrixData, lastMatrixCompute ?? undefined);
+                }
             }).catch((err) => {
-                console.error('[matrix3d] 初始化失败，回退到 2D', err);
+                console.error('[matrix3d] 初始化失败，回退到 2D Canvas', err);
                 matrix3dViewEnabled = false;
-                // 不强行取消勾选，避免用户误以为“切不过去”
                 if (statusText) {
                     const m = (err && (err.message || err.toString())) ? (err.message || err.toString()) : 'unknown error';
-                    statusText.textContent = `3D初始化失败：${m}`;
+                    statusText.textContent = `3D初始化失败，已回退2D：${m}`;
                 }
-
                 stopMatrix3DLoop();
-                matrixGrid.style.visibility = 'visible';
-                matrixGrid.style.pointerEvents = '';
+                matrixGrid.style.visibility = 'hidden';
+                matrixGrid.style.pointerEvents = 'none';
+                if (matrixHeatmapCanvas) matrixHeatmapCanvas.style.display = 'block';
                 traceCanvas.style.display = '';
                 if (matrixOverlayCanvasEl) matrixOverlayCanvasEl.style.display = '';
                 if (matrix3dCanvas) {
@@ -4908,13 +5108,17 @@
             });
         } else {
             stopMatrix3DLoop();
-            matrixGrid.style.visibility = 'visible';
-            matrixGrid.style.pointerEvents = '';
+            if (matrixHeatmapCanvas) matrixHeatmapCanvas.style.display = 'block';
+            matrixGrid.style.visibility = 'hidden';
+            matrixGrid.style.pointerEvents = 'none';
             traceCanvas.style.display = '';
             if (matrixOverlayCanvasEl) matrixOverlayCanvasEl.style.display = '';
             if (matrix3dCanvas) {
                 matrix3dCanvas.style.display = 'none';
                 matrix3dCanvas.style.pointerEvents = 'none';
+            }
+            if (matrixCanvas2d && currentMatrixData) {
+                matrixCanvas2d.drawMatrix(currentMatrixData, lastMatrixCompute ?? undefined);
             }
         }
     }
@@ -5034,6 +5238,7 @@
             try {
                 await window.electronAPI.writeSerialPort(currentPortPath, 'STOP\n');
                 logButtonCommand('STOP');
+                await flushStreamPipeline();
             } catch (e) {
                 await disconnectDevice(true, "发送失败");
             }
@@ -5060,6 +5265,8 @@
         if (shouldClearMatrix) {
             clearMatrixBeforeStartCommands();
         }
+
+        resumeStreamPipeline();
 
         try {
             // 点击任意指令前，先发送一次 STOP
@@ -5866,9 +6073,11 @@
             dataFormatHelpText.textContent = '未找到数据格式,默认使用矩阵扫描解析。'; 
             return; 
         }
-        if (format.type === 'block') 
+        if (format.type === 'block')
             dataFormatHelpText.textContent = `${format.description || '矩阵块解析模式。'} 帧头: ${format.startMarker} · 帧尾: ${format.endMarker}`;
-        else 
+        else if (format.type === 'binary')
+            dataFormatHelpText.textContent = format.description || '二进制帧解析模式。';
+        else
             dataFormatHelpText.textContent = `${format.description || '正则解析模式。'} ${format.regex ? '正则: ' + format.regex : ''}`;
     }
     function centerModal(modalElement) {
@@ -6072,11 +6281,7 @@
         } catch (_) {}
         const show = appBuildMode === 'debug';
         runtimeWindowInfo.style.display = show ? 'block' : 'none';
-        if (exportPreparedTxtBtn) {
-            // 用户模式（如 package:user:small）不允许显示“导出 TXT”
-            exportPreparedTxtBtn.style.display = show ? '' : 'none';
-            if (!show) exportPreparedTxtBtn.disabled = true;
-        }
+        updateExportButtons();
         if (!show && runtimeWindowInfoTimer) {
             clearInterval(runtimeWindowInfoTimer);
             runtimeWindowInfoTimer = null;
@@ -6112,11 +6317,16 @@
         xcfgModal.style.display = 'flex';
         xcfgModal.style.zIndex = nextModalZIndex++;
         centerModal(xcfgModal);
+        updateExportButtons();
+        updateXcfgDeviceButtons();
         if (window.electronAPI && window.electronAPI.getLastXcfgDir && xcfgCurrentDir) {
             window.electronAPI.getLastXcfgDir().then((r) => {
                 const dir = (r && r.success && r.dir) ? r.dir : '';
                 xcfgCurrentDir.textContent = `当前目录: ${dir || '-'}`;
             }).catch(() => {});
+        }
+        if (isXcfgAutoReadEnabled() && currentPortPath && !selectedXcfgContent && !xcfgTransferInProgress) {
+            autoReadXcfgFromDevice({ silent: true }).catch(() => {});
         }
     }
     function closeXcfgModal() {
@@ -6301,7 +6511,7 @@
             const dt = currentTime - lastScanStartTime;
             if (dt > 0) {
                 const scanFreq = 1000 / dt;
-            matrixScanFreqDisplay.textContent = `${scanFreq.toFixed(2)} Hz`;
+                updateScanFreqDisplay(scanFreq);
             }
         }
         lastScanStartTime = currentTime;
@@ -6338,7 +6548,7 @@
         }
         
         // 记录历史数据
-        const scanFreq = matrixScanFreqDisplay.textContent !== "N/A" ? parseFloat(matrixScanFreqDisplay.textContent) : null;
+        const scanFreq = frameRateDisplay && frameRateDisplay.textContent !== "N/A" ? parseFloat(frameRateDisplay.textContent) : null;
         const changeFreq = firstCellChangeFreqDisplay.textContent !== "N/A" ? parseFloat(firstCellChangeFreqDisplay.textContent) : null;
         frequencyHistory.push({ scanNumber: matrixScanCounter, time: currentTime, scanFreq: scanFreq, changeFreq: changeFreq });
         if (frequencyHistory.length > MAX_FREQUENCY_HISTORY) frequencyHistory.shift();
@@ -6384,7 +6594,7 @@
                                 const dt = currentTime - lastScanStartTime;
                                 if (dt > 0) {
                                     const scanFreq = 1000 / dt;
-                                    matrixScanFreqDisplay.textContent = `${scanFreq.toFixed(2)} Hz`;
+                                    updateScanFreqDisplay(scanFreq);
                                 
                                 const changeFreq = firstCellChangeFreqDisplay.textContent !== "N/A" ? parseFloat(firstCellChangeFreqDisplay.textContent) : null;
                                 frequencyHistory.push({ scanNumber: matrixScanCounter, time: currentTime, scanFreq: scanFreq, changeFreq: changeFreq });
@@ -6421,7 +6631,7 @@
                                 const dt = currentTime - lastScanStartTime;
                                 if (dt > 0) {
                                     const scanFreq = 1000 / dt;
-                                    matrixScanFreqDisplay.textContent = `${scanFreq.toFixed(2)} Hz`;
+                                    updateScanFreqDisplay(scanFreq);
                                 
                                 const changeFreq = firstCellChangeFreqDisplay.textContent !== "N/A" ? parseFloat(firstCellChangeFreqDisplay.textContent) : null;
                                 frequencyHistory.push({ scanNumber: matrixScanCounter, time: currentTime, scanFreq: scanFreq, changeFreq: changeFreq });
@@ -6440,8 +6650,7 @@
                 }
             }
         } else if (format.id === 'hex-mode3-frame' || format.id === 'frame0-mode3-binary') {
-            // Mode3 数据包格式: AA 10 33 | LEN | 帧号 | 行号 | 16*2字节数据 | CRC16
-            // 最小包长度: 3(帧头) + 1(LEN) + 1(帧号) + 1(行号) + 32(数据) + 2(CRC) = 40字节
+            // Mode3 行包(40B): AA 10 33 | LEN=40 | FRAME_ID | ROW_ID | DATA[16×int16 BE] | CRC16-CCITT-FALSE(BE)
             const MODE3_MIN_PACKET_SIZE = 40;
             const MODE3_MAX_BUFFER_SIZE = 4096; // 最大缓冲区大小，防止内存溢出
             
@@ -6637,9 +6846,7 @@
                         const dt = currentTime - lastScanStartTime;
                         if (dt > 0) {
                             const scanFreq = 1000 / dt;
-                            if (matrixScanFreqDisplay) {
-                                matrixScanFreqDisplay.textContent = `${scanFreq.toFixed(2)} Hz`;
-                            }
+                            updateScanFreqDisplay(scanFreq);
                             
                             const changeFreq = firstCellChangeFreqDisplay && firstCellChangeFreqDisplay.textContent !== "N/A" ? parseFloat(firstCellChangeFreqDisplay.textContent) : null;
                             frequencyHistory.push({ scanNumber: matrixScanCounter, time: currentTime, scanFreq: scanFreq, changeFreq: changeFreq });
@@ -6775,7 +6982,7 @@
             if (lineId === 0) {
                 if (lastScanStartTime !== 0) {
                     const dt = currentTime - lastScanStartTime;
-                    if (dt > 0 && matrixScanFreqDisplay) matrixScanFreqDisplay.textContent = `${(1000 / dt).toFixed(2)} Hz`;
+                    if (dt > 0) updateScanFreqDisplay(1000 / dt);
                 }
                 lastScanStartTime = currentTime;
                 matrixHistory.push({ scanNumber: matrixScanCounter, matrix: cloneMatrix(regexMatrixBuffer) });
@@ -6844,7 +7051,6 @@
             disconnectBtn.disabled = false; 
             sendBtn.disabled = false;
             updateConfigTransferButtons();
-            if (exportPreparedTxtBtn) exportPreparedTxtBtn.disabled = !(selectedBinBase64 || preparedXcfgPath || (selectedXcfgContent && preparedXcfgToken));
             
             modeButtons.forEach(btn => {
                 const button = document.getElementById(btn.id);
@@ -6870,7 +7076,6 @@
             sendBtn.disabled = true;
             // 未连接时允许“仅处理 xcfg 为二进制文件”
             updateConfigTransferButtons();
-            if (exportPreparedTxtBtn) exportPreparedTxtBtn.disabled = !(selectedBinBase64 || preparedXcfgPath || (selectedXcfgContent && preparedXcfgToken));
             
             modeButtons.forEach(btn => {
                 const button = document.getElementById(btn.id);
@@ -6904,6 +7109,7 @@
         resetRegexMatrixBuffer();
         stopBlockScanState();
         if (frameIdDisplay) frameIdDisplay.textContent = "N/A";
+        resetScanFreqDisplay();
         mode3Buffer = new Uint8Array(0);
         lastMode3LineId = null;
         lastMode3LineSwitchTime = 0;
@@ -7627,13 +7833,26 @@ function getMatrixCellColor(value) {
             if (serialCloseListener) {
                 serialCloseListener();
             }
+            if (serialMatrixFrameListener) {
+                serialMatrixFrameListener();
+                serialMatrixFrameListener = null;
+            }
             
             // 设置新的监听器
             serialDataListener = window.electronAPI.onSerialData((receivedPortPath, data) => {
                 if (receivedPortPath === currentPortPath) {
-                    processSerialData(new Uint8Array(data));
+                    processSerialData(data);
                 }
             });
+
+            if (window.electronAPI.onSerialMatrixFrame) {
+                serialMatrixFrameListener = window.electronAPI.onSerialMatrixFrame((receivedPortPath, payload) => {
+                    if (receivedPortPath !== currentPortPath || streamPipelinePaused) return;
+                    if (!usesMainProcessMode3Frames()) return;
+                    const values = new Int16Array(new Int16Array(payload.data));
+                    matrixStreamPipeline?.ingestIpcFrame(values, { frameId: payload.frameId, ts: payload.ts });
+                });
+            }
             
             serialErrorListener = window.electronAPI.onSerialError((receivedPortPath, error) => {
                 if (receivedPortPath === currentPortPath) {
@@ -7665,12 +7884,19 @@ function getMatrixCellColor(value) {
             lastRowValues = Array(MATRIX_SIZE).fill(null);
             lastRowChangeTimes = Array(MATRIX_SIZE).fill(0);
             if (frameIdDisplay) frameIdDisplay.textContent = "N/A";
+            resetScanFreqDisplay();
             mode3Buffer = new Uint8Array(0);
             lastMode3LineId = null;
             lastMode3LineSwitchTime = 0;
+            streamPipelinePaused = false;
+            recvDisplayBuffer.clear();
+            recvDisplayBuffer.resume();
+            matrixRenderLoop.start();
             
             // 更新模式按钮状态
             renderModeButtons();
+            updateXcfgDeviceButtons();
+            maybeAutoReadXcfgOnConnect();
             
             return true;
         } catch (e) {
@@ -7681,31 +7907,31 @@ function getMatrixCellColor(value) {
         }
     }
 
+    function usesMainProcessMode3Frames() {
+        const f = getActiveDataFormat();
+        return !!(f && (f.id === 'frame0-mode3-binary' || f.id === 'hex-mode3-frame'));
+    }
+
     // 处理串口接收到的数据
     function processSerialData(data) {
-        if (!readLoopRunning || !data || data.length === 0) return;
+        if (!readLoopRunning || !data || data.length === 0 || streamPipelinePaused) return;
         
         recvBytesTotal += data.byteLength; 
-                recvCount++;
+        recvCount++;
 
-        const bytesArray = new Uint8Array(data);
-        let logChunk = '';
-                parseHexPatternsDirectly(bytesArray);
+        const bytesArray = data instanceof Uint8Array ? data : new Uint8Array(data);
 
-                if (recvDisplayMode === 'hex') {
-                    let hexStr = "";
-                    for(let i=0; i<bytesArray.length; i++) hexStr += HEX_LOOKUP[bytesArray[i]] + " ";
-                    mainDisplayBuffer += hexStr;
-                    logChunk = hexStr;
-                } else {
-            logChunk = decoder.decode(data, { stream: true });
-            mainDisplayBuffer += logChunk;
-                }
-                if (logChunk) queueRecvLogText(logChunk, 'RECV');
-                if (mainDisplayBuffer.length > MAX_DISPLAY_CHARS) 
-                    mainDisplayBuffer = mainDisplayBuffer.slice(-MAX_DISPLAY_CHARS);
+        if (usesMainProcessMode3Frames()) {
+            matrixStreamPipeline?.pushBytes(bytesArray);
+        } else {
+            parseHexPatternsDirectly(bytesArray);
+        }
 
-        const textChunk = decoder.decode(data, { stream: true });
+        recvDisplayBuffer.push(bytesArray);
+        const logChunk = formatRecvLogPayload(bytesArray);
+        if (logChunk) queueRecvLogText(logChunk, 'RECV');
+
+        const textChunk = decoder.decode(bytesArray, { stream: true });
                 partialLineBuffer += textChunk;
                 let newLineIndex;
                 if (partialLineBuffer.length > 10000) 
@@ -7714,7 +7940,6 @@ function getMatrixCellColor(value) {
                     let line = partialLineBuffer.substring(0, newLineIndex + 1);
                     partialLineBuffer = partialLineBuffer.substring(newLineIndex + 1);
                     processLineWithActiveFormat(line);
-                    // 解析触摸轨迹日志（TCHx X=.. Y=.. FNG/STY/RSV ...）
                     processTouchLogLine(line);
                     const blockFormat = getActiveBlockFormat();
                     const lowerLine = line.toLowerCase();
@@ -7736,6 +7961,7 @@ function getMatrixCellColor(value) {
                 }
         
         if (Date.now() - lastUpdateTime > 100) {
+            mainDisplayBuffer = recvDisplayMode === 'hex' ? recvDisplayBuffer.toHex() : recvDisplayBuffer.toText();
             recvText.textContent = mainDisplayBuffer;
             recvText.scrollTop = recvText.scrollHeight;
             updateCountersInDom();
@@ -7807,8 +8033,169 @@ function getMatrixCellColor(value) {
         return undefined;
     }
 
+    function canExportPreparedTxt() {
+        if (selectedConfigType === 'enc') return false;
+        if (selectedBinBase64 && String(selectedBinBase64).trim()) return true;
+        if (preparedXcfgPath && String(preparedXcfgPath).trim()) return true;
+        if (selectedXcfgContent && preparedXcfgToken) return true;
+        return false;
+    }
+
+    function updateExportPreparedTxtBtn() {
+        if (!exportPreparedTxtBtn) return;
+        exportPreparedTxtBtn.style.display = selectedConfigType === 'enc' ? 'none' : '';
+        exportPreparedTxtBtn.disabled = xcfgTransferInProgress || !canExportPreparedTxt();
+    }
+
+    function canExportXcfg() {
+        return selectedConfigType === 'xcfg'
+            && !!(selectedXcfgContent && String(selectedXcfgContent).trim());
+    }
+
+    function isXcfgAutoReadEnabled() {
+        try {
+            return localStorage.getItem(XCFG_AUTO_READ_KEY) === '1';
+        } catch (_) {
+            return false;
+        }
+    }
+
+    function setXcfgAutoReadEnabled(enabled) {
+        try {
+            localStorage.setItem(XCFG_AUTO_READ_KEY, enabled ? '1' : '0');
+        } catch (_) {}
+    }
+
+    function formatChipInfoForDisplay(info) {
+        if (!info) return '';
+        const lines = [
+            `Family ID: 0x${Number(info.familyId).toString(16).toUpperCase().padStart(2, '0')}`,
+            `Variant ID: 0x${Number(info.variantId).toString(16).toUpperCase().padStart(2, '0')}`,
+            `Version: ${info.versionMajor}.${info.versionMinor}`,
+            `Build: 0x${Number(info.build).toString(16).toUpperCase()}`,
+            `Matrix: ${info.matrixX}×${info.matrixY}`,
+            `Objects: ${info.numObjects}`
+        ];
+        return lines.join('\n');
+    }
+
+    function updateXcfgDeviceButtons() {
+        const connected = !!currentPortPath;
+        const busy = xcfgTransferInProgress || xcfgAutoReadInProgress;
+        if (readChipInfoBtn) readChipInfoBtn.disabled = !connected || busy;
+        if (readXcfgFromDeviceBtn) readXcfgFromDeviceBtn.disabled = !connected || busy;
+    }
+
+    async function handleReadChipInfo() {
+        if (!currentPortPath) {
+            if (xcfgChipInfo) xcfgChipInfo.textContent = '请先连接设备';
+            return;
+        }
+        if (!window.electronAPI || !window.electronAPI.readMcuChipInfo) {
+            if (xcfgChipInfo) xcfgChipInfo.textContent = '当前版本不支持读取芯片信息';
+            return;
+        }
+        if (readChipInfoBtn) readChipInfoBtn.disabled = true;
+        if (xcfgChipInfo) xcfgChipInfo.textContent = '正在读取芯片 Info Block...';
+        try {
+            const result = await window.electronAPI.readMcuChipInfo({ portPath: currentPortPath });
+            if (!result || !result.success) {
+                if (xcfgChipInfo) xcfgChipInfo.textContent = `读取失败: ${(result && result.error) ? result.error : '未知错误'}`;
+                return;
+            }
+            const iicText = (result.iicAddr != null)
+                ? `I2C 应用地址: 0x${Number(result.iicAddr).toString(16).toUpperCase()}\n`
+                : '';
+            if (xcfgChipInfo) {
+                xcfgChipInfo.textContent = `${iicText}${formatChipInfoForDisplay(result.chipInfo)}`;
+            }
+        } catch (e) {
+            if (xcfgChipInfo) xcfgChipInfo.textContent = `读取异常: ${e && e.message ? e.message : e}`;
+        } finally {
+            updateXcfgDeviceButtons();
+        }
+    }
+
+    async function applyXcfgContentFromDevice(content, fileName, sourceLabel) {
+        if (!content || !String(content).trim()) throw new Error('读取到的 xcfg 为空');
+        preparedXcfgToken = null;
+        preparedXcfgPath = '';
+        selectedXcfgFile = null;
+        selectedConfigType = 'xcfg';
+        selectedXcfgPath = fileName || 'device-read.xcfg';
+        selectedXcfgContent = content;
+        selectedBinBase64 = '';
+        if (xcfgSelectedName) {
+            xcfgSelectedName.textContent = `已选择: ${selectedXcfgPath}${sourceLabel ? ` (${sourceLabel})` : ''}`;
+        }
+        if (!window.electronAPI || !window.electronAPI.prepareXcfgBinary) {
+            throw new Error('当前版本不支持 xcfg 预处理');
+        }
+        const prep = await window.electronAPI.prepareXcfgBinary({
+            fileName: selectedXcfgPath,
+            xcfgContent: selectedXcfgContent,
+            backupName: 'test-V1'
+        });
+        if (!prep || !prep.success) throw new Error((prep && prep.error) ? prep.error : '预处理失败');
+        preparedXcfgToken = prep.token || null;
+        preparedXcfgPath = prep.preparedFilePath || '';
+        if (xcfgWriteResult) {
+            xcfgWriteResult.textContent = `已从设备读取并完成预处理\n对象数: ${prep.totalObjects || 0}/${prep.maxObjectsMcu || 128}\n分包: ${prep.totalChunks || 0}  字节: ${prep.totalBytes || 0}\nBIN: ${preparedXcfgPath || '未落盘'}`;
+        }
+        updateConfigTransferButtons();
+        updateExportButtons();
+    }
+
+    async function autoReadXcfgFromDevice(options = {}) {
+        const silent = options.silent === true;
+        if (!currentPortPath || xcfgTransferInProgress || xcfgAutoReadInProgress) return false;
+        if (!window.electronAPI || !window.electronAPI.readMcuXcfgFromDevice) {
+            if (!silent && xcfgWriteResult) xcfgWriteResult.textContent = '当前版本不支持从设备读取 cfg';
+            return false;
+        }
+        xcfgAutoReadInProgress = true;
+        updateXcfgDeviceButtons();
+        if (!silent && xcfgWriteResult) xcfgWriteResult.textContent = '正在从设备读取 xcfg...';
+        try {
+            const result = await window.electronAPI.readMcuXcfgFromDevice({ portPath: currentPortPath });
+            if (!result || !result.success) {
+                if (!silent && xcfgWriteResult) {
+                    xcfgWriteResult.textContent = `自动读取 cfg 失败: ${(result && result.error) ? result.error : '未知错误'}`;
+                }
+                return false;
+            }
+            await applyXcfgContentFromDevice(result.content, result.fileName, silent ? '自动' : '手动');
+            return true;
+        } catch (e) {
+            if (!silent && xcfgWriteResult) {
+                xcfgWriteResult.textContent = `读取 cfg 异常: ${e && e.message ? e.message : e}`;
+            }
+            return false;
+        } finally {
+            xcfgAutoReadInProgress = false;
+            updateXcfgDeviceButtons();
+        }
+    }
+
+    function maybeAutoReadXcfgOnConnect() {
+        if (!isXcfgAutoReadEnabled() || !currentPortPath) return;
+        autoReadXcfgFromDevice({ silent: true }).catch(() => {});
+    }
+
+    function updateExportXcfgBtn() {
+        if (!exportXcfgBtn) return;
+        exportXcfgBtn.style.display = selectedConfigType === 'xcfg' ? '' : 'none';
+        exportXcfgBtn.disabled = xcfgTransferInProgress || !canExportXcfg();
+    }
+
+    function updateExportButtons() {
+        updateExportPreparedTxtBtn();
+        updateExportXcfgBtn();
+    }
+
     function updateConfigTransferButtons() {
         const connected = !!currentPortPath;
+        updateXcfgDeviceButtons();
         if (writeXcfgBtn) {
             if (selectedConfigType === 'enc') {
                 writeXcfgBtn.style.display = 'none';
@@ -7832,6 +8219,7 @@ function getMatrixCellColor(value) {
                 flashEncBtn.disabled = true;
             }
         }
+        updateExportButtons();
     }
 
     async function handleFlashEnc() {
@@ -7849,6 +8237,7 @@ function getMatrixCellColor(value) {
         }
         try {
             xcfgTransferInProgress = true;
+            updateExportButtons();
             if (flashEncBtn) flashEncBtn.disabled = true;
             if (writeXcfgBtn) writeXcfgBtn.disabled = true;
             if (stopXcfgBtn) stopXcfgBtn.disabled = false;
@@ -7894,6 +8283,7 @@ function getMatrixCellColor(value) {
             }
             try {
                 xcfgTransferInProgress = true;
+                updateExportButtons();
                 writeXcfgBtn.disabled = true;
                 if (stopXcfgBtn) stopXcfgBtn.disabled = false;
                 xcfgWriteResult.textContent = '正在上传已处理 BIN（启动更新模式 -> 传输 -> 备份）...';
@@ -7913,7 +8303,7 @@ function getMatrixCellColor(value) {
             } finally {
                 xcfgTransferInProgress = false;
                 if (stopXcfgBtn) stopXcfgBtn.disabled = true;
-                writeXcfgBtn.disabled = !currentPortPath;
+                updateConfigTransferButtons();
             }
             return;
         }
@@ -7929,6 +8319,7 @@ function getMatrixCellColor(value) {
 
         try {
             xcfgTransferInProgress = true;
+            updateExportButtons();
             writeXcfgBtn.disabled = true;
             if (stopXcfgBtn) stopXcfgBtn.disabled = false;
             if (!preparedXcfgToken && window.electronAPI.prepareXcfgBinary) {
@@ -7977,37 +8368,31 @@ function getMatrixCellColor(value) {
         } finally {
             xcfgTransferInProgress = false;
             if (stopXcfgBtn) stopXcfgBtn.disabled = true;
-            writeXcfgBtn.disabled = selectedConfigType === 'bin'
-                ? (!currentPortPath)
-                : (currentPortPath
-                ? (!selectedXcfgContent || !preparedXcfgToken)
-                : (!selectedXcfgContent));
+            updateConfigTransferButtons();
         }
     }
 
     async function handleExportPreparedTxt() {
-        if (appBuildMode === 'user') {
-            if (exportPreparedTxtBtn) exportPreparedTxtBtn.disabled = true;
-            if (xcfgWriteResult) xcfgWriteResult.textContent = '用户模式禁止导出 TXT';
-            return;
-        }
         if (!window.electronAPI || !window.electronAPI.exportPreparedBinaryTxt) {
             if (xcfgWriteResult) xcfgWriteResult.textContent = '当前版本不支持导出 TXT';
             return;
         }
         const hasBin = !!(selectedBinBase64 && String(selectedBinBase64).trim());
         const hasPreparedFile = !!(preparedXcfgPath && String(preparedXcfgPath).trim());
-        if (!hasBin && !hasPreparedFile) {
+        const hasPreparedToken = !!(preparedXcfgToken && selectedXcfgContent);
+        if (!hasBin && !hasPreparedFile && !hasPreparedToken) {
             if (xcfgWriteResult) xcfgWriteResult.textContent = '请先选择 BIN，或先选择 XCFG 完成预处理';
             return;
         }
         try {
-            if (exportPreparedTxtBtn) exportPreparedTxtBtn.disabled = true;
+            exportPreparedTxtBtn.disabled = true;
             if (xcfgWriteResult) xcfgWriteResult.textContent = '正在导出 TXT...';
             const result = await window.electronAPI.exportPreparedBinaryTxt(
                 hasBin
                     ? { filePath: selectedXcfgPath || undefined, binBase64: selectedBinBase64 }
-                    : { filePath: preparedXcfgPath }
+                    : hasPreparedFile
+                        ? { filePath: preparedXcfgPath }
+                        : { preparedToken: preparedXcfgToken }
             );
             if (result && result.success) {
                 if (xcfgWriteResult) {
@@ -8019,7 +8404,42 @@ function getMatrixCellColor(value) {
         } catch (e) {
             if (xcfgWriteResult) xcfgWriteResult.textContent = `TXT 导出异常: ${e && e.message ? e.message : e}`;
         } finally {
-            if (exportPreparedTxtBtn) exportPreparedTxtBtn.disabled = !(selectedBinBase64 || preparedXcfgPath || (selectedXcfgContent && preparedXcfgToken));
+            updateExportButtons();
+        }
+    }
+
+    async function handleExportXcfg() {
+        if (!canExportXcfg()) {
+            if (xcfgWriteResult) xcfgWriteResult.textContent = '请先选择 XCFG 文件';
+            return;
+        }
+        if (!window.electronAPI || !window.electronAPI.saveXcfgContentDialog) {
+            if (xcfgWriteResult) xcfgWriteResult.textContent = '当前版本不支持导出 XCFG';
+            return;
+        }
+        const defaultName = (selectedXcfgPath ? selectedXcfgPath.replace(/^.*[\\\/]/, '') : '') || 'config.xcfg';
+        const defaultDir = selectedXcfgPath ? selectedXcfgPath.replace(/[\\\/][^\\\/]+$/, '') : undefined;
+        try {
+            if (exportXcfgBtn) exportXcfgBtn.disabled = true;
+            if (xcfgWriteResult) xcfgWriteResult.textContent = '正在导出 XCFG...';
+            const result = await window.electronAPI.saveXcfgContentDialog({
+                content: selectedXcfgContent,
+                defaultName,
+                defaultDir
+            });
+            if (result && result.canceled) {
+                if (xcfgWriteResult) xcfgWriteResult.textContent = '已取消导出';
+                return;
+            }
+            if (result && result.success) {
+                if (xcfgWriteResult) xcfgWriteResult.textContent = `XCFG 导出成功\n路径: ${result.filePath || '未知'}`;
+            } else {
+                if (xcfgWriteResult) xcfgWriteResult.textContent = `XCFG 导出失败: ${(result && result.error) ? result.error : '未知错误'}`;
+            }
+        } catch (e) {
+            if (xcfgWriteResult) xcfgWriteResult.textContent = `XCFG 导出异常: ${e && e.message ? e.message : e}`;
+        } finally {
+            updateExportButtons();
         }
     }
 
@@ -8027,6 +8447,7 @@ function getMatrixCellColor(value) {
         if (isAutoConnecting && isUnexpected) return setStatus(false, reason, true);
         stopAutoConnectLoop(); 
         readLoopRunning = false;
+        await flushStreamPipeline();
         
         const portPathToDisconnect = currentPortPath;
         currentPortPath = null;
@@ -8050,6 +8471,10 @@ function getMatrixCellColor(value) {
                 serialCloseListener();
                 serialCloseListener = null;
             }
+            if (serialMatrixFrameListener) {
+                serialMatrixFrameListener();
+                serialMatrixFrameListener = null;
+            }
             
             // 断开串口连接
             if (portPathToDisconnect && window.electronAPI && window.electronAPI.disconnectSerialPort) {
@@ -8072,10 +8497,12 @@ function getMatrixCellColor(value) {
             lastRowValues = Array(MATRIX_SIZE).fill(null);
             lastRowChangeTimes = Array(MATRIX_SIZE).fill(0);
             if (frameIdDisplay) frameIdDisplay.textContent = "N/A";
+            resetScanFreqDisplay();
             mode3Buffer = new Uint8Array(0);
             lastMode3LineId = null;
             lastMode3LineSwitchTime = 0;
             stopDrag();
+            updateXcfgDeviceButtons();
         }
     }
 
@@ -8222,7 +8649,7 @@ function getMatrixCellColor(value) {
             if (writeXcfgBtn) writeXcfgBtn.disabled = true;
             if (flashEncBtn) flashEncBtn.disabled = true;
             if (stopXcfgBtn) stopXcfgBtn.disabled = true;
-            if (exportPreparedTxtBtn) exportPreparedTxtBtn.disabled = true;
+            updateExportButtons();
             if (xcfgWriteResult) xcfgWriteResult.textContent = '';
 
             try {
@@ -8245,7 +8672,6 @@ function getMatrixCellColor(value) {
                     if (xcfgWriteResult) xcfgWriteResult.textContent = '已选择已处理 BIN，可直接连接后上传';
                     updateConfigTransferButtons();
                     if (stopXcfgBtn) stopXcfgBtn.disabled = true;
-                    if (exportPreparedTxtBtn) exportPreparedTxtBtn.disabled = !selectedBinBase64;
                     return;
                 }
 
@@ -8253,7 +8679,6 @@ function getMatrixCellColor(value) {
                     if (xcfgWriteResult) xcfgWriteResult.textContent = '已选择 ENC 固件，连接后点「上传 ENC 固件」流式烧录（无需整文件缓存）';
                     updateConfigTransferButtons();
                     if (stopXcfgBtn) stopXcfgBtn.disabled = true;
-                    if (exportPreparedTxtBtn) exportPreparedTxtBtn.disabled = true;
                     return;
                 }
 
@@ -8275,14 +8700,12 @@ function getMatrixCellColor(value) {
                 }
                 updateConfigTransferButtons();
                 if (stopXcfgBtn) stopXcfgBtn.disabled = true;
-                if (exportPreparedTxtBtn) exportPreparedTxtBtn.disabled = !preparedXcfgPath;
             } catch (e) {
                 preparedXcfgToken = null;
                 preparedXcfgPath = '';
                 if (xcfgWriteResult) xcfgWriteResult.textContent = `选择/预处理失败: ${e && e.message ? e.message : e}`;
                 updateConfigTransferButtons();
                 if (stopXcfgBtn) stopXcfgBtn.disabled = true;
-                if (exportPreparedTxtBtn) exportPreparedTxtBtn.disabled = true;
             }
         });
     }
@@ -8308,6 +8731,25 @@ function getMatrixCellColor(value) {
     if (exportPreparedTxtBtn) {
         exportPreparedTxtBtn.addEventListener('click', handleExportPreparedTxt);
     }
+    if (exportXcfgBtn) {
+        exportXcfgBtn.addEventListener('click', handleExportXcfg);
+    }
+    if (readChipInfoBtn) {
+        readChipInfoBtn.addEventListener('click', handleReadChipInfo);
+    }
+    if (readXcfgFromDeviceBtn) {
+        readXcfgFromDeviceBtn.addEventListener('click', () => autoReadXcfgFromDevice({ silent: false }));
+    }
+    if (xcfgAutoReadCheckbox) {
+        xcfgAutoReadCheckbox.checked = isXcfgAutoReadEnabled();
+        xcfgAutoReadCheckbox.addEventListener('change', () => {
+            setXcfgAutoReadEnabled(!!xcfgAutoReadCheckbox.checked);
+            if (xcfgAutoReadCheckbox.checked && currentPortPath && !selectedXcfgContent) {
+                autoReadXcfgFromDevice({ silent: true }).catch(() => {});
+            }
+        });
+    }
+    updateXcfgDeviceButtons();
     if (openXcfgModalBtn) openXcfgModalBtn.addEventListener('click', openXcfgModal);
     if (openXcfgViewerBtn) openXcfgViewerBtn.addEventListener('click', openXcfgViewer);
     const openXcfgViewerFromModalBtn = document.getElementById('openXcfgViewerFromModalBtn');
@@ -8433,6 +8875,18 @@ function getMatrixCellColor(value) {
         recvLogFlushCharsInput.addEventListener('change', applyFlushChars);
         recvLogFlushCharsInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') applyFlushChars(); });
     }
+    if (recvLogIdleFlushSecInput) {
+        const applyIdleFlushSec = () => {
+            const sec = Math.max(1, parseInt(recvLogIdleFlushSecInput.value, 10) || 3);
+            recvLogIdleFlushMs = sec * 1000;
+            recvLogIdleFlushSecInput.value = String(sec);
+            localStorage.setItem(RECV_LOG_IDLE_FLUSH_SEC_KEY, String(sec));
+            updateRecvLogUiState();
+            if (recvLogPendingBuffer) scheduleRecvLogIdleFlush();
+        };
+        recvLogIdleFlushSecInput.addEventListener('change', applyIdleFlushSec);
+        recvLogIdleFlushSecInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') applyIdleFlushSec(); });
+    }
     if (openRecvLogFolderBtn) {
         openRecvLogFolderBtn.addEventListener('click', async () => {
             try {
@@ -8446,9 +8900,20 @@ function getMatrixCellColor(value) {
             }
         });
     }
+    if (window.electronAPI && window.electronAPI.onSerialBridgeLog) {
+        window.electronAPI.onSerialBridgeLog((portPath, direction, text) => {
+            if (currentPortPath && portPath
+                && portPath.toLowerCase() !== currentPortPath.toLowerCase()) return;
+            const prefixMap = { tx: '[TX] ', rx: '[RX] ', info: '[MXT] ' };
+            const prefix = prefixMap[direction] || '[MXT] ';
+            appendToReceiveDisplay(text, prefix);
+            if (direction === 'rx') queueRecvLogText(text, 'RECV');
+            else if (direction === 'tx') queueRecvLogText(text, 'CMD');
+            else queueRecvLogText(text, 'MXT');
+        });
+    }
     if (window.electronAPI && window.electronAPI.onXcfgTransferProgress) {
         xcfgProgressListener = window.electronAPI.onXcfgTransferProgress((progress) => {
-            if (!xcfgWriteResult) return;
             const phaseTextMap = {
                 prepare: '预处理',
                 transfer: '发送',
@@ -8465,10 +8930,14 @@ function getMatrixCellColor(value) {
             const ratio = (current !== '' && total !== '') ? ` (${current}/${total})` : '';
             const msg = progress.message ? ` - ${progress.message}` : '';
             const progressText = `${phaseText}${percent ? ` ${percent}` : ''}${ratio}${msg}`.trim();
+            const tag = progress.kind === 'enc' ? 'ENC' : 'XCFG';
+            queueRecvLogText(progressText, tag);
+
+            if (!xcfgWriteResult) return;
             xcfgWriteResult.textContent = progressText;
 
             // 同步输出到接收区域，便于现场观察每一步进度/超时原因
-            const recvLine = `[XCFG] ${progressText}\n`;
+            const recvLine = `[${tag}] ${progressText}\n`;
             mainDisplayBuffer += recvLine;
             if (mainDisplayBuffer.length > MAX_DISPLAY_CHARS) {
                 mainDisplayBuffer = mainDisplayBuffer.substring(mainDisplayBuffer.length - MAX_DISPLAY_CHARS);
@@ -9312,6 +9781,7 @@ function getMatrixCellColor(value) {
                 localStorage.removeItem(RECV_DISPLAY_MODE_KEY);
                 localStorage.removeItem(ENABLE_RECV_LOG_KEY);
                 localStorage.removeItem(RECV_LOG_FLUSH_CHARS_KEY);
+                localStorage.removeItem(RECV_LOG_IDLE_FLUSH_SEC_KEY);
                 localStorage.removeItem(GLOBAL_DECIMAL_PLACES_KEY);
                 localStorage.removeItem(MATRIX_HIGHLIGHT_CONFIG_KEY);
                 localStorage.removeItem(MATRIX_HIGHLIGHT_PROFILE_CONFIGS_KEY);
@@ -9519,6 +9989,10 @@ function getMatrixCellColor(value) {
         const savedRecvLogFlushChars = localStorage.getItem(RECV_LOG_FLUSH_CHARS_KEY);
         if (savedRecvLogFlushChars !== null) {
             recvLogFlushChars = Math.max(100, parseInt(savedRecvLogFlushChars, 10) || 5000);
+        }
+        const savedRecvLogIdleFlushSec = localStorage.getItem(RECV_LOG_IDLE_FLUSH_SEC_KEY);
+        if (savedRecvLogIdleFlushSec !== null) {
+            recvLogIdleFlushMs = Math.max(1000, (parseInt(savedRecvLogIdleFlushSec, 10) || 3) * 1000);
         }
         updateRecvLogUiState();
 

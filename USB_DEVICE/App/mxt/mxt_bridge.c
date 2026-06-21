@@ -284,7 +284,7 @@ void ProcessBridgePacket(uint8_t *buf, uint32_t len)
                     CFG_SendResp(ENC_RESP_NACK_CMD, 0, STATUS_ADDR_NACK);
                     return;
                 }
-                expected_len = (uint16_t)(9 + frame_len);
+                expected_len = ENC_FRAME_PKT_SIZE(frame_len);
             } else if (enc_cmd == ENC_END_CMD) {
                 expected_len = 7;
             } else {
@@ -596,7 +596,7 @@ void ProcessBridgePacket(uint8_t *buf, uint32_t len)
 
         uint16_t seq = buf[1] | ((uint16_t)buf[2] << 8);
         uint16_t frame_len = buf[3] | ((uint16_t)buf[4] << 8);
-        uint16_t expected_len = (uint16_t)(9 + frame_len);
+        uint16_t expected_len = ENC_FRAME_PKT_SIZE(frame_len);
         if (frame_len < 2 || expected_len != len || frame_len > ENC_MAX_FRAME_BYTES) {
             CFG_SendResp(ENC_RESP_NACK_CMD, seq, STATUS_ADDR_NACK);
             return;
@@ -837,8 +837,9 @@ void ProcessBridgePacket(uint8_t *buf, uint32_t len)
             MXT_InitTouchScreen();
             USB_SendString("Bridge mode switched to STRING mode\r\n");
         } else {
-            g_bridge_mode = BRIDGE_MODE_BINARY;
             USB_SendString("Bridge mode switched to I2C-USB mode\r\n");
+            MXT_WaitUsbIdle(500U);
+            g_bridge_mode = BRIDGE_MODE_BINARY;
         }
         
         /* 返回配置成功 */
@@ -856,8 +857,9 @@ void ProcessBridgePacket(uint8_t *buf, uint32_t len)
     {
         uint8_t new_mode = buf[1];
         if(new_mode == 0) {
-            g_bridge_mode = BRIDGE_MODE_BINARY;
             USB_SendString("Bridge Mode: I2C-USB bridge\r\n");
+            MXT_WaitUsbIdle(500U);
+            g_bridge_mode = BRIDGE_MODE_BINARY;
         } else if (new_mode == 1) {
             g_bridge_mode = BRIDGE_MODE_STRING;
             // 初始化触摸屏配置

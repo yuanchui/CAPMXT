@@ -118,7 +118,7 @@ void MX_GPIO_Init(void)
 #define SSN_GAP_POLL_US           100U
 #define SSN_LOW_PULL_US           20U
 #define SSN_SPI_IDLE_US           2500U
-#define SSN_HOLD_LOW_US           6208U
+#define SSN_HOLD_LOW_US           6210U
 #define SSN_STOP_PULLUP_US        250U
 #define SSN_GAP_MIN_US            500U
 #define SSN_PA10_LOW_MIN_US       1000U

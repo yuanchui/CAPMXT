@@ -44,7 +44,7 @@ export async function suspendBridgeForMxtApp(
   }
 
   if (suspended.length > 0) {
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    await new Promise((resolve) => setTimeout(resolve, 500));
   }
 
   return suspended;

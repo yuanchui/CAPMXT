@@ -1,6 +1,6 @@
 Dependencies for Project 'STMUSBATMXT640', Target 'STMUSBATMXT640': (DO NOT MODIFY !)
 F (startup_stm32f103xb.s)(0x69EF65CE)(--cpu Cortex-M3 -g --apcs=interwork -I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include--pd "__UVISION_VERSION SETA 515" --pd "_RTE_ SETA 1" --pd "STM32F10X_MD SETA 1"--list startup_stm32f103xb.lst --xref -o stmusbatmxt640\startup_stm32f103xb.o --depend stmusbatmxt640\startup_stm32f103xb.d)
-F (../Core/Src/main.c)(0x6A2EE585)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\main.o --omf_browse stmusbatmxt640\main.crf --depend stmusbatmxt640\main.d)
+F (../Core/Src/main.c)(0x6A33AA54)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\main.o --omf_browse stmusbatmxt640\main.crf --depend stmusbatmxt640\main.d)
 I (../Core/Inc/main.h)(0x6A27E1BE)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x68F9849E)
 I (../Core/Inc/stm32f1xx_hal_conf.h)(0x6A2B66C5)
@@ -34,27 +34,27 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd.h)(0x68F9849E)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h)(0x68F9849E)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h)(0x68F9849E)
 I (../Core/Inc/dma.h)(0x6A2B65B8)
-I (../Core/Inc/tim.h)(0x6A2BD9CD)
+I (../Core/Inc/tim.h)(0x6A2FACD8)
 I (../Core/Inc/i2c.h)(0x697F123A)
-I (../Core/Inc/spi.h)(0x6A2BD9C3)
+I (../Core/Inc/spi.h)(0x6A2FACD8)
 I (../USB_DEVICE/App/usb_device.h)(0x697F123A)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h)(0x68F98496)
 I (../USB_DEVICE/Target/usbd_conf.h)(0x697F123A)
 I (D:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x54C245B8)
 I (D:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x54C245B8)
 I (D:\Keil_v5\ARM\ARMCC\include\string.h)(0x54C245B8)
-I (../Core/Inc/gpio.h)(0x6A2BD9CF)
+I (../Core/Inc/gpio.h)(0x6A2FACD8)
 I (../USB_DEVICE/App/usbd_cdc_if.h)(0x6A2784EE)
 I (../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc/usbd_cdc.h)(0x68F98496)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h)(0x68F98496)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h)(0x68F98496)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h)(0x68F98496)
 I (../USB_DEVICE/App/mxt/mxt_spi_stream.h)(0x6A2BB80D)
-I (../USB_DEVICE/App/mxt/mxt_state.h)(0x6A2EE585)
-I (../USB_DEVICE/App/mxt/mxt_config.h)(0x6A2EE585)
+I (../USB_DEVICE/App/mxt/mxt_state.h)(0x6A322ED9)
+I (../USB_DEVICE/App/mxt/mxt_config.h)(0x6A33AC89)
 I (../USB_DEVICE/App/mxt/mxt_usb_io.h)(0x6A2B7DF3)
-F (../Core/Src/gpio.c)(0x6A2EE585)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\gpio.o --omf_browse stmusbatmxt640\gpio.crf --depend stmusbatmxt640\gpio.d)
-I (../Core/Inc/gpio.h)(0x6A2BD9CF)
+F (../Core/Src/gpio.c)(0x6A3401A3)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\gpio.o --omf_browse stmusbatmxt640\gpio.crf --depend stmusbatmxt640\gpio.d)
+I (../Core/Inc/gpio.h)(0x6A2FACD8)
 I (../Core/Inc/main.h)(0x6A27E1BE)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x68F9849E)
 I (../Core/Inc/stm32f1xx_hal_conf.h)(0x6A2B66C5)
@@ -87,12 +87,12 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h)(0x6A27DEF7)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd.h)(0x68F9849E)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h)(0x68F9849E)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h)(0x68F9849E)
-I (../Core/Inc/tim.h)(0x6A2BD9CD)
-I (../Core/Inc/spi.h)(0x6A2BD9C3)
+I (../Core/Inc/tim.h)(0x6A2FACD8)
+I (../Core/Inc/spi.h)(0x6A2FACD8)
 I (../USB_DEVICE/App/mxt/mxt_spi_stream.h)(0x6A2BB80D)
-I (../USB_DEVICE/App/mxt/mxt_state.h)(0x6A2EE585)
-I (../USB_DEVICE/App/mxt/mxt_config.h)(0x6A2EE585)
-F (../Core/Src/i2c.c)(0x697F123A)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\i2c.o --omf_browse stmusbatmxt640\i2c.crf --depend stmusbatmxt640\i2c.d)
+I (../USB_DEVICE/App/mxt/mxt_state.h)(0x6A322ED9)
+I (../USB_DEVICE/App/mxt/mxt_config.h)(0x6A33AC89)
+F (../Core/Src/i2c.c)(0x6A33B188)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\i2c.o --omf_browse stmusbatmxt640\i2c.crf --depend stmusbatmxt640\i2c.d)
 I (../Core/Inc/i2c.h)(0x697F123A)
 I (../Core/Inc/main.h)(0x6A27E1BE)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x68F9849E)
@@ -161,7 +161,7 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd.h)(0x68F9849E)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h)(0x68F9849E)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h)(0x68F9849E)
 F (../Core/Src/tim.c)(0x6A2BD9CE)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\tim.o --omf_browse stmusbatmxt640\tim.crf --depend stmusbatmxt640\tim.d)
-I (../Core/Inc/tim.h)(0x6A2BD9CD)
+I (../Core/Inc/tim.h)(0x6A2FACD8)
 I (../Core/Inc/main.h)(0x6A27E1BE)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x68F9849E)
 I (../Core/Inc/stm32f1xx_hal_conf.h)(0x6A2B66C5)
@@ -194,8 +194,8 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h)(0x6A27DEF7)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd.h)(0x68F9849E)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h)(0x68F9849E)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h)(0x68F9849E)
-F (../Core/Src/spi.c)(0x6A2B804F)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\spi.o --omf_browse stmusbatmxt640\spi.crf --depend stmusbatmxt640\spi.d)
-I (../Core/Inc/spi.h)(0x6A2BD9C3)
+F (../Core/Src/spi.c)(0x6A342205)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\spi.o --omf_browse stmusbatmxt640\spi.crf --depend stmusbatmxt640\spi.d)
+I (../Core/Inc/spi.h)(0x6A2FACD8)
 I (../Core/Inc/main.h)(0x6A27E1BE)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x68F9849E)
 I (../Core/Inc/stm32f1xx_hal_conf.h)(0x6A2B66C5)
@@ -228,7 +228,7 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h)(0x6A27DEF7)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd.h)(0x68F9849E)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h)(0x68F9849E)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h)(0x68F9849E)
-F (../Core/Src/stm32f1xx_it.c)(0x6A2BD9D0)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\stm32f1xx_it.o --omf_browse stmusbatmxt640\stm32f1xx_it.crf --depend stmusbatmxt640\stm32f1xx_it.d)
+F (../Core/Src/stm32f1xx_it.c)(0x6A2FACD8)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\stm32f1xx_it.o --omf_browse stmusbatmxt640\stm32f1xx_it.crf --depend stmusbatmxt640\stm32f1xx_it.d)
 I (../Core/Inc/main.h)(0x6A27E1BE)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x68F9849E)
 I (../Core/Inc/stm32f1xx_hal_conf.h)(0x6A2B66C5)
@@ -262,8 +262,8 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd.h)(0x68F9849E)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h)(0x68F9849E)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h)(0x68F9849E)
 I (../Core/Inc/stm32f1xx_it.h)(0x6A2B613A)
-I (../Core/Inc/gpio.h)(0x6A2BD9CF)
-I (../Core/Inc/tim.h)(0x6A2BD9CD)
+I (../Core/Inc/gpio.h)(0x6A2FACD8)
+I (../Core/Inc/tim.h)(0x6A2FACD8)
 I (../USB_DEVICE/App/usbd_cdc_if.h)(0x6A2784EE)
 I (../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc/usbd_cdc.h)(0x68F98496)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h)(0x68F98496)
@@ -274,7 +274,7 @@ I (D:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x54C245B8)
 I (D:\Keil_v5\ARM\ARMCC\include\string.h)(0x54C245B8)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h)(0x68F98496)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h)(0x68F98496)
-I (../Core/Inc/spi.h)(0x6A2BD9C3)
+I (../Core/Inc/spi.h)(0x6A2FACD8)
 F (../Core/Src/stm32f1xx_hal_msp.c)(0x697F123C)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\stm32f1xx_hal_msp.o --omf_browse stmusbatmxt640\stm32f1xx_hal_msp.crf --depend stmusbatmxt640\stm32f1xx_hal_msp.d)
 I (../Core/Inc/main.h)(0x6A27E1BE)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x68F9849E)
@@ -395,7 +395,7 @@ I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h)(0x68F98496)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h)(0x68F98496)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h)(0x68F98496)
 I (../USB_DEVICE/App/usbd_desc.h)(0x697F123A)
-F (../USB_DEVICE/App/usbd_cdc_if.c)(0x6A278502)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\usbd_cdc_if.o --omf_browse stmusbatmxt640\usbd_cdc_if.crf --depend stmusbatmxt640\usbd_cdc_if.d)
+F (../USB_DEVICE/App/usbd_cdc_if.c)(0x6A33AA54)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\usbd_cdc_if.o --omf_browse stmusbatmxt640\usbd_cdc_if.crf --depend stmusbatmxt640\usbd_cdc_if.d)
 I (../USB_DEVICE/App/usbd_cdc_if.h)(0x6A2784EE)
 I (../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc/usbd_cdc.h)(0x68F98496)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h)(0x68F98496)
@@ -438,21 +438,23 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h)(0x68F9849E)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h)(0x68F9849E)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h)(0x68F98496)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h)(0x68F98496)
-I (../USB_DEVICE/App/mxt/mxt_config.h)(0x6A2EE585)
-I (../USB_DEVICE/App/mxt/mxt_state.h)(0x6A2EE585)
-I (../USB_DEVICE/App/mxt/mxt_i2c.h)(0x6A2779A6)
+I (../USB_DEVICE/App/mxt/mxt_config.h)(0x6A33AC89)
+I (../USB_DEVICE/App/mxt/mxt_state.h)(0x6A322ED9)
+I (../USB_DEVICE/App/mxt/mxt_i2c.h)(0x6A341527)
 I (../USB_DEVICE/App/mxt/mxt_usb_io.h)(0x6A2B7DF3)
 I (../USB_DEVICE/App/mxt/mxt_bridge.h)(0x6A2779A6)
 I (../USB_DEVICE/App/mxt/mxt_cmd.h)(0x6A2779A6)
 I (../USB_DEVICE/App/mxt/mxt_touch.h)(0x6A2BB7F5)
 I (../USB_DEVICE/App/mxt/mxt_work.h)(0x6A2784DC)
-F (..\USB_DEVICE\App\mxt\mxt_enc.c)(0x6A2EE585)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\mxt_enc.o --omf_browse stmusbatmxt640\mxt_enc.crf --depend stmusbatmxt640\mxt_enc.d)
-I (..\USB_DEVICE\App\mxt\mxt_enc.h)(0x6A2EE585)
+F (..\USB_DEVICE\App\mxt\mxt_enc.c)(0x6A33C444)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\mxt_enc.o --omf_browse stmusbatmxt640\mxt_enc.crf --depend stmusbatmxt640\mxt_enc.d)
+I (..\USB_DEVICE\App\mxt\mxt_enc.h)(0x6A341527)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x54C245B8)
-I (..\USB_DEVICE\App\mxt\mxt_config.h)(0x6A2EE585)
-I (..\USB_DEVICE\App\mxt\mxt_state.h)(0x6A2EE585)
-I (..\USB_DEVICE\App\mxt\mxt_i2c.h)(0x6A2779A6)
+I (..\USB_DEVICE\App\mxt\mxt_config.h)(0x6A33AC89)
+I (..\USB_DEVICE\App\mxt\mxt_state.h)(0x6A322ED9)
+I (..\USB_DEVICE\App\mxt\mxt_i2c.h)(0x6A341527)
 I (..\USB_DEVICE\App\mxt\mxt_touch.h)(0x6A2BB7F5)
+I (../Core/Inc/gpio.h)(0x6A2FACD8)
+I (../Core/Inc/main.h)(0x6A27E1BE)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x68F9849E)
 I (../Core/Inc/stm32f1xx_hal_conf.h)(0x6A2B66C5)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h)(0x68F9849E)
@@ -483,13 +485,13 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h)(0x6A27DEF7)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd.h)(0x68F9849E)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h)(0x68F9849E)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h)(0x68F9849E)
-F (..\USB_DEVICE\App\mxt\mxt_bridge.c)(0x6A2EE585)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\mxt_bridge.o --omf_browse stmusbatmxt640\mxt_bridge.crf --depend stmusbatmxt640\mxt_bridge.d)
+F (..\USB_DEVICE\App\mxt\mxt_bridge.c)(0x6A341527)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\mxt_bridge.o --omf_browse stmusbatmxt640\mxt_bridge.crf --depend stmusbatmxt640\mxt_bridge.d)
 I (..\USB_DEVICE\App\mxt\mxt_bridge.h)(0x6A2779A6)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x54C245B8)
-I (..\USB_DEVICE\App\mxt\mxt_state.h)(0x6A2EE585)
-I (..\USB_DEVICE\App\mxt\mxt_config.h)(0x6A2EE585)
+I (..\USB_DEVICE\App\mxt\mxt_state.h)(0x6A322ED9)
+I (..\USB_DEVICE\App\mxt\mxt_config.h)(0x6A33AC89)
 I (..\USB_DEVICE\App\mxt\mxt_work.h)(0x6A2784DC)
-I (..\USB_DEVICE\App\mxt\mxt_i2c.h)(0x6A2779A6)
+I (..\USB_DEVICE\App\mxt\mxt_i2c.h)(0x6A341527)
 I (..\USB_DEVICE\App\mxt\mxt_usb_io.h)(0x6A2B7DF3)
 I (../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc/usbd_cdc.h)(0x68F98496)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h)(0x68F98496)
@@ -533,16 +535,16 @@ I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h)(0x68F98496)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h)(0x68F98496)
 I (..\USB_DEVICE\App\mxt\mxt_touch.h)(0x6A2BB7F5)
 I (..\USB_DEVICE\App\mxt\mxt_cmd.h)(0x6A2779A6)
-I (..\USB_DEVICE\App\mxt\mxt_enc.h)(0x6A2EE585)
+I (..\USB_DEVICE\App\mxt\mxt_enc.h)(0x6A341527)
 I (../USB_DEVICE/App/usbd_cdc_if.h)(0x6A2784EE)
-I (../Core/Inc/gpio.h)(0x6A2BD9CF)
-F (..\USB_DEVICE\App\mxt\mxt_cmd.c)(0x6A2EA61D)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\mxt_cmd.o --omf_browse stmusbatmxt640\mxt_cmd.crf --depend stmusbatmxt640\mxt_cmd.d)
+I (../Core/Inc/gpio.h)(0x6A2FACD8)
+F (..\USB_DEVICE\App\mxt\mxt_cmd.c)(0x6A341527)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\mxt_cmd.o --omf_browse stmusbatmxt640\mxt_cmd.crf --depend stmusbatmxt640\mxt_cmd.d)
 I (..\USB_DEVICE\App\mxt\mxt_cmd.h)(0x6A2779A6)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x54C245B8)
-I (..\USB_DEVICE\App\mxt\mxt_state.h)(0x6A2EE585)
-I (..\USB_DEVICE\App\mxt\mxt_config.h)(0x6A2EE585)
+I (..\USB_DEVICE\App\mxt\mxt_state.h)(0x6A322ED9)
+I (..\USB_DEVICE\App\mxt\mxt_config.h)(0x6A33AC89)
 I (..\USB_DEVICE\App\mxt\mxt_work.h)(0x6A2784DC)
-I (..\USB_DEVICE\App\mxt\mxt_i2c.h)(0x6A2779A6)
+I (..\USB_DEVICE\App\mxt\mxt_i2c.h)(0x6A341527)
 I (..\USB_DEVICE\App\mxt\mxt_usb_io.h)(0x6A2B7DF3)
 I (../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc/usbd_cdc.h)(0x68F98496)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h)(0x68F98496)
@@ -588,14 +590,15 @@ I (..\USB_DEVICE\App\mxt\mxt_touch.h)(0x6A2BB7F5)
 I (..\USB_DEVICE\App\mxt\mxt_msg.h)(0x6A2779A6)
 I (..\USB_DEVICE\App\mxt\mxt_spi_stream.h)(0x6A2BB80D)
 I (..\USB_DEVICE\App\mxt\mxt_bridge.h)(0x6A2779A6)
-I (../Core/Inc/spi.h)(0x6A2BD9C3)
-I (../Core/Inc/gpio.h)(0x6A2BD9CF)
+I (..\USB_DEVICE\App\mxt\mxt_enc.h)(0x6A341527)
+I (../Core/Inc/spi.h)(0x6A2FACD8)
+I (../Core/Inc/gpio.h)(0x6A2FACD8)
 I (../USB_DEVICE/App/usbd_cdc_if.h)(0x6A2784EE)
-F (..\USB_DEVICE\App\mxt\mxt_i2c.c)(0x6A2EE585)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\mxt_i2c.o --omf_browse stmusbatmxt640\mxt_i2c.crf --depend stmusbatmxt640\mxt_i2c.d)
-I (..\USB_DEVICE\App\mxt\mxt_i2c.h)(0x6A2779A6)
+F (..\USB_DEVICE\App\mxt\mxt_i2c.c)(0x6A341527)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\mxt_i2c.o --omf_browse stmusbatmxt640\mxt_i2c.crf --depend stmusbatmxt640\mxt_i2c.d)
+I (..\USB_DEVICE\App\mxt\mxt_i2c.h)(0x6A341527)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x54C245B8)
-I (..\USB_DEVICE\App\mxt\mxt_state.h)(0x6A2EE585)
-I (..\USB_DEVICE\App\mxt\mxt_config.h)(0x6A2EE585)
+I (..\USB_DEVICE\App\mxt\mxt_state.h)(0x6A322ED9)
+I (..\USB_DEVICE\App\mxt\mxt_config.h)(0x6A33AC89)
 I (../Core/Inc/main.h)(0x6A27E1BE)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x68F9849E)
 I (../Core/Inc/stm32f1xx_hal_conf.h)(0x6A2B66C5)
@@ -631,10 +634,10 @@ I (../Core/Inc/i2c.h)(0x697F123A)
 F (..\USB_DEVICE\App\mxt\mxt_msg.c)(0x6A278502)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\mxt_msg.o --omf_browse stmusbatmxt640\mxt_msg.crf --depend stmusbatmxt640\mxt_msg.d)
 I (..\USB_DEVICE\App\mxt\mxt_msg.h)(0x6A2779A6)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x54C245B8)
-I (..\USB_DEVICE\App\mxt\mxt_state.h)(0x6A2EE585)
-I (..\USB_DEVICE\App\mxt\mxt_config.h)(0x6A2EE585)
+I (..\USB_DEVICE\App\mxt\mxt_state.h)(0x6A322ED9)
+I (..\USB_DEVICE\App\mxt\mxt_config.h)(0x6A33AC89)
 I (..\USB_DEVICE\App\mxt\mxt_work.h)(0x6A2784DC)
-I (..\USB_DEVICE\App\mxt\mxt_i2c.h)(0x6A2779A6)
+I (..\USB_DEVICE\App\mxt\mxt_i2c.h)(0x6A341527)
 I (..\USB_DEVICE\App\mxt\mxt_usb_io.h)(0x6A2B7DF3)
 I (../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc/usbd_cdc.h)(0x68F98496)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h)(0x68F98496)
@@ -677,12 +680,12 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h)(0x68F9849E)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h)(0x68F98496)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h)(0x68F98496)
 I (..\USB_DEVICE\App\mxt\mxt_touch.h)(0x6A2BB7F5)
-I (../Core/Inc/gpio.h)(0x6A2BD9CF)
-F (..\USB_DEVICE\App\mxt\mxt_spi_stream.c)(0x6A2EA619)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\mxt_spi_stream.o --omf_browse stmusbatmxt640\mxt_spi_stream.crf --depend stmusbatmxt640\mxt_spi_stream.d)
+I (../Core/Inc/gpio.h)(0x6A2FACD8)
+F (..\USB_DEVICE\App\mxt\mxt_spi_stream.c)(0x6A33AA54)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\mxt_spi_stream.o --omf_browse stmusbatmxt640\mxt_spi_stream.crf --depend stmusbatmxt640\mxt_spi_stream.d)
 I (..\USB_DEVICE\App\mxt\mxt_spi_stream.h)(0x6A2BB80D)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x54C245B8)
-I (..\USB_DEVICE\App\mxt\mxt_state.h)(0x6A2EE585)
-I (..\USB_DEVICE\App\mxt\mxt_config.h)(0x6A2EE585)
+I (..\USB_DEVICE\App\mxt\mxt_state.h)(0x6A322ED9)
+I (..\USB_DEVICE\App\mxt\mxt_config.h)(0x6A33AC89)
 I (..\USB_DEVICE\App\mxt\mxt_usb_io.h)(0x6A2B7DF3)
 I (../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc/usbd_cdc.h)(0x68F98496)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h)(0x68F98496)
@@ -726,17 +729,17 @@ I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h)(0x68F98496)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h)(0x68F98496)
 I (..\USB_DEVICE\App\mxt\mxt_touch.h)(0x6A2BB7F5)
 I (../USB_DEVICE/App/usbd_cdc_if.h)(0x6A2784EE)
-I (../Core/Inc/gpio.h)(0x6A2BD9CF)
-I (../Core/Inc/spi.h)(0x6A2BD9C3)
-F (..\USB_DEVICE\App\mxt\mxt_state.c)(0x6A2EE585)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\mxt_state.o --omf_browse stmusbatmxt640\mxt_state.crf --depend stmusbatmxt640\mxt_state.d)
-I (..\USB_DEVICE\App\mxt\mxt_state.h)(0x6A2EE585)
-I (..\USB_DEVICE\App\mxt\mxt_config.h)(0x6A2EE585)
+I (../Core/Inc/gpio.h)(0x6A2FACD8)
+I (../Core/Inc/spi.h)(0x6A2FACD8)
+F (..\USB_DEVICE\App\mxt\mxt_state.c)(0x6A322EDA)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\mxt_state.o --omf_browse stmusbatmxt640\mxt_state.crf --depend stmusbatmxt640\mxt_state.d)
+I (..\USB_DEVICE\App\mxt\mxt_state.h)(0x6A322ED9)
+I (..\USB_DEVICE\App\mxt\mxt_config.h)(0x6A33AC89)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x54C245B8)
 F (..\USB_DEVICE\App\mxt\mxt_touch.c)(0x6A2BB7F4)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\mxt_touch.o --omf_browse stmusbatmxt640\mxt_touch.crf --depend stmusbatmxt640\mxt_touch.d)
 I (..\USB_DEVICE\App\mxt\mxt_touch.h)(0x6A2BB7F5)
 I (D:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x54C245B8)
-I (..\USB_DEVICE\App\mxt\mxt_config.h)(0x6A2EE585)
-I (../Core/Inc/gpio.h)(0x6A2BD9CF)
+I (..\USB_DEVICE\App\mxt\mxt_config.h)(0x6A33AC89)
+I (../Core/Inc/gpio.h)(0x6A2FACD8)
 I (../Core/Inc/main.h)(0x6A27E1BE)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x68F9849E)
 I (../Core/Inc/stm32f1xx_hal_conf.h)(0x6A2B66C5)
@@ -768,9 +771,9 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h)(0x6A27DEF7)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd.h)(0x68F9849E)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h)(0x68F9849E)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h)(0x68F9849E)
-I (..\USB_DEVICE\App\mxt\mxt_state.h)(0x6A2EE585)
+I (..\USB_DEVICE\App\mxt\mxt_state.h)(0x6A322ED9)
 I (..\USB_DEVICE\App\mxt\mxt_work.h)(0x6A2784DC)
-I (..\USB_DEVICE\App\mxt\mxt_i2c.h)(0x6A2779A6)
+I (..\USB_DEVICE\App\mxt\mxt_i2c.h)(0x6A341527)
 I (..\USB_DEVICE\App\mxt\mxt_usb_io.h)(0x6A2B7DF3)
 I (../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc/usbd_cdc.h)(0x68F98496)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h)(0x68F98496)
@@ -827,13 +830,13 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_usb.h)(0x68F9849E)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pcd_ex.h)(0x68F9849E)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h)(0x68F98496)
 I (../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h)(0x68F98496)
-I (..\USB_DEVICE\App\mxt\mxt_state.h)(0x6A2EE585)
-I (..\USB_DEVICE\App\mxt\mxt_config.h)(0x6A2EE585)
+I (..\USB_DEVICE\App\mxt\mxt_state.h)(0x6A322ED9)
+I (..\USB_DEVICE\App\mxt\mxt_config.h)(0x6A33AC89)
 I (..\USB_DEVICE\App\mxt\mxt_work.h)(0x6A2784DC)
-I (..\USB_DEVICE\App\mxt\mxt_i2c.h)(0x6A2779A6)
+I (..\USB_DEVICE\App\mxt\mxt_i2c.h)(0x6A341527)
 I (../USB_DEVICE/App/usbd_cdc_if.h)(0x6A2784EE)
 I (D:\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x54C245B8)
-F (../USB_DEVICE/Target/usbd_conf.c)(0x6A2BD9C3)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\usbd_conf.o --omf_browse stmusbatmxt640\usbd_conf.crf --depend stmusbatmxt640\usbd_conf.d)
+F (../USB_DEVICE/Target/usbd_conf.c)(0x6A2FACD8)(--c99 -c --cpu Cortex-M3 -g -O3 --apcs=interwork --split_sections -I../Core/Inc -I../USB_DEVICE/App -I../USB_DEVICE/App/mxt -I../USB_DEVICE/Target -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Middlewares/ST/STM32_USB_Device_Library/Core/Inc -I../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include-I C:\Users\yuanchu\Desktop\电容2.7\MDK-ARM\RTE-I D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-I D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include-D__UVISION_VERSION="515" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o stmusbatmxt640\usbd_conf.o --omf_browse stmusbatmxt640\usbd_conf.crf --depend stmusbatmxt640\usbd_conf.d)
 I (../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h)(0x68F9849E)
 I (../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h)(0x68F9849E)
 I (../Drivers/CMSIS/Include/core_cm3.h)(0x68F98494)

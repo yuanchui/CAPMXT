@@ -5,6 +5,8 @@ stmusbatmxt640\mxt_enc.o: ..\USB_DEVICE\App\mxt\mxt_config.h
 stmusbatmxt640\mxt_enc.o: ..\USB_DEVICE\App\mxt\mxt_state.h
 stmusbatmxt640\mxt_enc.o: ..\USB_DEVICE\App\mxt\mxt_i2c.h
 stmusbatmxt640\mxt_enc.o: ..\USB_DEVICE\App\mxt\mxt_touch.h
+stmusbatmxt640\mxt_enc.o: ../Core/Inc/gpio.h
+stmusbatmxt640\mxt_enc.o: ../Core/Inc/main.h
 stmusbatmxt640\mxt_enc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 stmusbatmxt640\mxt_enc.o: ../Core/Inc/stm32f1xx_hal_conf.h
 stmusbatmxt640\mxt_enc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h

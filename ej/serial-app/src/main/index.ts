@@ -33,9 +33,34 @@ import {
   ENC_RESP_NACK_CMD,
   ENC_DEFAULT_BL_ADDR,
   ENC_FLAG_SKIP_ENTER_BOOTLOADER,
-  ENC_MAX_FRAME_BYTES
+  ENC_MAX_FRAME_BYTES,
+  ENC_END_ACK_TIMEOUT_MS,
+  ENC_POST_RESET_SETTLE_MS,
+  ENC_POST_VERIFY_TIMEOUT_MS,
+  encFrameAckTimeoutMs
 } from './enc_protocol';
 import { iterateEncFramesFromFile, scanEncFile } from './enc_codec';
+import {
+  type McuStringSession,
+  type ChipInfoParsed,
+  consumeMatchingLine,
+  ensureMcuStringMode,
+  extractMatchingLine,
+  formatChipInfo,
+  hasCompleteMatchingLine,
+  mcuEncFindBootloader,
+  mcuEncResetBootloader,
+  mcuEncUnlock,
+  mcuFindIicAddress,
+  mcuReadChipInfo,
+  mcuSwitchBinaryBridge,
+  mcuVerifyAppAfterEncBurn
+} from './enc_mcu_strings';
+import {
+  createBridgeAccessorFromHandlers,
+  readXcfgViaSerialBridge,
+  withSerialBridgeRestore
+} from './mxt_serial_bridge';
 import { registerXcfgViewerIpc, setXcfgViewerInitialPayload } from './xcfg_viewer_api';
 import {
   createCoordinatedMxtAppRunner,
@@ -44,28 +69,76 @@ import {
   type BridgeSessionSnapshot,
   type MxtUsbCoordState
 } from './mxt_usb_coord';
-import { bytesSwitchToMode0, bytesSwitchToMode1 } from './bridge_mode';
+import { bytesSwitchToMode0, bytesSwitchToMode1, MODE0_TEXT, MODE1_TEXT } from './bridge_mode';
+import { startSerialProxy } from './mxt_serial_proxy';
+import { bridgeLogFromBuffer } from './mxt_bridge_log';
+import {
+  flushSerialStream,
+  isStopCommand,
+  isStreamStartCommand,
+  removeSerialStream,
+  resumeSerialStream,
+  routeSerialPortData,
+} from './serial_stream_hub';
+import {
+  checkRuntimeWindowAllowed,
+  getRuntimeWindowDisplayConfig,
+} from './runtime_window';
 
-// 参考 xcfg-viewer: 使用 mxt-app -q (libusb) 枚举 WinUSB 设备，与 app.py 中 _run_mxt_app / _extract_supported_devices_from_q 一致
 const MXT_APP_SUPPORTED_VIDPID = new Set(['0483:5740', '03eb:211d', '03eb:2119', '03eb:6123']);
+
+const MXT_APP_WIN_DLLS = ['libusb-1.0.dll', 'libgcc_s_seh-1.dll', 'libstdc++-6.dll', 'libwinpthread-1.dll'];
+const MXT_APP_WIN_EXE = 'mxt-app.exe';
+
+function mxtAppBundleComplete(exePath: string): boolean {
+  if (process.platform !== 'win32' || !exePath.toLowerCase().endsWith('.exe')) return true;
+  const dir = path.dirname(exePath);
+  if (!fs.existsSync(exePath)) return false;
+  return MXT_APP_WIN_DLLS.every((name) => {
+    try { return fs.existsSync(path.join(dir, name)); } catch (_) { return false; }
+  });
+}
+
+function describeMxtAppBundleGap(exePath: string): string {
+  if (process.platform !== 'win32' || !exePath.toLowerCase().endsWith('.exe')) return '';
+  const dir = path.dirname(exePath);
+  const missing = MXT_APP_WIN_DLLS.filter((name) => !fs.existsSync(path.join(dir, name)));
+  if (missing.length === 0 && fs.existsSync(exePath)) return '';
+  const parts: string[] = [];
+  if (!fs.existsSync(exePath)) parts.push(MXT_APP_WIN_EXE);
+  parts.push(...missing);
+  return parts.length ? `缺少文件: ${parts.join(', ')}` : '';
+}
 
 function getMxtAppPath(): string | null {
   const envPath = process.env.MXT_APP?.trim();
   if (envPath) return envPath;
-  const exeName = process.platform === 'win32' ? 'mxt-app.exe' : 'mxt-app';
-  // 与 xcfg-viewer 一致：CLI 目录、resources 同级的 CLI、应用根目录
-  const candidates = [
-    path.join(path.dirname(process.execPath), 'CLI', exeName),
-    path.join(process.resourcesPath || '', 'CLI', exeName),
-    path.join(app.getAppPath(), 'CLI', exeName),
-    path.join(app.getAppPath(), '..', 'CLI', exeName)
-  ];
+  const exeName = process.platform === 'win32' ? MXT_APP_WIN_EXE : 'mxt-app';
+  const installRootCli = path.join(path.dirname(process.execPath), 'CLI', exeName);
+  const resourcesCli = path.join(process.resourcesPath || '', 'CLI', exeName);
+  const devCli = path.join(__dirname, '..', '..', 'CLI', exeName);
+  const candidates = app.isPackaged
+    ? [
+        resourcesCli,
+        installRootCli,
+        path.join(app.getAppPath(), '..', 'CLI', exeName)
+      ]
+    : [
+        devCli,
+        installRootCli,
+        resourcesCli,
+        path.join(app.getAppPath(), 'CLI', exeName),
+        path.join(app.getAppPath(), '..', 'CLI', exeName)
+      ];
+  let fallback: string | null = null;
   for (const p of candidates) {
     try {
-      if (p && fs.existsSync(p)) return p;
+      if (!p || !fs.existsSync(p)) continue;
+      if (mxtAppBundleComplete(p)) return p;
+      if (!fallback) fallback = p;
     } catch (_) {}
   }
-  return exeName; // 回退到 PATH
+  return fallback;
 }
 
 function getMxtUsbCoordState(): MxtUsbCoordState {
@@ -116,17 +189,44 @@ function runMxtApp(args: string[], device?: string, timeout = 60000): Promise<{ 
     const finalArgs = device ? ['-d', device, ...args] : args;
     const env = { ...process.env } as NodeJS.ProcessEnv;
 
-    if (path.isAbsolute(mxtPath) && mxtPath.toLowerCase().endsWith('.exe')) {
-      env.PATH = path.dirname(mxtPath) + path.delimiter + (env.PATH || '');
+    const mxtDir = path.isAbsolute(mxtPath) && mxtPath.toLowerCase().endsWith('.exe')
+      ? path.dirname(mxtPath)
+      : undefined;
+    const execOpts: { windowsHide: boolean; timeout: number; env: NodeJS.ProcessEnv; cwd?: string; maxBuffer?: number } = {
+      windowsHide: true,
+      timeout,
+      env,
+      maxBuffer: 10 * 1024 * 1024
+    };
+    if (mxtDir) {
+      env.PATH = mxtDir + path.delimiter + (env.PATH || '');
+      execOpts.cwd = mxtDir;
     }
 
-    execFile(mxtPath, finalArgs, { windowsHide: true, timeout, env }, (error, stdout, stderr) => {
+    execFile(mxtPath, finalArgs, execOpts, (error, stdout, stderr) => {
       if (error) {
+        const outText = String(stdout || '').trim();
+        const errText = String(stderr || '').trim();
+        const combined = errText || outText;
+        const errno = (error as NodeJS.ErrnoException).code;
+        const spawnFailed = errno === 'ENOENT' || errno === 'EACCES';
+        const launchFailed = spawnFailed || (!combined && !String(error.message || '').includes('Command failed'));
+        const bundleGap = path.isAbsolute(mxtPath) ? describeMxtAppBundleGap(mxtPath) : '';
+        const rawCode = (error as NodeJS.ErrnoException).code;
+        const returncode = typeof rawCode === 'number' && rawCode >= 0 && rawCode <= 255
+          ? rawCode
+          : (combined ? 1 : -1);
+        let errOut = combined;
+        if (!errOut && String(error.message || '').startsWith('Command failed')) {
+          errOut = 'mxt-app 执行失败（详见终端 [MXT]/[TX]/[RX] 日志）';
+        }
         resolve({
           success: false,
-          returncode: typeof (error as any).code === 'number' ? (error as any).code : -1,
+          returncode,
           stdout: String(stdout || ''),
-          stderr: String(stderr || error.message || '')
+          stderr: errOut || (launchFailed
+            ? `mxt-app 无法启动（路径: ${mxtPath}${bundleGap ? `；${bundleGap}` : ''}），请重新安装 Serial Terminal 或运行 npm run prepare:cli 后重新打包`
+            : String(error.message || 'mxt-app 执行失败'))
         });
         return;
       }
@@ -172,14 +272,23 @@ function checkWinUsbViaMxtApp(vendorIdHex: string, productIdHex: string): Promis
       resolve({ present: false, error: 'mxt-app not found' });
       return;
     }
+    const mxtDir = path.isAbsolute(mxtPath) && mxtPath.toLowerCase().endsWith('.exe')
+      ? path.dirname(mxtPath)
+      : undefined;
     const env = { ...process.env };
-    if (path.isAbsolute(mxtPath) && mxtPath.toLowerCase().endsWith('.exe')) {
-      env.PATH = path.dirname(mxtPath) + path.delimiter + (env.PATH || '');
+    const execOpts: { windowsHide: boolean; timeout: number; env: NodeJS.ProcessEnv; cwd?: string } = {
+      windowsHide: true,
+      timeout: 10000,
+      env
+    };
+    if (mxtDir) {
+      env.PATH = mxtDir + path.delimiter + (env.PATH || '');
+      execOpts.cwd = mxtDir;
     }
     execFile(
       mxtPath,
       ['-q'],
-      { windowsHide: true, timeout: 10000, env },
+      execOpts,
       (error, stdout, stderr) => {
         if (error) {
           resolve({ present: false, error: error.message });
@@ -213,7 +322,6 @@ let splashWindow: BrowserWindow | null = null;
 const detachedModalWindows = new Map<string, BrowserWindow>();
 const xcfgViewerWindows = new Map<string, BrowserWindow>();
 let lastXcfgDir: string = process.cwd();
-const RUNTIME_CFG_SECRET = 'mxt-runtime-window-v1';
 
 function broadcastToRendererWindows(channel: string, ...args: any[]) {
   for (const win of BrowserWindow.getAllWindows()) {
@@ -224,69 +332,15 @@ function broadcastToRendererWindows(channel: string, ...args: any[]) {
   }
 }
 
-function decryptRuntimePayload(payload: string): Record<string, any> | null {
-  try {
-    const parts = String(payload || '').trim().split(':');
-    if (parts.length !== 4 || parts[0] !== 'v1') return null;
-    const iv = Buffer.from(parts[1], 'base64');
-    const tag = Buffer.from(parts[2], 'base64');
-    const encrypted = Buffer.from(parts[3], 'base64');
-    const key = crypto.createHash('sha256').update(RUNTIME_CFG_SECRET).digest();
-    const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
-    decipher.setAuthTag(tag);
-    const plaintext = Buffer.concat([decipher.update(encrypted), decipher.final()]).toString('utf-8');
-    const obj = JSON.parse(plaintext);
-    return obj && typeof obj === 'object' ? obj : null;
-  } catch {
-    return null;
-  }
+function broadcastSerialPortData(portPath: string, data: Buffer): void {
+  if (!data || data.length === 0) return;
+  routeSerialPortData(portPath, data, broadcastToRendererWindows);
 }
 
-function loadEmbeddedRuntimeWindow(): { startMs: number; maxDays: number; expireMs?: number; fixedStartAt?: string } | null {
-  try {
-    const embeddedPath = path.join(app.getAppPath(), 'dist', 'main', 'runtime-window.generated.json');
-    if (!fs.existsSync(embeddedPath)) return null;
-    const text = fs.readFileSync(embeddedPath, 'utf-8');
-    const obj = JSON.parse(text);
-    const payload = typeof obj?.payload === 'string' ? obj.payload.trim() : '';
-    if (!payload) return null;
-    const decrypted = decryptRuntimePayload(payload);
-    if (!decrypted) return null;
-    const maxDays = Number(decrypted.max_days);
-    const startMs = Date.parse(String(decrypted.start_at || '').replace(' ', 'T'));
-    const expireMs = Date.parse(String(decrypted.expire_at || '').replace(' ', 'T'));
-    const fixedStartAtRaw = String(decrypted.fixed_start_at || '').trim();
-    if (!Number.isFinite(maxDays) || maxDays <= 0 || !Number.isFinite(startMs)) return null;
-    return {
-      startMs,
-      maxDays: Math.floor(maxDays),
-      expireMs: Number.isFinite(expireMs) ? expireMs : undefined,
-      fixedStartAt: fixedStartAtRaw || undefined
-    };
-  } catch {
-    return null;
-  }
-}
-
-function readProjectRuntimeWindowConfig(): { maxDays: number; fixedStartAt: string } {
-  try {
-    const cfgPath = path.join(app.getAppPath(), 'build', 'runtime-window.config.json');
-    if (!fs.existsSync(cfgPath)) return { maxDays: 30, fixedStartAt: '' };
-    const text = fs.readFileSync(cfgPath, 'utf-8');
-    const obj = JSON.parse(text);
-    const n = Number(obj?.maxDays);
-    const maxDays = Number.isFinite(n) && n > 0 ? Math.floor(n) : 30;
-    const fixedStartAt = String(obj?.fixedStartAt || '').trim();
-    return { maxDays, fixedStartAt };
-  } catch {
-    return { maxDays: 30, fixedStartAt: '' };
-  }
-}
-
-function getRuntimeWindowDisplayConfig(): { maxDays: number; fixedStartAt: string } {
-  const embedded = loadEmbeddedRuntimeWindow();
-  if (embedded) return { maxDays: embedded.maxDays, fixedStartAt: embedded.fixedStartAt || '' };
-  return readProjectRuntimeWindowConfig();
+function broadcastBridgeLog(portPath: string, direction: 'tx' | 'rx' | 'info', text: string): void {
+  const line = (text || '').trim();
+  if (!line) return;
+  broadcastToRendererWindows('serial-bridge-log', portPath, direction, line);
 }
 
 function getBuildMode(): 'user' | 'debug' {
@@ -310,22 +364,6 @@ function getLocalTempDir(): string {
   return path.join(baseDir, 'temp');
 }
 
-function isWithinRuntimeWindow(maxDays: number): boolean {
-  try {
-    // 开发环境默认放行；打包后仅使用打包时写入到应用内的时间窗口配置
-    if (!app.isPackaged) return true;
-    const now = Date.now();
-    const embedded = loadEmbeddedRuntimeWindow();
-    // 打包版采用 fail-closed：若读取不到内嵌窗口配置，则拒绝启动
-    if (!embedded) return false;
-    const expireMs = embedded.startMs + embedded.maxDays * 24 * 60 * 60 * 1000;
-    const effectiveExpireMs = Number.isFinite(embedded.expireMs) ? embedded.expireMs! : expireMs;
-    const finalExpireMs = Math.min(expireMs, effectiveExpireMs);
-    return now <= finalExpireMs;
-  } catch {
-    return !app.isPackaged;
-  }
-}
 interface PreparedXcfgChunk {
   seq: number;
   obj_index: number;
@@ -506,6 +544,41 @@ function formatPreparedBinAsText(parsed: ParsedPreparedBinData): string {
 /** 须与固件 `CFG_MAX_DATA_PER_FRAME` 一致 */
 const CFG_XFER_MAX_CHUNK = CFG_MAX_CHUNK;
 
+function buildPreparedBinBuffer(prepared: {
+  total_objects: number;
+  total_chunks: number;
+  total_bytes: number;
+  objectsMeta: Array<{ object_address: number; object_size: number }>;
+  chunks: PreparedXcfgChunk[];
+}): Buffer {
+  const startWithoutCrc: number[] = [
+    CFGWRITE_START_CMD,
+    CFG_PROTOCOL_VERSION,
+    ...u16le(prepared.total_objects),
+    ...u16le(prepared.total_chunks),
+    ...u32le(prepared.total_bytes)
+  ];
+  for (const m of prepared.objectsMeta) {
+    startWithoutCrc.push(...u16le(m.object_address));
+    startWithoutCrc.push(...u16le(m.object_size));
+  }
+  const merged: Buffer[] = [Buffer.from(buildFrameWithCRC(startWithoutCrc))];
+  for (const ch of prepared.chunks) {
+    const chunkBytes: number[] = [
+      CFGWRITE_CHUNK_CMD,
+      ...u16le(ch.seq),
+      ...u16le(ch.obj_index),
+      ...u16le(ch.offset),
+      ...u16le(ch.data.length),
+      ...Array.from(ch.data)
+    ];
+    merged.push(Buffer.from(buildFrameWithCRC(chunkBytes)));
+  }
+  const endSeq = prepared.total_chunks + 1;
+  merged.push(Buffer.from(buildFrameWithCRC([CFGWRITE_END_CMD, ...u16le(endSeq), ...u16le(0)])));
+  return Buffer.concat(merged);
+}
+
 function buildPreparedXcfgData(
   xcfgContent: string,
   fileName: string,
@@ -535,29 +608,14 @@ function buildPreparedXcfgData(
   const total_bytes = objBytes.reduce((a, b) => a + b.length, 0);
   if (total_chunks === 0) throw new Error('object bytes 为空');
 
-  const startWithoutCrc: number[] = [CFGWRITE_START_CMD, CFG_PROTOCOL_VERSION, ...u16le(total_objects), ...u16le(total_chunks), ...u32le(total_bytes)];
-  for (const m of objectsMeta) {
-    startWithoutCrc.push(...u16le(m.object_address));
-    startWithoutCrc.push(...u16le(m.object_size));
-  }
-  const startFrame = buildFrameWithCRC(startWithoutCrc);
-  const endSeq = total_chunks + 1;
-  const endFrame = buildFrameWithCRC([CFGWRITE_END_CMD, ...u16le(endSeq), ...u16le(0)]);
-
   let preparedFilePath = '';
+  const merged = buildPreparedBinBuffer({ total_objects, total_chunks, total_bytes, objectsMeta, chunks });
   if (writePreparedFile) {
-    const merged: Buffer[] = [Buffer.from(startFrame)];
-    for (const ch of chunks) {
-      const chunkBytes: number[] = [CFGWRITE_CHUNK_CMD, ...u16le(ch.seq), ...u16le(ch.obj_index), ...u16le(ch.offset), ...u16le(ch.data.length), ...Array.from(ch.data)];
-      merged.push(Buffer.from(buildFrameWithCRC(chunkBytes)));
-    }
-    merged.push(Buffer.from(endFrame));
-
     fs.mkdirSync(outputDir, { recursive: true });
     const parsedName = path.parse(fileName || 'config1.xcfg');
     const outName = `${parsedName.name || 'config1'}-prepared.bin`;
     preparedFilePath = path.join(outputDir, outName);
-    fs.writeFileSync(preparedFilePath, Buffer.concat(merged));
+    fs.writeFileSync(preparedFilePath, merged);
   }
 
   return {
@@ -578,6 +636,7 @@ function buildPreparedXcfgData(
 
 function sendXcfgTransferProgress(progress: {
   phase: string;
+  kind?: 'xcfg' | 'enc';
   portPath?: string;
   fileName?: string;
   current?: number;
@@ -586,6 +645,13 @@ function sendXcfgTransferProgress(progress: {
   message?: string;
 }) {
   broadcastToRendererWindows('xcfg-transfer-progress', progress);
+}
+
+function sendEncTransferProgress(
+  message: string,
+  extra: Partial<Omit<Parameters<typeof sendXcfgTransferProgress>[0], 'message' | 'kind'>> = {}
+) {
+  sendXcfgTransferProgress({ kind: 'enc', phase: extra.phase ?? 'enc-transfer', message, ...extra });
 }
 
 // 串口连接管理
@@ -609,6 +675,7 @@ interface WinUsbInstance {
 }
 const winUsbConnections = new Map<string, WinUsbInstance>();
 const cancelledXcfgTransfers = new Set<string>();
+const encTransfersInProgress = new Set<string>();
 
 function parseUsbId(usbId: string): { bus: number; device: number } | null {
   const m = usbId.match(/^usb:(\d{3})-(\d{3})$/);
@@ -734,7 +801,7 @@ function startWinUsbRead(portPath: string): void {
         broadcastToRendererWindows('serial-error', portPath, err.message);
         return;
       }
-      if (data && data.length > 0) broadcastToRendererWindows('serial-data', portPath, Array.from(data));
+      if (data && data.length > 0) broadcastSerialPortData(portPath, data);
       doRead();
     });
   };
@@ -747,6 +814,8 @@ function stopWinUsbRead(portPath: string): void {
 }
 
 async function disconnectSerialPort(portPath: string): Promise<void> {
+  flushSerialStream(portPath);
+  removeSerialStream(portPath);
   const portInstance = serialPorts.get(portPath);
   if (!portInstance || !portInstance.isOpen) return;
   portInstance.readActive = false;
@@ -781,7 +850,7 @@ function startSerialRead(portPath: string): void {
   portInstance.port.removeAllListeners('data');
   portInstance.port.removeAllListeners('error');
   portInstance.port.on('data', (data: Buffer) => {
-    broadcastToRendererWindows('serial-data', portPath, Array.from(data));
+    broadcastSerialPortData(portPath, data);
   });
   portInstance.port.on('error', (error: Error) => {
     broadcastToRendererWindows('serial-error', portPath, error.message);
@@ -792,8 +861,566 @@ function startSerialRead(portPath: string): void {
   });
 }
 
+function getFirstOpenSerialPortPath(): string | null {
+  for (const [portPath, inst] of serialPorts.entries()) {
+    if (inst?.isOpen) return portPath;
+  }
+  return null;
+}
+
+function resolveOpenSerialPortPath(device?: string): string | null {
+  const dev = (device || getDefaultMxtDeviceFromSerialApp() || '').trim();
+  if (!dev.toLowerCase().startsWith('serial:')) return null;
+  const raw = dev.slice('serial:'.length).trim();
+  if (raw.toLowerCase().startsWith('proxy:')) return null;
+  const candidates = [raw, raw.toUpperCase()];
+  for (const portPath of candidates) {
+    const inst = serialPorts.get(portPath);
+    if (inst?.isOpen) return portPath;
+  }
+  return null;
+}
+
+function restoreSerialUiRead(portPath: string): void {
+  const portInstance = serialPorts.get(portPath);
+  if (!portInstance || !portInstance.isOpen) return;
+  portInstance.port.removeAllListeners('data');
+  portInstance.port.removeAllListeners('error');
+  portInstance.port.removeAllListeners('close');
+  if (portInstance.readActive) {
+    portInstance.port.on('data', (data: Buffer) => {
+      broadcastSerialPortData(portPath, data);
+    });
+  }
+  portInstance.port.on('error', (error: Error) => {
+    broadcastToRendererWindows('serial-error', portPath, error.message);
+  });
+  portInstance.port.on('close', () => {
+    serialPorts.delete(portPath);
+    broadcastToRendererWindows('serial-close', portPath);
+  });
+}
+
+async function restoreMcuStringMode(portPath: string): Promise<void> {
+  const portInstance = serialPorts.get(portPath);
+  if (!portInstance?.isOpen) return;
+  broadcastBridgeLog(portPath, 'tx', 'mode1');
+  const rxChunks: Buffer[] = [];
+  const onData = (chunk: Buffer) => { rxChunks.push(chunk); };
+  portInstance.port.on('data', onData);
+  try {
+    await new Promise<void>((resolve, reject) => {
+      portInstance.port.write(Buffer.from(MODE1_TEXT, 'ascii'), (err) => (err ? reject(err) : resolve()));
+    });
+    await new Promise((r) => setTimeout(r, 200));
+    if (rxChunks.length > 0) {
+      for (const entry of bridgeLogFromBuffer(Buffer.concat(rxChunks), 'rx')) {
+        broadcastBridgeLog(portPath, entry.direction, entry.text);
+      }
+    }
+  } finally {
+    portInstance.port.removeListener('data', onData);
+  }
+}
+
+function broadcastMxtAppDiagnostics(portPath: string, stdout: string, stderr: string): void {
+  const lines = `${stdout || ''}\n${stderr || ''}`.split(/\r?\n/);
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (line.startsWith('SERIAL_TRACE')) {
+      const dir = line.includes('] TX ') ? 'tx' : line.includes('] RX ') ? 'rx' : 'info';
+      broadcastBridgeLog(portPath, dir, line);
+    } else if (line.startsWith('SERIAL_TEST:')) {
+      broadcastBridgeLog(portPath, 'info', line);
+    }
+  }
+}
+
+async function prepareMcuForMxtApp(portPath: string): Promise<void> {
+  const portInstance = serialPorts.get(portPath);
+  if (!portInstance?.isOpen) return;
+
+  const rxChunks: Buffer[] = [];
+  const onData = (chunk: Buffer) => { rxChunks.push(chunk); };
+  portInstance.port.on('data', onData);
+
+  const writeLine = (text: string) =>
+    new Promise<void>((resolve, reject) => {
+      portInstance.port.write(Buffer.from(text, 'ascii'), (err) => (err ? reject(err) : resolve()));
+    });
+
+  const drainPort = () =>
+    new Promise<void>((resolve) => {
+      portInstance.port.drain(() => resolve());
+    });
+
+  const waitRxHint = async (hints: string[], timeoutMs: number) => {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      const all = Buffer.concat(rxChunks).toString('ascii');
+      if (hints.some((h) => all.includes(h))) return true;
+      await new Promise((r) => setTimeout(r, 40));
+    }
+    return false;
+  };
+
+  const flushRxLogs = () => {
+    if (rxChunks.length === 0) return;
+    for (const entry of bridgeLogFromBuffer(Buffer.concat(rxChunks), 'rx')) {
+      broadcastBridgeLog(portPath, entry.direction, entry.text);
+    }
+    rxChunks.length = 0;
+  };
+
+  try {
+    broadcastBridgeLog(portPath, 'tx', 'SPISTOP');
+    await writeLine('SPISTOP\r\n');
+    await drainPort();
+    await waitRxHint(['INFO: SPI stream STOP', 'OK:'], 500);
+    flushRxLogs();
+
+    broadcastBridgeLog(portPath, 'tx', 'mode0');
+    await writeLine(MODE0_TEXT);
+    await drainPort();
+    const ok = await waitRxHint(['OK: Switched to I2C-USB bridge mode', 'OK:'], 1200);
+    flushRxLogs();
+    if (!ok) {
+      /* 已在二进制桥模式时 mode0 无文本应答；用 0xE0 探测 */
+      rxChunks.length = 0;
+      await new Promise<void>((resolve, reject) => {
+        portInstance.port.write(Buffer.from([0xE0]), (err) => (err ? reject(err) : resolve()));
+      });
+      await drainPort();
+      await new Promise((r) => setTimeout(r, 200));
+      const probe = Buffer.concat(rxChunks);
+      flushRxLogs();
+      if (probe.length >= 2 && probe[0] === 0xE0) {
+        broadcastBridgeLog(portPath, 'info', 'MCU 已在二进制桥模式（跳过 mode0 文本）');
+      } else {
+        broadcastBridgeLog(portPath, 'info', 'MCU mode0 应答超时（将继续尝试 mxt-app）');
+      }
+    }
+  } finally {
+    portInstance.port.removeListener('data', onData);
+  }
+}
+
+async function runMxtAppThroughSerialProxy(
+  portPath: string,
+  args: string[],
+  timeout = 60000
+): Promise<{ success: boolean; returncode: number; stdout: string; stderr: string; device?: string }> {
+  const portInstance = serialPorts.get(portPath);
+  if (!portInstance || !portInstance.isOpen) {
+    return { success: false, returncode: 1, stdout: '', stderr: `串口 ${portPath} 未连接` };
+  }
+
+  const wasReadActive = portInstance.readActive;
+  portInstance.port.removeAllListeners('data');
+  portInstance.port.removeAllListeners('error');
+  portInstance.port.removeAllListeners('close');
+
+  await new Promise<void>((resolve) => {
+    portInstance.port.flush((err) => {
+      if (err) broadcastBridgeLog(portPath, 'info', `串口 flush: ${err.message}`);
+      resolve();
+    });
+  });
+
+  await prepareMcuForMxtApp(portPath);
+
+  const cmdPreview = args.join(' ');
+  broadcastBridgeLog(portPath, 'info', `mxt-app -d serial:proxy:… ${cmdPreview}`);
+
+  const proxy = await startSerialProxy(portInstance.port, {
+    onBridgeLog: (entry) => broadcastBridgeLog(portPath, entry.direction, entry.text)
+  });
+  try {
+    broadcastBridgeLog(portPath, 'info', `代理 ${proxy.deviceString}`);
+    const result = await runMxtApp(args, proxy.deviceString, timeout);
+    broadcastMxtAppDiagnostics(portPath, result.stdout, result.stderr);
+    if (result.success) {
+      broadcastBridgeLog(portPath, 'info', 'mxt-app 完成');
+    } else {
+      const detail = (result.stderr || result.stdout || `退出码 ${result.returncode}`).trim();
+      broadcastBridgeLog(portPath, 'info', `mxt-app 失败: ${detail}`);
+    }
+    return { ...result, device: proxy.deviceString };
+  } finally {
+    await proxy.close();
+    try {
+      await restoreMcuStringMode(portPath);
+    } catch (_) {}
+    portInstance.readActive = wasReadActive;
+    restoreSerialUiRead(portPath);
+  }
+}
+
+/** 串口已连接时走 TCP 代理复用同一串口；mxt-app 内部负责 mode0 + I2C 二进制协议 */
+async function runMxtAppShared(
+  args: string[],
+  device?: string,
+  timeout = 60000
+): Promise<{ success: boolean; returncode: number; stdout: string; stderr: string; device?: string; resumed?: string[] }> {
+  const resolvedDevice = (device || '').trim() || getDefaultMxtDeviceFromSerialApp() || '';
+  const openPath = resolveOpenSerialPortPath(resolvedDevice || undefined) || getFirstOpenSerialPortPath();
+  if (openPath) {
+    return runMxtAppThroughSerialProxy(openPath, args, timeout);
+  }
+  return runMxtAppCoordinated(args, device, timeout);
+}
+
 function isWinUsbPath(p: string): boolean {
   return typeof p === 'string' && p.startsWith(WINUSB_PREFIX);
+}
+
+function resolveConnectedPortPath(portPath?: string): string | null {
+  const raw = (portPath || '').trim();
+  if (raw) {
+    if (isWinUsbPath(raw) && winUsbConnections.has(raw)) return raw;
+    const inst = serialPorts.get(raw);
+    if (inst?.isOpen) return raw;
+    const upper = raw.toUpperCase();
+    const instUpper = serialPorts.get(upper);
+    if (instUpper?.isOpen) return upper;
+  }
+  for (const [path, inst] of serialPorts.entries()) {
+    if (inst?.isOpen) return path;
+  }
+  for (const path of winUsbConnections.keys()) {
+    return path;
+  }
+  return null;
+}
+
+function assertPortReadyForMcuOps(portPath: string): void {
+  if (encTransfersInProgress.has(portPath)) {
+    throw new Error('该端口正在进行 ENC 烧录，请稍后再试');
+  }
+  if (isWinUsbPath(portPath)) {
+    if (!winUsbConnections.has(portPath)) throw new Error('WinUSB 未连接');
+    return;
+  }
+  const portInstance = serialPorts.get(portPath);
+  if (!portInstance?.isOpen) throw new Error('串口未连接');
+}
+
+async function withExclusivePortStringSession<T>(
+  portPath: string,
+  fn: (session: McuStringSession) => Promise<T>
+): Promise<T> {
+  assertPortReadyForMcuOps(portPath);
+  flushSerialStream(portPath);
+
+  let rxBuffer = Buffer.alloc(0);
+  let stringRxAcc = '';
+  let nextChunkResolve: ((buf: Buffer) => void) | null = null;
+  let wasReadActive = false;
+  let winUsbPumpActive = false;
+
+  const appendRx = (d: Buffer) => {
+    rxBuffer = Buffer.concat([rxBuffer, d]);
+    const ascii = d.toString('ascii');
+    stringRxAcc += ascii;
+    if (stringRxAcc.length > 65536) stringRxAcc = stringRxAcc.slice(-32768);
+    if (nextChunkResolve) {
+      nextChunkResolve(d);
+      nextChunkResolve = null;
+    }
+  };
+
+  const sendBuf = async (data: Uint8Array, timeoutMs = 30000) => {
+    await Promise.race([
+      (async () => {
+        if (isWinUsbPath(portPath)) {
+          await writeWinUsb(portPath, Buffer.from(data));
+          return;
+        }
+        const portInstance = serialPorts.get(portPath);
+        if (!portInstance?.isOpen) throw new Error('串口未连接');
+        await new Promise<void>((resolve, reject) => {
+          portInstance.port.write(Buffer.from(data), (err: Error | null | undefined) => (err ? reject(err) : resolve()));
+        });
+      })(),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('USB/串口写入超时')), timeoutMs))
+    ]);
+  };
+
+  const nextIncomingChunkWithTimeout = async (timeoutMs: number): Promise<Buffer> => {
+    if (isWinUsbPath(portPath)) {
+      return await new Promise<Buffer>((resolve, reject) => {
+        const conn = winUsbConnections.get(portPath);
+        if (!conn) return reject(new Error('WinUSB 未连接'));
+        const timer = setTimeout(() => reject(new Error(`nextIncomingChunk timeout (${timeoutMs}ms)`)), timeoutMs);
+        conn.inEp.transfer(4096, (err: Error | undefined, data: Buffer | undefined) => {
+          clearTimeout(timer);
+          if (err) reject(err);
+          else resolve(Buffer.from(data || Buffer.alloc(0)));
+        });
+      });
+    }
+    return await new Promise<Buffer>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        nextChunkResolve = null;
+        reject(new Error(`nextIncomingChunk timeout (${timeoutMs}ms)`));
+      }, timeoutMs);
+      nextChunkResolve = (buf: Buffer) => {
+        clearTimeout(timer);
+        nextChunkResolve = null;
+        resolve(buf);
+      };
+    });
+  };
+
+  if (isWinUsbPath(portPath)) {
+    wasReadActive = Boolean(winUsbConnections.get(portPath)?.readActive);
+    stopWinUsbRead(portPath);
+    winUsbPumpActive = true;
+    const pump = () => {
+      if (!winUsbPumpActive) return;
+      const conn = winUsbConnections.get(portPath);
+      if (!conn) return;
+      conn.inEp.transfer(4096, (err: Error | undefined, data: Buffer | undefined) => {
+        if (!winUsbPumpActive) return;
+        if (!err && data && data.length > 0) appendRx(data);
+        pump();
+      });
+    };
+    pump();
+  } else {
+    const portInstance = serialPorts.get(portPath)!;
+    wasReadActive = Boolean(portInstance.readActive);
+    portInstance.port.removeAllListeners('data');
+    portInstance.port.removeAllListeners('error');
+    portInstance.port.removeAllListeners('close');
+    portInstance.port.on('data', appendRx);
+  }
+
+  await new Promise<void>((r) => setTimeout(r, 120));
+  rxBuffer = Buffer.alloc(0);
+  stringRxAcc = '';
+
+  const session: McuStringSession = {
+    sendLine: async (line: string, timeoutMs = 30000) => {
+      const text = line.endsWith('\r\n') ? line : `${line}\r\n`;
+      broadcastBridgeLog(portPath, 'tx', line);
+      await sendBuf(Uint8Array.from(Buffer.from(text, 'ascii')), timeoutMs);
+      if (!isWinUsbPath(portPath)) {
+        const portInstance = serialPorts.get(portPath);
+        await new Promise<void>((resolve) => {
+          portInstance?.port?.drain?.(() => resolve());
+        });
+        await new Promise<void>((r) => setTimeout(r, 40));
+      }
+    },
+    sendRaw: (data, timeoutMs) => sendBuf(data, timeoutMs),
+    waitText: async (hints: string[], timeoutMs: number) => {
+      const deadline = Date.now() + timeoutMs;
+      while (Date.now() < deadline) {
+        if (hasCompleteMatchingLine(stringRxAcc, hints)) {
+          const matched = extractMatchingLine(stringRxAcc, hints) || '';
+          const consumed = consumeMatchingLine(stringRxAcc, hints);
+          stringRxAcc = consumed.rest;
+          return matched || consumed.line || '';
+        }
+        await nextIncomingChunkWithTimeout(80).catch(() => Buffer.alloc(0));
+      }
+      const tail = stringRxAcc.slice(-280).replace(/[\x00-\x08\x0b-\x1f\x7f]/g, '.');
+      if (tail.trim()) broadcastBridgeLog(portPath, 'info', `MCU 应答超时，已收尾部: ${tail}`);
+      throw new Error(`MCU 应答超时: ${hints.join(' | ')}`);
+    },
+    waitRxIdle: async (quietMs = 80, maxWaitMs = 800) => {
+      const deadline = Date.now() + maxWaitMs;
+      let lastLen = stringRxAcc.length;
+      let quietSince = Date.now();
+      while (Date.now() < deadline) {
+        if (stringRxAcc.length !== lastLen) {
+          lastLen = stringRxAcc.length;
+          quietSince = Date.now();
+        }
+        if (Date.now() - quietSince >= quietMs) return;
+        await nextIncomingChunkWithTimeout(40).catch(() => Buffer.alloc(0));
+      }
+    },
+    trimRxAfter: (hints: string[]) => {
+      if (!stringRxAcc) return;
+      for (const hint of hints) {
+        const { line, rest } = consumeMatchingLine(stringRxAcc, [hint]);
+        if (line) {
+          stringRxAcc = rest;
+          return;
+        }
+      }
+    },
+    drainRx: () => {
+      const t = stringRxAcc;
+      stringRxAcc = '';
+      return t;
+    },
+    flushBridgeLogs: (text, direction) => broadcastBridgeLog(portPath, direction, text)
+  };
+
+  try {
+    return await fn(session);
+  } finally {
+    if (isWinUsbPath(portPath)) {
+      winUsbPumpActive = false;
+      if (wasReadActive) startWinUsbRead(portPath);
+    } else {
+      restoreSerialUiRead(portPath);
+      if (wasReadActive) startSerialRead(portPath);
+    }
+  }
+}
+
+async function readChipInfoFromConnectedPort(portPath: string): Promise<{
+  success: boolean;
+  chipInfo?: ChipInfoParsed | null;
+  formatted?: string;
+  iicAddr?: number | null;
+  error?: string;
+}> {
+  const resolved = resolveConnectedPortPath(portPath);
+  if (!resolved) return { success: false, error: '设备未连接' };
+  try {
+    return await withExclusivePortStringSession(resolved, async (session) => {
+      await ensureMcuStringMode(session);
+      const iicAddr = await mcuFindIicAddress(session);
+      const chipInfo = await mcuReadChipInfo(session);
+      if (!chipInfo) {
+        return { success: false, error: '未能读取 Info Block（请确认芯片已上电且 I2C 正常）' };
+      }
+      return {
+        success: true,
+        chipInfo,
+        formatted: formatChipInfo(chipInfo),
+        iicAddr
+      };
+    });
+  } catch (error: any) {
+    return { success: false, error: error?.message || String(error) };
+  }
+}
+
+async function withExclusivePortBridgeAccessor<T>(
+  portPath: string,
+  fn: (accessor: ReturnType<typeof createBridgeAccessorFromHandlers>) => Promise<T>
+): Promise<T> {
+  assertPortReadyForMcuOps(portPath);
+  flushSerialStream(portPath);
+
+  let rxBuffer = Buffer.alloc(0);
+  let wasReadActive = false;
+  let winUsbPumpActive = false;
+
+  const appendRx = (d: Buffer) => {
+    rxBuffer = Buffer.concat([rxBuffer, d]);
+  };
+
+  const sendBuf = async (data: Buffer, timeoutMs = 20000) => {
+    await Promise.race([
+      (async () => {
+        if (isWinUsbPath(portPath)) {
+          await writeWinUsb(portPath, data);
+          return;
+        }
+        const portInstance = serialPorts.get(portPath);
+        if (!portInstance?.isOpen) throw new Error('串口未连接');
+        await new Promise<void>((resolve, reject) => {
+          portInstance.port.write(data, (err: Error | null | undefined) => (err ? reject(err) : resolve()));
+        });
+      })(),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('USB/串口写入超时')), timeoutMs))
+    ]);
+  };
+
+  if (isWinUsbPath(portPath)) {
+    wasReadActive = Boolean(winUsbConnections.get(portPath)?.readActive);
+    stopWinUsbRead(portPath);
+    winUsbPumpActive = true;
+    const pump = () => {
+      if (!winUsbPumpActive) return;
+      const conn = winUsbConnections.get(portPath);
+      if (!conn) return;
+      conn.inEp.transfer(4096, (err: Error | undefined, data: Buffer | undefined) => {
+        if (!winUsbPumpActive) return;
+        if (!err && data && data.length > 0) appendRx(data);
+        pump();
+      });
+    };
+    pump();
+  } else {
+    const portInstance = serialPorts.get(portPath)!;
+    wasReadActive = Boolean(portInstance.readActive);
+    portInstance.port.removeAllListeners('data');
+    portInstance.port.removeAllListeners('error');
+    portInstance.port.removeAllListeners('close');
+    portInstance.port.on('data', appendRx);
+  }
+
+  await new Promise<void>((r) => setTimeout(r, 120));
+  rxBuffer = Buffer.alloc(0);
+
+  const accessor = createBridgeAccessorFromHandlers({
+    write: (buf) => sendBuf(buf),
+    getRxLength: () => rxBuffer.length,
+    consumeRx: (maxSize) => {
+      const size = Math.min(rxBuffer.length, maxSize);
+      const out = Buffer.from(rxBuffer.subarray(0, size));
+      rxBuffer = rxBuffer.subarray(size);
+      return out;
+    },
+    clearRx: () => { rxBuffer = Buffer.alloc(0); }
+  });
+
+  try {
+    return await fn(accessor);
+  } finally {
+    if (isWinUsbPath(portPath)) {
+      winUsbPumpActive = false;
+      if (wasReadActive) startWinUsbRead(portPath);
+    } else {
+      restoreSerialUiRead(portPath);
+      if (wasReadActive) startSerialRead(portPath);
+    }
+  }
+}
+
+async function readXcfgFromConnectedPort(portPath: string): Promise<{
+  success: boolean;
+  content?: string;
+  fileName?: string;
+  error?: string;
+}> {
+  const resolved = resolveConnectedPortPath(portPath);
+  if (!resolved) return { success: false, error: '设备未连接' };
+  const fileName = 'device-read.xcfg';
+
+  if (!isWinUsbPath(resolved)) {
+    const tmpPath = path.join(getLocalTempDir(), `serial-app-read-xcfg-${Date.now()}.xcfg`);
+    try {
+      const result = await runMxtAppThroughSerialProxy(resolved, ['--save', tmpPath, '--format', '3'], 120000);
+      if (!result.success) {
+        return { success: false, error: (result.stderr || result.stdout || '读取失败').trim() };
+      }
+      const content = fs.readFileSync(tmpPath, 'utf-8');
+      return { success: true, content, fileName };
+    } catch (error: any) {
+      return { success: false, error: error?.message || String(error) };
+    } finally {
+      try { if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath); } catch (_) {}
+    }
+  }
+
+  try {
+    const content = await withExclusivePortBridgeAccessor(resolved, async (accessor) =>
+      withSerialBridgeRestore(accessor, () => readXcfgViaSerialBridge(accessor))
+    );
+    return { success: true, content, fileName };
+  } catch (error: any) {
+    return { success: false, error: error?.message || String(error) };
+  }
 }
 
 interface WinUsbPresenceResult {
@@ -1033,7 +1660,7 @@ async function bootWithSplash() {
   createSplashWindow();
   const startedAt = Date.now();
   const minSplashMs = 1300;
-  const passed = isWithinRuntimeWindow(30);
+  const { passed } = await checkRuntimeWindowAllowed();
   const waitMs = Math.max(0, minSplashMs - (Date.now() - startedAt));
   if (waitMs > 0) await new Promise<void>((resolve) => setTimeout(resolve, waitMs));
 
@@ -1081,7 +1708,7 @@ ipcMain.handle('get-last-xcfg-dir', async () => {
 });
 
 ipcMain.handle('get-runtime-window-config', async () => {
-  const cfg = getRuntimeWindowDisplayConfig();
+  const cfg = getRuntimeWindowDisplayConfig(app.getAppPath());
   return { success: true, ...cfg };
 });
 
@@ -1246,6 +1873,30 @@ ipcMain.handle('select-config-file', async () => {
   }
 });
 
+ipcMain.handle('save-xcfg-content-dialog', async (_event: Electron.IpcMainInvokeEvent, payload: {
+  content?: string;
+  defaultName?: string;
+  defaultDir?: string;
+}) => {
+  const content = String(payload?.content || '');
+  if (!content.trim()) return { success: false, error: 'xcfg 内容为空' };
+  const defaultName = (payload?.defaultName || 'config.xcfg').trim() || 'config.xcfg';
+  const defaultDir = (payload?.defaultDir || lastXcfgDir || process.cwd()).trim() || process.cwd();
+  try {
+    const result = await dialog.showSaveDialog({
+      title: '导出 XCFG 文件',
+      defaultPath: path.join(defaultDir, defaultName),
+      filters: [{ name: 'XCFG', extensions: ['xcfg'] }]
+    });
+    if (result.canceled || !result.filePath) return { success: false, canceled: true };
+    fs.writeFileSync(result.filePath, content, 'utf-8');
+    lastXcfgDir = path.dirname(result.filePath);
+    return { success: true, filePath: result.filePath };
+  } catch (error: any) {
+    return { success: false, error: error?.message || String(error) };
+  }
+});
+
 // 连接串口（支持 COM 口或 WinUSB）
 ipcMain.handle('connect-serial-port', async (_event: Electron.IpcMainInvokeEvent, portPath: string, baudRate: number = 115200) => {
   try {
@@ -1353,6 +2004,11 @@ ipcMain.handle('write-serial-port', async (_event: Electron.IpcMainInvokeEvent, 
           reject(err);
           return;
         }
+        if (isStopCommand(data)) {
+          flushSerialStream(portPath);
+        } else if (isStreamStartCommand(data)) {
+          resumeSerialStream(portPath);
+        }
         resolve();
       });
     });
@@ -1383,7 +2039,7 @@ ipcMain.handle('start-serial-read', async (_event: Electron.IpcMainInvokeEvent, 
     // 设置数据监听器
     portInstance.port.on('data', (data: Buffer) => {
       // 将数据发送到渲染进程
-      broadcastToRendererWindows('serial-data', portPath, Array.from(data));
+      broadcastSerialPortData(portPath, data);
     });
 
     // 设置错误监听器
@@ -1409,6 +2065,7 @@ ipcMain.handle('start-serial-read', async (_event: Electron.IpcMainInvokeEvent, 
 // 停止串口数据监听
 ipcMain.handle('stop-serial-read', async (_event: Electron.IpcMainInvokeEvent, portPath: string) => {
   try {
+    flushSerialStream(portPath);
     if (isWinUsbPath(portPath)) {
       stopWinUsbRead(portPath);
       return true;
@@ -1424,6 +2081,17 @@ ipcMain.handle('stop-serial-read', async (_event: Electron.IpcMainInvokeEvent, p
     console.error('Error stopping serial read:', error);
     throw error;
   }
+});
+
+// 清空串口 streaming 管线（STOP 后丢弃 USB 残留）
+ipcMain.handle('flush-serial-stream', async (_event: Electron.IpcMainInvokeEvent, portPath: string) => {
+  flushSerialStream(portPath);
+  return true;
+});
+
+ipcMain.handle('resume-serial-stream', async (_event: Electron.IpcMainInvokeEvent, portPath: string) => {
+  resumeSerialStream(portPath);
+  return true;
 });
 
 // 检测 USB 设备是否存在（即使没有 COM 口）
@@ -2138,7 +2806,7 @@ ipcMain.handle('write-xcfg-and-export-from-mcu', async (_event: Electron.IpcMain
           portInstance.port.removeAllListeners('error');
           portInstance.port.removeAllListeners('close');
           portInstance.port.on('data', (data: Buffer) => {
-            broadcastToRendererWindows('serial-data', portPath, Array.from(data));
+            broadcastSerialPortData(portPath, data);
           });
           portInstance.port.on('error', (error: Error) => {
             broadcastToRendererWindows('serial-error', portPath, error.message);
@@ -2219,10 +2887,12 @@ ipcMain.handle('parse-prepared-binary', async (_event: Electron.IpcMainInvokeEve
 ipcMain.handle('export-prepared-binary-txt', async (_event: Electron.IpcMainInvokeEvent, payload: {
   filePath?: string;
   binBase64?: string;
+  preparedToken?: string;
   outputPath?: string;
 }) => {
   const filePath = (payload?.filePath || '').trim();
   const binBase64 = (payload?.binBase64 || '').trim();
+  const preparedToken = (payload?.preparedToken || '').trim();
   let outputPath = (payload?.outputPath || '').trim();
 
   try {
@@ -2231,16 +2901,29 @@ ipcMain.handle('export-prepared-binary-txt', async (_event: Electron.IpcMainInvo
       bin = fs.readFileSync(filePath);
     } else if (binBase64) {
       bin = Buffer.from(binBase64, 'base64');
+    } else if (preparedToken && preparedXcfgMap.has(preparedToken)) {
+      bin = buildPreparedBinBuffer(preparedXcfgMap.get(preparedToken)!);
     } else {
-      return { success: false, error: '请提供 filePath 或 binBase64' };
+      return { success: false, error: '请提供 filePath、binBase64 或 preparedToken' };
     }
 
     const parsed = parsePreparedBinBuffer(bin);
     const text = formatPreparedBinAsText(parsed);
 
     if (!outputPath) {
-      const base = filePath ? path.parse(filePath).name : `prepared-${Date.now()}`;
-      outputPath = path.join(filePath ? path.dirname(filePath) : process.cwd(), `${base}.txt`);
+      const base = filePath
+        ? path.parse(filePath).name
+        : preparedToken && preparedXcfgMap.has(preparedToken)
+          ? path.parse(preparedXcfgMap.get(preparedToken)!.fileName || 'config1').name
+          : `prepared-${Date.now()}`;
+      const dir = filePath
+        ? path.dirname(filePath)
+        : preparedToken && preparedXcfgMap.has(preparedToken)
+          ? (preparedXcfgMap.get(preparedToken)!.preparedFilePath
+            ? path.dirname(preparedXcfgMap.get(preparedToken)!.preparedFilePath)
+            : process.cwd())
+          : process.cwd();
+      outputPath = path.join(dir, `${base}.txt`);
     }
     fs.writeFileSync(outputPath, text, 'utf-8');
 
@@ -2557,7 +3240,7 @@ ipcMain.handle('write-bin-and-backup-from-mcu', async (_event: Electron.IpcMainI
           portInstance.port.removeAllListeners('error');
           portInstance.port.removeAllListeners('close');
           portInstance.port.on('data', (data: Buffer) => {
-            broadcastToRendererWindows('serial-data', portPath, Array.from(data));
+            broadcastSerialPortData(portPath, data);
           });
           portInstance.port.on('error', (error: Error) => {
             broadcastToRendererWindows('serial-error', portPath, error.message);
@@ -2587,12 +3270,41 @@ ipcMain.handle('flash-enc-from-mcu', async (_event: Electron.IpcMainInvokeEvent,
 
   if (!portPath) return { success: false, error: '缺少 portPath' };
   if (!encFilePath || !fs.existsSync(encFilePath)) return { success: false, error: 'enc 文件不存在' };
+  if (encTransfersInProgress.has(portPath)) {
+    return { success: false, error: '该端口已有 ENC 烧录任务进行中，请等待完成后再试' };
+  }
   cancelledXcfgTransfers.delete(portPath);
+  encTransfersInProgress.add(portPath);
 
   type EncAckFrame = { cmd: number; seq: number; status: number };
 
   let rxBuffer = Buffer.alloc(0);
+  let stringRxAcc = '';
+  let encRxBridgeLogAcc = '';
   let nextChunkResolve: ((buf: Buffer) => void) | null = null;
+
+  let encBinaryActive = false;
+
+  const appendRxChunk = (d: Buffer) => {
+    rxBuffer = Buffer.concat([rxBuffer, d]);
+    if (!encBinaryActive) {
+      const ascii = d.toString('ascii');
+      stringRxAcc += ascii;
+      if (stringRxAcc.length > 65536) stringRxAcc = stringRxAcc.slice(-32768);
+      encRxBridgeLogAcc += ascii;
+      let nlIdx = encRxBridgeLogAcc.indexOf('\n');
+      while (nlIdx !== -1) {
+        const line = encRxBridgeLogAcc.slice(0, nlIdx).replace(/\r$/, '').trim();
+        encRxBridgeLogAcc = encRxBridgeLogAcc.slice(nlIdx + 1);
+        if (line) broadcastBridgeLog(portPath, 'rx', line);
+        nlIdx = encRxBridgeLogAcc.indexOf('\n');
+      }
+    }
+    if (nextChunkResolve) {
+      nextChunkResolve(d);
+      nextChunkResolve = null;
+    }
+  };
 
   const sendBuf = async (data: Uint8Array, timeoutMs = 30000) => {
     if (cancelledXcfgTransfers.has(portPath)) throw new Error('transfer cancelled');
@@ -2643,11 +3355,7 @@ ipcMain.handle('flash-enc-from-mcu', async (_event: Electron.IpcMainInvokeEvent,
     const portInstance = serialPorts.get(portPath);
     if (!portInstance || !portInstance.isOpen) throw new Error('串口未连接');
     portInstance.port.on('data', (d: Buffer) => {
-      rxBuffer = Buffer.concat([rxBuffer, d]);
-      if (nextChunkResolve) {
-        nextChunkResolve(d);
-        nextChunkResolve = null;
-      }
+      appendRxChunk(d);
     });
   };
 
@@ -2663,12 +3371,7 @@ ipcMain.handle('flash-enc-from-mcu', async (_event: Electron.IpcMainInvokeEvent,
       conn.inEp.transfer(4096, (err: Error | undefined, data: Buffer | undefined) => {
         if (!winUsbRxPumpActive) return;
         if (!err && data && data.length > 0) {
-          rxBuffer = Buffer.concat([rxBuffer, data]);
-          if (nextChunkResolve) {
-            const resolve = nextChunkResolve;
-            nextChunkResolve = null;
-            resolve(data);
-          }
+          appendRxChunk(Buffer.from(data));
         }
         if (winUsbRxPumpActive) pump();
       });
@@ -2695,19 +3398,25 @@ ipcMain.handle('flash-enc-from-mcu', async (_event: Electron.IpcMainInvokeEvent,
       while (rxBuffer.length > 0) {
         const parsed = tryConsumeEncAck(rxBuffer);
         if (!parsed) {
+          if (
+            rxBuffer.length < 6 &&
+            (rxBuffer[0] === ENC_RESP_ACK_CMD || rxBuffer[0] === ENC_RESP_NACK_CMD)
+          ) {
+            break;
+          }
           rxBuffer = rxBuffer.subarray(1);
           continue;
         }
         rxBuffer = rxBuffer.subarray(parsed.frameLen);
         if (parsed.frame.seq === expectedSeq) return parsed.frame;
       }
-      const chunk = await nextIncomingChunkWithTimeout(300).catch(() => Buffer.alloc(0));
-      if (isWinUsbPath(portPath) && chunk.length > 0) rxBuffer = Buffer.concat([rxBuffer, chunk]);
+      await nextIncomingChunkWithTimeout(300).catch(() => Buffer.alloc(0));
     }
     throw new Error(`ENC ACK timeout seq=${expectedSeq}`);
   };
 
   try {
+    flushSerialStream(portPath);
     if (isWinUsbPath(portPath)) stopWinUsbRead(portPath);
     else {
       const p = serialPorts.get(portPath);
@@ -2718,35 +3427,185 @@ ipcMain.handle('flash-enc-from-mcu', async (_event: Electron.IpcMainInvokeEvent,
     attachRx();
     if (isWinUsbPath(portPath)) startWinUsbRxPump();
     rxBuffer = Buffer.alloc(0);
+    stringRxAcc = '';
+    encRxBridgeLogAcc = '';
+    await new Promise<void>((r) => setTimeout(r, 120));
 
-    sendXcfgTransferProgress({ phase: 'prepare', portPath, fileName, message: '扫描 enc 帧数（流式，不占大内存）...' });
+    sendEncTransferProgress('扫描 enc 帧数（流式，不占大内存）...', { phase: 'prepare', portPath, fileName });
     const scan = await scanEncFile(encFilePath);
     if (scan.totalFrames === 0) return { success: false, error: 'enc 中未找到有效帧' };
 
-    sendXcfgTransferProgress({ phase: 'transfer', portPath, fileName, message: '切换 MCU 到二进制桥模式 (mode0)...' });
-    await sendBuf(bytesSwitchToMode0());
-    await new Promise<void>(r => setTimeout(r, 80));
+    const stringSession: McuStringSession = {
+      sendLine: async (line: string, timeoutMs = 30000) => {
+        const text = line.endsWith('\r\n') ? line : `${line}\r\n`;
+        broadcastBridgeLog(portPath, 'tx', line);
+        await sendBuf(Uint8Array.from(Buffer.from(text, 'ascii')), timeoutMs);
+        if (!isWinUsbPath(portPath)) {
+          const portInstance = serialPorts.get(portPath);
+          await new Promise<void>((resolve) => {
+            portInstance?.port?.drain?.(() => resolve());
+          });
+          await new Promise<void>((r) => setTimeout(r, 40));
+        }
+      },
+      sendRaw: (data, timeoutMs) => sendBuf(data, timeoutMs),
+      waitText: async (hints: string[], timeoutMs: number) => {
+        const deadline = Date.now() + timeoutMs;
+        while (Date.now() < deadline) {
+          if (cancelledXcfgTransfers.has(portPath)) throw new Error('transfer cancelled');
+          if (hasCompleteMatchingLine(stringRxAcc, hints)) {
+            const matched = extractMatchingLine(stringRxAcc, hints) || '';
+            const consumed = consumeMatchingLine(stringRxAcc, hints);
+            stringRxAcc = consumed.rest;
+            return matched || consumed.line || '';
+          }
+          await nextIncomingChunkWithTimeout(80).catch(() => Buffer.alloc(0));
+        }
+        const tail = stringRxAcc.slice(-280).replace(/[\x00-\x08\x0b-\x1f\x7f]/g, '.');
+        if (tail.trim()) broadcastBridgeLog(portPath, 'info', `MCU 应答超时，已收尾部: ${tail}`);
+        throw new Error(`MCU 应答超时: ${hints.join(' | ')}`);
+      },
+      waitRxIdle: async (quietMs = 80, maxWaitMs = 800) => {
+        const deadline = Date.now() + maxWaitMs;
+        let lastLen = stringRxAcc.length;
+        let quietSince = Date.now();
+        while (Date.now() < deadline) {
+          if (stringRxAcc.length !== lastLen) {
+            lastLen = stringRxAcc.length;
+            quietSince = Date.now();
+          }
+          if (Date.now() - quietSince >= quietMs) return;
+          await nextIncomingChunkWithTimeout(40).catch(() => Buffer.alloc(0));
+        }
+      },
+      trimRxAfter: (hints: string[]) => {
+        if (!stringRxAcc) return;
+        for (const hint of hints) {
+          const { line, rest } = consumeMatchingLine(stringRxAcc, [hint]);
+          if (line) {
+            stringRxAcc = rest;
+            return;
+          }
+        }
+      },
+      drainRx: () => {
+        const t = stringRxAcc;
+        stringRxAcc = '';
+        return t;
+      },
+      flushBridgeLogs: (text, direction) => broadcastBridgeLog(portPath, direction, text)
+    };
 
-    const flags = skipEnter ? ENC_FLAG_SKIP_ENTER_BOOTLOADER : 0;
+    sendEncTransferProgress('切换字符串命令模式，读取芯片信息...', { phase: 'enc-transfer', portPath, fileName });
+    await ensureMcuStringMode(stringSession);
+
+    sendEncTransferProgress('确认 I2C 应用地址 (FINDIIC)...', { phase: 'enc-transfer', portPath, fileName });
+    let appAddr: number | null = await mcuFindIicAddress(stringSession);
+    if (appAddr != null) {
+      sendEncTransferProgress(`OK: 应用模式地址 0x${appAddr.toString(16).toUpperCase()}`, { phase: 'enc-transfer', portPath, fileName });
+    } else {
+      sendEncTransferProgress('未找到应用地址（可能已在 Bootloader，继续尝试烧录）', { phase: 'enc-transfer', portPath, fileName });
+    }
+
+    const chipInfo = await mcuReadChipInfo(stringSession);
+    if (chipInfo) {
+      sendEncTransferProgress(`芯片信息: ${formatChipInfo(chipInfo)}`, { phase: 'enc-transfer', portPath, fileName });
+    } else {
+      sendEncTransferProgress('未能读取 Info Block（继续尝试烧录）', { phase: 'enc-transfer', portPath, fileName });
+    }
+
+    let blAddrUsed = bootloaderAddr;
+    let useSkipEnterFlag = skipEnter;
+
+    if (!skipEnter) {
+      sendEncTransferProgress('T6 写 RESET=0xA5，强制进入 Bootloader...', { phase: 'enc-transfer', portPath, fileName });
+      const resetPrep = await mcuEncResetBootloader(stringSession);
+      if (!resetPrep.ok) {
+        return {
+          success: false,
+          phase: 'bootloader',
+          error: `ENCRESETBL 失败: ${resetPrep.reason}`
+        };
+      }
+      sendEncTransferProgress(
+        `OK: 应用 0x${resetPrep.app.toString(16).toUpperCase()} T6@0x${resetPrep.t6.toString(16).toUpperCase()} 已写 0xA5`,
+        { phase: 'enc-transfer', portPath, fileName }
+      );
+
+      let blPrep: { ok: true; bootloader: number; blStatus: number } | { ok: false; reason: string };
+      if (resetPrep.bootloader != null && resetPrep.blStatus != null) {
+        blPrep = {
+          ok: true,
+          bootloader: resetPrep.bootloader,
+          blStatus: resetPrep.blStatus
+        };
+        sendEncTransferProgress(
+          `OK: ENCRESETBL 已确认 Bootloader 0x${resetPrep.bootloader.toString(16).toUpperCase()}, 状态 0x${resetPrep.blStatus.toString(16).toUpperCase()}`,
+          { phase: 'enc-transfer', portPath, fileName }
+        );
+      } else {
+        sendEncTransferProgress(
+          `扫描 Bootloader 地址${bootloaderAddr ? ` (hint=0x${bootloaderAddr.toString(16)})` : ''}...`,
+          { phase: 'enc-transfer', portPath, fileName }
+        );
+        blPrep = await mcuEncFindBootloader(stringSession, bootloaderAddr);
+      }
+      if (!blPrep.ok) {
+        return {
+          success: false,
+          phase: 'bootloader',
+          error: `FINDBL 失败: ${blPrep.reason}`
+        };
+      }
+      blAddrUsed = blPrep.bootloader;
+      sendEncTransferProgress(
+        `OK: Bootloader 地址 0x${blPrep.bootloader.toString(16).toUpperCase()}, 状态 0x${blPrep.blStatus.toString(16).toUpperCase()}`,
+        { phase: 'enc-transfer', portPath, fileName }
+      );
+
+      sendEncTransferProgress('Bootloader 解锁 (DC AA)...', { phase: 'enc-transfer', portPath, fileName });
+      const unlockSt = await mcuEncUnlock(stringSession);
+      if (unlockSt == null) {
+        return { success: false, phase: 'unlock', error: 'ENCUNLOCK 失败或无 OK 应答' };
+      }
+      sendEncTransferProgress(`OK: 解锁完成，状态 0x${unlockSt.toString(16).toUpperCase()}，准备传输 ${scan.totalFrames} 帧`, {
+        phase: 'enc-transfer',
+        portPath,
+        fileName
+      });
+      useSkipEnterFlag = true;
+    }
+
+    sendEncTransferProgress('切换二进制桥模式 (BRIDGEBIN)...', { phase: 'transfer', portPath, fileName });
+    stringRxAcc = '';
+    rxBuffer = Buffer.alloc(0);
+    const bridged = await mcuSwitchBinaryBridge(stringSession);
+    if (!bridged) {
+      return { success: false, phase: 'bridge', error: 'BRIDGEBIN 无 OK 应答' };
+    }
+    sendEncTransferProgress('OK: 已进入二进制桥模式', { phase: 'transfer', portPath, fileName });
+    encBinaryActive = true;
+    await new Promise<void>((r) => setTimeout(r, 80));
+
+    const flags = useSkipEnterFlag ? ENC_FLAG_SKIP_ENTER_BOOTLOADER : 0;
     const startFrame = buildFrameWithCRC([
       ENC_START_CMD,
       ENC_PROTOCOL_VERSION,
-      bootloaderAddr & 0xFF,
+      blAddrUsed & 0xFF,
       flags,
       ...u16le(scan.totalFrames)
     ]);
-    sendXcfgTransferProgress({
-      phase: 'transfer',
-      portPath,
-      fileName,
-      message: `进入 Bootloader 并解锁 (BL=${bootloaderAddr ? `0x${bootloaderAddr.toString(16)}` : 'auto'}, ${scan.totalFrames} 帧)`
-    });
+    sendEncTransferProgress(
+      `ENC START (${scan.totalFrames} 帧, BL=0x${blAddrUsed.toString(16).toUpperCase()})...`,
+      { phase: 'transfer', portPath, fileName }
+    );
     await sendBuf(startFrame, 60000);
     const startAck = await waitEncAck(0, 30000).catch(() => null);
     if (!startAck || startAck.cmd !== ENC_RESP_ACK_CMD || startAck.status !== STATUS_OK) {
       const st = startAck ? `status=0x${startAck.status.toString(16)}` : '无 ACK';
       return { success: false, phase: 'start', error: `ENC START 失败: ${st}` };
     }
+    sendEncTransferProgress('OK: ENC START', { phase: 'transfer', portPath, fileName });
 
     let seq = 1;
     let sent = 0;
@@ -2761,7 +3620,18 @@ ipcMain.handle('flash-enc-from-mcu', async (_event: Electron.IpcMainInvokeEvent,
         ...Array.from(frame)
       ]);
       await sendBuf(encFrame, 60000);
-      const ack = await waitEncAck(seq, 60000).catch(() => null);
+      const ackTimeoutMs = encFrameAckTimeoutMs(frame.length, seq, scan.totalFrames);
+      if (seq >= scan.totalFrames) {
+        sendEncTransferProgress(`末帧 ${seq}/${scan.totalFrames}（${frame.length}B，含复位，等待 CRC 0x04...）`, {
+          phase: 'transfer',
+          portPath,
+          fileName,
+          current: seq - 1,
+          total: scan.totalFrames,
+          percent: Math.min(100, Math.round(((seq - 1) / scan.totalFrames) * 100))
+        });
+      }
+      const ack = await waitEncAck(seq, ackTimeoutMs).catch(() => null);
       if (!ack || ack.cmd !== ENC_RESP_ACK_CMD || ack.status !== STATUS_OK) {
         const st = ack ? `status=0x${ack.status.toString(16)}` : '无 ACK';
         return { success: false, phase: 'transfer', error: `ENC 帧 ${seq}/${scan.totalFrames} 失败: ${st}` };
@@ -2769,35 +3639,96 @@ ipcMain.handle('flash-enc-from-mcu', async (_event: Electron.IpcMainInvokeEvent,
       sent += 1;
       seq += 1;
       const percent = Math.min(100, Math.round((sent / scan.totalFrames) * 100));
-      sendXcfgTransferProgress({
+      sendEncTransferProgress(`Bootloader 写帧 ${sent}/${scan.totalFrames} (${frame.length}B) OK`, {
         phase: 'transfer',
         portPath,
         fileName,
         current: sent,
         total: scan.totalFrames,
-        percent,
-        message: `Bootloader 写帧 ${sent}/${scan.totalFrames} (${frame.length}B)`
+        percent
       });
     }
 
     const endSeq = seq;
     const endFrame = buildFrameWithCRC([ENC_END_CMD, ...u16le(endSeq), ...u16le(0)]);
-    sendXcfgTransferProgress({ phase: 'transfer', portPath, fileName, message: '发送 ENC END，等待芯片复位...' });
-    await sendBuf(endFrame, 30000);
-    const endAck = await waitEncAck(endSeq, 30000).catch(() => null);
+    sendEncTransferProgress('发送 ENC END，等待 MCU 确认...', { phase: 'transfer', portPath, fileName });
+    rxBuffer = Buffer.alloc(0);
+    await sendBuf(endFrame, ENC_END_ACK_TIMEOUT_MS);
+    const endAck = await waitEncAck(endSeq, ENC_END_ACK_TIMEOUT_MS).catch(() => null);
+    encBinaryActive = false;
     if (!endAck || endAck.cmd !== ENC_RESP_ACK_CMD || endAck.status !== STATUS_OK) {
       const st = endAck ? `status=0x${endAck.status.toString(16)}` : '无 ACK';
-      return { success: false, phase: 'end', error: `ENC END 失败: ${st}` };
+      sendEncTransferProgress(
+        `ENC END 未确认 (${st})，末帧可能已触发芯片复位，继续验证应用模式...`,
+        { phase: 'transfer', portPath, fileName }
+      );
+    } else {
+      sendEncTransferProgress('OK: ENC END', { phase: 'transfer', portPath, fileName });
     }
 
-    sendXcfgTransferProgress({
+    sendEncTransferProgress(
+      `等待芯片复位 (${ENC_POST_RESET_SETTLE_MS / 1000}s) 并扫描应用地址 0x4B...`,
+      { phase: 'transfer', portPath, fileName }
+    );
+    rxBuffer = Buffer.alloc(0);
+    stringRxAcc = '';
+    encRxBridgeLogAcc = '';
+    encBinaryActive = false;
+    await new Promise<void>((r) => setTimeout(r, ENC_POST_RESET_SETTLE_MS));
+
+    // 末帧复位后补发 ENC END，促使 MCU 清理 enc 会话（无 ACK 也继续）
+    try {
+      rxBuffer = Buffer.alloc(0);
+      await sendBuf(endFrame, ENC_END_ACK_TIMEOUT_MS);
+      await waitEncAck(endSeq, 12000).catch(() => null);
+    } catch {
+      /* 芯片已复位时可能无 ACK */
+    }
+    rxBuffer = Buffer.alloc(0);
+    stringRxAcc = '';
+    encRxBridgeLogAcc = '';
+
+    let verifiedInfo: ChipInfoParsed | null = null;
+    try {
+      verifiedInfo = await mcuVerifyAppAfterEncBurn(stringSession, ENC_POST_VERIFY_TIMEOUT_MS);
+    } catch (verifyErr: any) {
+      sendEncTransferProgress(
+        `应用模式验证异常（${verifyErr?.message || verifyErr}），帧已全部写入`,
+        { phase: 'transfer', portPath, fileName }
+      );
+    }
+    if (verifiedInfo) {
+      sendEncTransferProgress(`应用模式就绪: ${formatChipInfo(verifiedInfo)}`, {
+        phase: 'transfer',
+        portPath,
+        fileName
+      });
+    } else if (sent >= scan.totalFrames) {
+      sendEncTransferProgress(
+        '全部 ENC 帧已写入；应用模式 INFO 未确认（enc.txt 阶段 F：可断电重连后执行 INFO / 再写 xcfg）',
+        { phase: 'transfer', portPath, fileName }
+      );
+    } else if (!endAck) {
+      return {
+        success: false,
+        phase: 'verify',
+        error: 'ENC 帧未写全且应用模式验证失败，请断电重试'
+      };
+    } else {
+      sendEncTransferProgress('未能读取 Info Block（固件帧已全部写入，建议稍后手动 INFO 确认）', {
+        phase: 'transfer',
+        portPath,
+        fileName
+      });
+    }
+
+    sendEncTransferProgress(`ENC 烧录完成: ${sent} 帧, ${scan.totalBinaryBytes}B 二进制流`, {
       phase: 'done',
       portPath,
       fileName,
       current: sent,
       total: scan.totalFrames,
-      percent: 100,
-      message: `ENC 烧录完成: ${sent} 帧, ${scan.totalBinaryBytes}B 二进制流`
+      percent: 100
     });
     return {
       success: true,
@@ -2807,12 +3738,14 @@ ipcMain.handle('flash-enc-from-mcu', async (_event: Electron.IpcMainInvokeEvent,
     };
   } catch (error: any) {
     if (cancelledXcfgTransfers.has(portPath)) {
-      sendXcfgTransferProgress({ phase: 'error', portPath, fileName, message: '已停止 ENC 传输' });
+      sendEncTransferProgress('已停止 ENC 传输', { phase: 'error', portPath, fileName });
       return { success: false, error: 'transfer cancelled' };
     }
-    sendXcfgTransferProgress({ phase: 'error', portPath, fileName, message: error?.message || String(error) });
+    sendEncTransferProgress(error?.message || String(error), { phase: 'error', portPath, fileName });
     return { success: false, error: error?.message || String(error) };
   } finally {
+    encBinaryActive = false;
+    encTransfersInProgress.delete(portPath);
     stopWinUsbRxPump();
     cancelledXcfgTransfers.delete(portPath);
     try {
@@ -2824,7 +3757,7 @@ ipcMain.handle('flash-enc-from-mcu', async (_event: Electron.IpcMainInvokeEvent,
           portInstance.port.removeAllListeners('error');
           portInstance.port.removeAllListeners('close');
           portInstance.port.on('data', (data: Buffer) => {
-            broadcastToRendererWindows('serial-data', portPath, Array.from(data));
+            broadcastSerialPortData(portPath, data);
           });
           portInstance.port.on('error', (error: Error) => {
             broadcastToRendererWindows('serial-error', portPath, error.message);
@@ -2846,10 +3779,21 @@ ipcMain.handle('cancel-xcfg-transfer', async (_event: Electron.IpcMainInvokeEven
   return { success: true };
 });
 
+ipcMain.handle('read-mcu-chip-info', async (_event: Electron.IpcMainInvokeEvent, payload: { portPath?: string }) => {
+  const portPath = (payload?.portPath || '').trim();
+  return readChipInfoFromConnectedPort(portPath);
+});
+
+ipcMain.handle('read-mcu-xcfg-from-device', async (_event: Electron.IpcMainInvokeEvent, payload: { portPath?: string }) => {
+  const portPath = (payload?.portPath || '').trim();
+  return readXcfgFromConnectedPort(portPath);
+});
+
 registerXcfgViewerIpc({
   getMxtAppPath,
-  runMxtApp: runMxtAppCoordinated,
-  getDefaultMxtDevice: getDefaultMxtDeviceFromSerialApp
+  runMxtApp: runMxtAppShared,
+  getDefaultMxtDevice: getDefaultMxtDeviceFromSerialApp,
+  readChipInfoFromPort: readChipInfoFromConnectedPort
 });
 
 ipcMain.handle('open-xcfg-viewer-window', async (_event: Electron.IpcMainInvokeEvent, payload?: {

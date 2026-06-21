@@ -2,9 +2,8 @@
  * 打包前将 mxt-app 复制到 serial-app/CLI/
  *
  * 查找顺序:
- * 1. 已存在于 CLI/mxt-app.exe（跳过复制 exe，仅补 libusb）
- * 2. MXT_APP_BUILD_DIR/mxt-app.exe
- * 3. mxt-app 各构建输出路径（MSYS2 本地 / Linux 交叉）
+ * 1. MXT_APP_BUILD_DIR / mxt-app 构建产物（优先 .libs 完整版）
+ * 2. 已存在于 CLI/mxt-app.exe（仅当无更新构建产物时）
  *
  * Windows 本地编译: npm run build:mxt-app  （MSYS2，见 build-win64-msys2.bat）
  * Linux 交叉编译:   ./build-w64-mingw.sh  （仅 Linux/WSL）
@@ -24,32 +23,109 @@ function fileExists(p) {
   }
 }
 
+const MIN_MXT_APP_BYTES = 100000;
+
+function mxtAppSize(p) {
+  try {
+    return fs.statSync(p).size;
+  } catch (_) {
+    return 0;
+  }
+}
+
+function isUsableMxtAppExe(p) {
+  return fileExists(p) && mxtAppSize(p) >= MIN_MXT_APP_BYTES;
+}
+
 function findMxtAppExe() {
+  const envDir = (process.env.MXT_APP_BUILD_DIR || '').trim();
+  if (envDir) {
+    const p = path.join(path.resolve(envDir), 'mxt-app.exe');
+    if (isUsableMxtAppExe(p)) return { exe: p, dir: path.dirname(p), source: envDir };
+  }
+
+  const candidates = [
+    path.join(MXT_APP_ROOT, '.libs', 'mxt-app.exe'),
+    path.join(MXT_APP_ROOT, 'build-win64', 'mxt-app.exe'),
+    path.join(MXT_APP_ROOT, 'mxt-app.exe'),
+    path.join(MXT_APP_ROOT, 'src', 'mxt-app', 'mxt-app.exe')
+  ];
+
+  for (const p of candidates) {
+    if (isUsableMxtAppExe(p)) {
+      return { exe: p, dir: path.dirname(p), source: p };
+    }
+  }
+
   const staged = path.join(CLI_DIR, 'mxt-app.exe');
   if (fileExists(staged)) {
     return { exe: staged, dir: CLI_DIR, source: 'CLI (已存在)' };
   }
 
-  const envDir = (process.env.MXT_APP_BUILD_DIR || '').trim();
-  if (envDir) {
-    const p = path.join(path.resolve(envDir), 'mxt-app.exe');
-    if (fileExists(p)) return { exe: p, dir: path.dirname(p), source: envDir };
+  return null;
+}
+
+const MINGW_RUNTIME_DLLS = [
+  'libgcc_s_seh-1.dll',
+  'libstdc++-6.dll',
+  'libwinpthread-1.dll'
+];
+
+const CLI_BUNDLE_FILES = ['mxt-app.exe', 'libusb-1.0.dll', ...MINGW_RUNTIME_DLLS];
+
+function verifyCliBundle(cliDir, strict) {
+  const missing = CLI_BUNDLE_FILES.filter((name) => !fileExists(path.join(cliDir, name)));
+  if (missing.length) {
+    const msg = `CLI 目录不完整，缺少: ${missing.join(', ')}（目录: ${cliDir}）`;
+    if (strict) throw new Error(msg);
+    console.warn('[prepare-cli]', msg);
+    return false;
+  }
+  const manifest = CLI_BUNDLE_FILES.map((name) => {
+    const p = path.join(cliDir, name);
+    return `${name}\t${mxtAppSize(p)}`;
+  }).join('\n');
+  fs.writeFileSync(path.join(cliDir, 'CLI_BUNDLE.txt'), manifest + '\n', 'utf-8');
+  return true;
+}
+
+function findMingwBinDir() {
+  const candidates = [
+    process.env.MINGW_PREFIX ? path.join(process.env.MINGW_PREFIX, 'bin') : null,
+    process.env.MSYS2_ROOT ? path.join(process.env.MSYS2_ROOT, 'mingw64', 'bin') : null,
+    process.platform === 'win32' ? 'C:/msys64/mingw64/bin' : null,
+    process.platform === 'win32' ? 'D:/msys64/mingw64/bin' : null
+  ].filter(Boolean);
+
+  for (const dir of candidates) {
+    if (fileExists(path.join(dir, 'libgcc_s_seh-1.dll'))) return dir;
+  }
+  return null;
+}
+
+function copyRuntimeDlls(cliDir, strict) {
+  const mingwBin = findMingwBinDir();
+  if (!mingwBin) {
+    const warn = '未找到 MinGW 运行时目录，mxt-app 在部分机器上可能无法启动。';
+    if (strict) throw new Error(warn);
+    console.warn('[prepare-cli]', warn);
+    return;
   }
 
-  const candidates = [
-    path.join(MXT_APP_ROOT, 'mxt-app.exe'),
-    path.join(MXT_APP_ROOT, 'build-win64', 'mxt-app.exe'),
-    path.join(MXT_APP_ROOT, 'src', 'mxt-app', 'mxt-app.exe'),
-    path.join(MXT_APP_ROOT, '.libs', 'mxt-app.exe')
-  ];
-
-  for (const p of candidates) {
-    if (fileExists(p)) {
-      return { exe: p, dir: path.dirname(p), source: p };
+  for (const name of MINGW_RUNTIME_DLLS) {
+    const src = path.join(mingwBin, name);
+    const dest = path.join(cliDir, name);
+    if (!fileExists(src)) {
+      const warn = `缺少 MinGW 运行时: ${src}`;
+      if (strict) throw new Error(warn);
+      console.warn('[prepare-cli]', warn);
+      continue;
+    }
+    if (!fileExists(dest) || mxtAppSize(dest) !== mxtAppSize(src)) {
+      fs.copyFileSync(src, dest);
+      console.log('[prepare-cli] copied', name, '->', dest);
     }
   }
-
-  return null;
 }
 
 function findLibusbDll(mxtExeDir) {
@@ -127,10 +203,12 @@ function prepareCli(options = {}) {
   }
 
   const destExe = path.join(CLI_DIR, 'mxt-app.exe');
-  if (path.resolve(found.exe) !== path.resolve(destExe)) {
+  const shouldCopyExe = path.resolve(found.exe) !== path.resolve(destExe)
+    || mxtAppSize(destExe) !== mxtAppSize(found.exe);
+  if (shouldCopyExe) {
     fs.copyFileSync(found.exe, destExe);
     console.log('[prepare-cli] copied mxt-app.exe from', found.source || found.exe);
-    console.log('[prepare-cli]  ->', destExe);
+    console.log('[prepare-cli]  ->', destExe, `(${mxtAppSize(destExe)} bytes)`);
   } else {
     console.log('[prepare-cli] 使用已有 CLI/mxt-app.exe');
   }
@@ -150,10 +228,14 @@ function prepareCli(options = {}) {
     console.warn('[prepare-cli]', warn);
   }
 
+  copyRuntimeDlls(CLI_DIR, strict);
+
+  verifyCliBundle(CLI_DIR, strict);
+
   return { ok: true, cliDir: CLI_DIR, mxtApp: destExe, source: found.source };
 }
 
-module.exports = { prepareCli, CLI_DIR, findMxtAppExe, MXT_APP_ROOT };
+module.exports = { prepareCli, CLI_DIR, findMxtAppExe, MXT_APP_ROOT, CLI_BUNDLE_FILES, verifyCliBundle };
 
 if (require.main === module) {
   const strict = process.argv.includes('--strict');

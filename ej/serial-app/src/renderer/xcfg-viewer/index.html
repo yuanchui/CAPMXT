@@ -698,6 +698,11 @@
       加载 xcfg 文件
     </label>
     <button class="btn btn-secondary" id="btnReadDevice">从设备读取</button>
+    <button class="btn btn-secondary" id="btnReadChipInfo">读取芯片信息</button>
+    <label class="custom-checkbox-wrapper" title="Serial Terminal 已连接时自动从设备读取 xcfg" style="display:inline-flex;align-items:center;gap:6px;margin:0;">
+      <input type="checkbox" id="autoReadDeviceCheckbox">
+      <span>自动读取 cfg</span>
+    </label>
     <button class="btn btn-secondary" id="btnBackup">备份到NVM(B)</button>
     <button class="btn btn-secondary" id="btnReset">复位(R)</button>
     <button class="btn btn-secondary" id="btnCalibrate">校准(C)</button>
@@ -834,7 +839,66 @@
 
     const LAST_CONFIG_KEY = 'xcfg-viewer-last-config';
     const NAME_TO_ALIAS_ONCE_KEY = 'xcfg-viewer-name-to-alias-once-done';
+    const AUTO_READ_DEVICE_KEY = 'xcfg-viewer-auto-read-device';
     let serialAppMxtDevice = null;
+    let autoReadDeviceInProgress = false;
+    let autoReadDeviceDoneForSession = false;
+
+    function isAutoReadDeviceEnabled() {
+      try { return localStorage.getItem(AUTO_READ_DEVICE_KEY) === '1'; } catch (e) { return false; }
+    }
+
+    function setAutoReadDeviceEnabled(enabled) {
+      try { localStorage.setItem(AUTO_READ_DEVICE_KEY, enabled ? '1' : '0'); } catch (e) {}
+    }
+
+    function formatChipInfoLines(info) {
+      if (!info) return '';
+      return [
+        'Family ID: 0x' + Number(info.familyId).toString(16).toUpperCase().padStart(2, '0'),
+        'Variant ID: 0x' + Number(info.variantId).toString(16).toUpperCase().padStart(2, '0'),
+        'Version: ' + info.versionMajor + '.' + info.versionMinor,
+        'Build: 0x' + Number(info.build).toString(16).toUpperCase(),
+        'Matrix: ' + info.matrixX + '×' + info.matrixY,
+        'Objects: ' + info.numObjects
+      ].join('\n');
+    }
+
+    async function readDeviceConfigFromChip(options) {
+      const silent = options && options.silent;
+      if (autoReadDeviceInProgress) return false;
+      autoReadDeviceInProgress = true;
+      if (!silent) showStatus('正在从设备读取 xcfg...', true);
+      try {
+        const r = await fetch('/api/read-device', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(withDevicePayload({}))
+        });
+        const data = await r.json();
+        if (data.success) {
+          configData = data.data;
+          try { localStorage.setItem(LAST_CONFIG_KEY, JSON.stringify(configData)); } catch (e) {}
+          renderTree();
+          if (configData.objects && configData.objects.length > 0) selectObject(0);
+          showStatus(silent ? '已自动从设备读取 cfg' : '从设备读取成功', true);
+          return true;
+        }
+        if (!silent) showStatus('读取失败: ' + (data.error || '未知错误'), false);
+        return false;
+      } catch (e) {
+        if (!silent) showStatus('读取失败: ' + e.message, false);
+        return false;
+      } finally {
+        autoReadDeviceInProgress = false;
+      }
+    }
+
+    async function maybeAutoReadDeviceConfig() {
+      if (!isAutoReadDeviceEnabled() || !serialAppMxtDevice || autoReadDeviceDoneForSession) return;
+      autoReadDeviceDoneForSession = true;
+      await readDeviceConfigFromChip({ silent: true });
+    }
 
     async function refreshSerialAppConnection() {
       if (!window.xcfgViewerAPI || typeof window.xcfgViewerAPI.getSerialAppConnection !== 'function') return;
@@ -846,6 +910,9 @@
             ? ('串口 ' + serialAppMxtDevice.slice('serial:'.length))
             : serialAppMxtDevice;
           showStatus('Serial Terminal 已连接: ' + label + '（mxt-app 将临时接管此设备）', true);
+          maybeAutoReadDeviceConfig();
+        } else {
+          autoReadDeviceDoneForSession = false;
         }
       } catch (e) {}
     }
@@ -1024,6 +1091,7 @@
 
     let configData = null;
     let selectedObjIdx = -1;
+    let lastXcfgFileName = 'config.xcfg';
 
     const fileInput = document.getElementById('fileInput');
     const treeBody = document.getElementById('treeBody');
@@ -1036,6 +1104,7 @@
     fileInput.addEventListener('change', async (e) => {
       const f = e.target.files[0];
       if (!f) return;
+      lastXcfgFileName = f.name || 'config.xcfg';
       const content = await f.text();
       parseAndDisplay(content);
       e.target.value = '';
@@ -1779,34 +1848,73 @@
     });
 
     document.getElementById('btnReadDevice').addEventListener('click', async () => {
+      await readDeviceConfigFromChip({ silent: false });
+    });
+
+    document.getElementById('btnReadChipInfo').addEventListener('click', async () => {
       try {
-        const r = await fetch('/api/read-device', {
+        const r = await fetch('/api/read-chip-info', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(withDevicePayload({}))
         });
         const data = await r.json();
         if (data.success) {
-          configData = data.data;
-          try {
-            localStorage.setItem(LAST_CONFIG_KEY, JSON.stringify(configData));
-          } catch (e) {}
-          renderTree();
-          if (configData.objects && configData.objects.length > 0) {
-            selectObject(0);
-          }
-          showStatus('从设备读取成功', true);
+          const iic = (data.iicAddr != null)
+            ? ('I2C 应用地址: 0x' + Number(data.iicAddr).toString(16).toUpperCase() + '\n')
+            : '';
+          showStatus(iic + formatChipInfoLines(data.chipInfo), true);
         } else {
-          showStatus('读取失败: ' + (data.error || '未知错误'), false);
+          showStatus('读取芯片信息失败: ' + (data.error || '未知错误'), false);
         }
       } catch (e) {
-        showStatus('读取失败: ' + e.message, false);
+        showStatus('读取芯片信息失败: ' + e.message, false);
       }
     });
+
+    (function initAutoReadDeviceCheckbox() {
+      const el = document.getElementById('autoReadDeviceCheckbox');
+      if (!el) return;
+      el.checked = isAutoReadDeviceEnabled();
+      el.addEventListener('change', function () {
+        setAutoReadDeviceEnabled(!!el.checked);
+        if (el.checked && serialAppMxtDevice) {
+          autoReadDeviceDoneForSession = false;
+          maybeAutoReadDeviceConfig();
+        }
+      });
+    })();
 
     document.getElementById('btnSaveXcfg').addEventListener('click', async () => {
       if (!configData) {
         showStatus('请先加载或读取配置', false);
+        return;
+      }
+
+      /* Electron 中 window.prompt 不可用，须走原生保存对话框 */
+      const inElectron = window.xcfgViewerAPI && typeof window.xcfgViewerAPI.request === 'function';
+      if (inElectron) {
+        try {
+          const r = await fetch('/api/save-xcfg-dialog', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ config: configData, name: lastXcfgFileName })
+          });
+          if (!r.ok) {
+            showStatus('保存失败: HTTP ' + r.status, false);
+            return;
+          }
+          const data = await r.json();
+          if (data.canceled) return;
+          if (data.success && data.path) {
+            lastXcfgFileName = String(data.path).replace(/^.*[\\/]/, '') || lastXcfgFileName;
+            showStatus('已保存: ' + data.path, true);
+          } else {
+            showStatus(data.error || '保存失败', false);
+          }
+        } catch (e) {
+          showStatus('保存失败: ' + e.message, false);
+        }
         return;
       }
 
@@ -2526,7 +2634,10 @@
           const pending = res && res.pending;
           if (pending && pending.content) {
             parseAndDisplay(String(pending.content)).then(function () {
-              if (pending.fileName) showStatus('已加载: ' + pending.fileName, true);
+              if (pending.fileName) {
+                lastXcfgFileName = pending.fileName;
+                showStatus('已加载: ' + pending.fileName, true);
+              }
               if (window.xcfgViewerAPI.clearInitialPayload) window.xcfgViewerAPI.clearInitialPayload();
               afterConfigReady();
             }).catch(function () {

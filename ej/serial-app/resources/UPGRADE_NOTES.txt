@@ -1,7 +1,7 @@
 ========================================
 Serial Terminal 升级说明
-版本: 1.0.1
-打包时间: 2026-06-15 06:33:50
+版本: 1.0.37
+打包时间: 2026-06-18 15:50:43
 ========================================
 
 【本包包含】
@@ -10,7 +10,7 @@ Serial Terminal 升级说明
 - xcfg 配置查看器
 - xcfg 字段说明元数据（xcfg_viewer_metadata.json）
 - xcfg 说明配图（6 个文件）
-- libusb-1.0.dll（mxt-app 依赖）
+- libusb-1.0.dll、libgcc_s_seh-1.dll、libstdc++-6.dll、libwinpthread-1.dll（mxt-app 运行时）
 
 【更新说明】
 （打包前请在此填写本版本更新说明，留空则仅显示版本号与打包内容清单）
@@ -24,6 +24,8 @@ Serial Terminal 升级说明
   ..\linux_driver_mxt_sys\xcfg-viewer
 
 安装后路径:
+  程序目录\CLI\mxt-app.exe（与 Serial Terminal.exe 同级，优先使用）
+  程序目录\resources\CLI\（备用）
   程序目录\resources\UPGRADE_NOTES.txt
   程序目录\resources\xcfg-viewer\xcfg_viewer_metadata.json
   程序目录\resources\xcfg-viewer\metadata_images\

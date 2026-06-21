@@ -8,12 +8,31 @@
 #include "mxt_msg.h"
 #include "mxt_spi_stream.h"
 #include "mxt_bridge.h"
+#include "mxt_enc.h"
 #include "spi.h"
 #include "gpio.h"
 #include "usbd_cdc_if.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "main.h"
+
+static char g_cmd_queue[CMD_BUFFER_SIZE];
+static volatile uint8_t g_cmd_queued = 0U;
+
+static void MXT_QueueStringCommand(const char *cmd)
+{
+    if (cmd == NULL || cmd[0] == '\0') {
+        return;
+    }
+    if (strlen(cmd) >= CMD_BUFFER_SIZE) {
+        return;
+    }
+    if (g_cmd_queued == 0U) {
+        memcpy(g_cmd_queue, cmd, strlen(cmd) + 1U);
+        g_cmd_queued = 1U;
+    }
+}
 
 void ProcessStringCommand(uint8_t *buf, uint32_t len)
 {
@@ -32,6 +51,7 @@ void ProcessStringCommand(uint8_t *buf, uint32_t len)
     if (g_cmd_pending != 0U) {
       if ((strcmp(MXT_WORK_STR, "SPISTOP") != 0) && (strcmp(MXT_WORK_STR, "spistop") != 0)
           && (strcmp(MXT_WORK_STR, "SPIDBG") != 0) && (strcmp(MXT_WORK_STR, "spidbg") != 0)) {
+        MXT_QueueStringCommand(MXT_WORK_STR);
         return;
       }
     }
@@ -50,11 +70,14 @@ void ProcessPendingCommand(void)
     
 
     
-    /* Command: "MODE0" - Switch to I2C-USB bridge mode */
-    if (strcmp(cmd_str, "MODE0") == 0 || strcmp(cmd_str, "mode0") == 0) {
+    /* Command: "MODE0" / "BRIDGEBIN" - Switch to I2C-USB bridge mode */
+    if (strcmp(cmd_str, "MODE0") == 0 || strcmp(cmd_str, "mode0") == 0 ||
+        strcmp(cmd_str, "BRIDGEBIN") == 0 || strcmp(cmd_str, "bridgebin") == 0) {
+        /* 须先回 OK 再切 mode0：USB_SendString 在 BINARY 下会静默丢弃文本 */
+        USB_SendString("OK: Switched to I2C-USB bridge mode\r\n");
+        MXT_WaitUsbIdle(500U);
         g_bridge_mode = BRIDGE_MODE_BINARY;
         g_menu_state = MENU_IDLE;
-        USB_SendString("OK: Switched to I2C-USB bridge mode\r\n");
     }
     /* Command: "MODE1" - Switch to string mode */
     else if (strcmp(cmd_str, "MODE1") == 0 || strcmp(cmd_str, "mode1") == 0) {
@@ -84,7 +107,7 @@ void ProcessPendingCommand(void)
         g_spi_stream_enabled = 1U;
         MXT_SSN_ResetForStream();
         MXT_SPI_StartIT();
-        USB_SendString("INFO: SPI stream START3 (cropped packets)\r\n");
+        USB_SendString("INFO: SPI stream START3 (514B Mode3 packets)\r\n");
     }
     else if (strncmp(cmd_str, "SPISTART", 8) == 0 || strncmp(cmd_str, "spistart", 8) == 0) {
         const char *opt = cmd_str + 8;
@@ -683,6 +706,88 @@ void ProcessPendingCommand(void)
             USB_SendString(MXT_WORK_STR);
         }
     }
+    /* Command: "FINDIIC" - Scan maXTouch I2C address (application mode) */
+    else if (strcmp(cmd_str, "FINDIIC") == 0 || strcmp(cmd_str, "findiic") == 0) {
+        uint8_t found = MXT_FindI2CAddress();
+        if (found == 0x81U || found == 0U) {
+            SendResponse((uint8_t *)"ERR: FINDIIC no device\r\n", 24U);
+        } else {
+            snprintf(MXT_WORK_STR, MXT_WORK_BUF_SIZE, "OK: FINDIIC addr=0x%02X\r\n", found);
+            SendResponse((uint8_t *)MXT_WORK_STR, (uint16_t)strlen(MXT_WORK_STR));
+        }
+    }
+    /* Command: "ENCRESETBL" - T6@offset0 写 0xA5 强制进 Bootloader（enc.txt 阶段 B 末步） */
+    else if (strcmp(cmd_str, "ENCRESETBL") == 0 || strcmp(cmd_str, "encresetbl") == 0) {
+        uint8_t app = 0U;
+        uint16_t t6 = 0U;
+        uint8_t bl = 0U;
+        uint8_t st = 0U;
+        uint8_t r = MXT_ENC_ForceResetToBootloader(&app, &t6, &bl, &st);
+        if (r != 0U) {
+            snprintf(MXT_WORK_STR, MXT_WORK_BUF_SIZE, "ERR: ENCRESETBL failed status=0x%02X\r\n", r);
+            SendResponse((uint8_t *)MXT_WORK_STR, (uint16_t)strlen(MXT_WORK_STR));
+        } else {
+            snprintf(MXT_WORK_STR, MXT_WORK_BUF_SIZE,
+                     "OK: ENCRESETBL app=0x%02X t6=0x%04X bl=0x%02X bl_status=0x%02X\r\n",
+                     app, t6, bl, st);
+            SendResponse((uint8_t *)MXT_WORK_STR, (uint16_t)strlen(MXT_WORK_STR));
+        }
+    }
+    /* Command: "FINDBL [hint]" - 扫描 Bootloader 地址并读状态 E0（enc.txt 阶段 C） */
+    else if (strncmp(cmd_str, "FINDBL", 6) == 0 || strncmp(cmd_str, "findbl", 6) == 0) {
+        const char *arg = cmd_str + 6;
+        while (*arg == ' ') {
+            arg++;
+        }
+        uint8_t hint = 0U;
+        if (*arg != '\0') {
+            hint = (uint8_t)strtoul(arg, NULL, 16);
+        }
+        uint8_t bl = 0U, st = 0U;
+        uint8_t r = MXT_ENC_FindBootloader(hint, &bl, &st);
+        if (r != 0U) {
+            snprintf(MXT_WORK_STR, MXT_WORK_BUF_SIZE, "ERR: FINDBL failed status=0x%02X\r\n", r);
+            SendResponse((uint8_t *)MXT_WORK_STR, (uint16_t)strlen(MXT_WORK_STR));
+        } else {
+            snprintf(MXT_WORK_STR, MXT_WORK_BUF_SIZE,
+                     "OK: FINDBL bootloader=0x%02X bl_status=0x%02X\r\n", bl, st);
+            SendResponse((uint8_t *)MXT_WORK_STR, (uint16_t)strlen(MXT_WORK_STR));
+        }
+    }
+    /* Command: "ENCENTERBL [hint]" - Reset to Bootloader, report BL addr + status */
+    else if (strncmp(cmd_str, "ENCENTERBL", 10) == 0 || strncmp(cmd_str, "encenterbl", 10) == 0) {
+        const char *arg = cmd_str + 10;
+        while (*arg == ' ') {
+            arg++;
+        }
+        uint8_t hint = 0U;
+        if (*arg != '\0') {
+            hint = (uint8_t)strtoul(arg, NULL, 16);
+        }
+        uint8_t app = 0U, bl = 0U, st = 0U;
+        uint8_t r = MXT_ENC_PrepareEnterBootloader(hint, &app, &bl, &st);
+        if (r != 0U) {
+            snprintf(MXT_WORK_STR, MXT_WORK_BUF_SIZE, "ERR: ENCENTERBL failed status=0x%02X\r\n", r);
+            SendResponse((uint8_t *)MXT_WORK_STR, (uint16_t)strlen(MXT_WORK_STR));
+        } else {
+            snprintf(MXT_WORK_STR, MXT_WORK_BUF_SIZE,
+                     "OK: ENCENTERBL app=0x%02X bootloader=0x%02X bl_status=0x%02X\r\n",
+                     app, bl, st);
+            SendResponse((uint8_t *)MXT_WORK_STR, (uint16_t)strlen(MXT_WORK_STR));
+        }
+    }
+    /* Command: "ENCUNLOCK" - Bootloader unlock (DC AA), wait 0xA0 */
+    else if (strcmp(cmd_str, "ENCUNLOCK") == 0 || strcmp(cmd_str, "encunlock") == 0) {
+        uint8_t st = 0U;
+        uint8_t r = MXT_ENC_PrepareUnlock(&st);
+        if (r != 0U) {
+            snprintf(MXT_WORK_STR, MXT_WORK_BUF_SIZE, "ERR: ENCUNLOCK failed status=0x%02X\r\n", r);
+            SendResponse((uint8_t *)MXT_WORK_STR, (uint16_t)strlen(MXT_WORK_STR));
+        } else {
+            snprintf(MXT_WORK_STR, MXT_WORK_BUF_SIZE, "OK: ENCUNLOCK bl_status=0x%02X ready\r\n", st);
+            SendResponse((uint8_t *)MXT_WORK_STR, (uint16_t)strlen(MXT_WORK_STR));
+        }
+    }
     /* Command: "OBJTBL" - Read object table (addr 0x0007, 6 bytes per object); read per-entry to avoid long I2C read */
     else if (strcmp(cmd_str, "OBJTBL") == 0 || strcmp(cmd_str, "objtbl") == 0 ||
              strcmp(cmd_str, "OBJ") == 0 || strcmp(cmd_str, "obj") == 0) {
@@ -840,6 +945,12 @@ void ProcessPendingCommand(void)
         USB_SendString("  MAP16XY  - 16x16 flip X and Y\r\n");
         USB_SendString("  START CHGNO [X|Y|XY] ms - Mode3 stream with [touch_id,x,y,action] from CHG\r\n");
         USB_SendString("  INFO     - Read Info Block (0x0000, 7 bytes)\r\n");
+        USB_SendString("  FINDIIC  - Scan maXTouch I2C address\r\n");
+        USB_SendString("  ENCRESETBL - T6 RESET=0xA5, force enter Bootloader\r\n");
+        USB_SendString("  FINDBL [hint] - Scan Bootloader addr + read status\r\n");
+        USB_SendString("  ENCENTERBL [hint] - ENCRESETBL + FINDBL (combined)\r\n");
+        USB_SendString("  ENCUNLOCK - Bootloader unlock (DC AA)\r\n");
+        USB_SendString("  BRIDGEBIN - Switch to binary I2C bridge (same as MODE0)\r\n");
         USB_SendString("  OBJTBL   - Read object table (0x0007, first 10 objects)\r\n");
         USB_SendString("  MSGCNT   - Read message count (T44 from object table)\r\n");
         USB_SendString("  MSG      - Read one message (T5 from object table)\r\n");
@@ -848,7 +959,7 @@ void ProcessPendingCommand(void)
         USB_SendString("  SPISTART  - SPI binary, 88 77 66 + LE u16 len + payload\r\n");
         USB_SendString("  SPISTART -no - SSN only (no SPI read/USB tx)\r\n");
         USB_SendString("  SPISTART1 - SPI crop 20x16 to 16x16 text rows\r\n");
-        USB_SendString("  SPISTART3 - SPI crop 20x16 to 16x16 packets\r\n");
+        USB_SendString("  SPISTART3 - SPI 514B frame to Mode3 packets (AA 10 33)\r\n");
         USB_SendString("  SPISTOP   - Stop SPI stream\r\n");
         USB_SendString("  SPIDBG    - SSN/SPI diagnostic snapshot\r\n");
         USB_SendString("  SPI       - Toggle SPISTART raw stream\r\n");
@@ -860,11 +971,23 @@ void ProcessPendingCommand(void)
     else {
         USB_SendString("ERROR: Unknown command. Type HELP for available commands\r\n");
     }
+
+    MXT_FlushMessageBuffer();
 }
 
 
 void MXT_ProcessCommand(void)
 {
-  ProcessPendingCommand();
+  uint8_t guard = 0U;
+  while (g_cmd_pending && guard < 4U) {
+    ProcessPendingCommand();
+    guard++;
+  }
+  if (g_cmd_queued != 0U) {
+    g_cmd_queued = 0U;
+    memcpy(g_cmd_buffer, g_cmd_queue, strlen(g_cmd_queue) + 1U);
+    g_cmd_pending = 1U;
+    ProcessPendingCommand();
+  }
 }
 

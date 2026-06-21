@@ -44,6 +44,7 @@
 #include "libmaxtouch/log.h"
 #include "libmaxtouch/utilfuncs.h"
 #include "libmaxtouch/info_block.h"
+#include "libmaxtouch/serial/serial_device.h"
 #include "serial_data.h"
 #include "libmaxtouch/msg.h"
 
@@ -195,6 +196,8 @@ static void print_usage(char *prog_name)
           "  -d usb:BUS-DEVICE          : USB 设备，例如 \"usb:001-003\"\n"
           "  -d usb:BUS-DEVICE-ADDRESS  : USB 设备，例如 \"usb:001-003-4a\"\n"
           "  -d serial:PORT             : 串口设备，例如 \"serial:COM5\" 或 \"serial:/dev/ttyACM0\"\n"
+          "  -d serial:proxy:HOST:PORT  : 复用已打开串口（经 serial-app TCP 代理）\n"
+          "  --serial-test              : 测试串口/代理连接（mode0 + FIND_IIC）\n"
 #endif
           "  -d sysfs:PATH              : sysfs 接口\n"
           "  -d hidraw:PATH             : hidraw 设备，例如 \"hidraw:/dev/hidraw0\"\n"
@@ -339,6 +342,7 @@ int main (int argc, char *argv[])
       {"switch-parallel",  optional_argument, 0, 0},
       {"switch-fast",      optional_argument, 0, 0},
       {"bridge-config",  required_argument, 0, 0},
+      {"serial-test",    no_argument,       0, 0},
       {0,                  0,                 0, 0}
     };
 
@@ -610,6 +614,13 @@ int main (int argc, char *argv[])
       } else if (!strcmp(long_options[option_index].name, "zero")) {
         if (cmd == CMD_NONE) {
           cmd = CMD_ZERO_CFG;
+        } else {
+          print_usage(argv[0]);
+          return MXT_ERROR_BAD_INPUT;
+        }
+      } else if (!strcmp(long_options[option_index].name, "serial-test")) {
+        if (cmd == CMD_NONE) {
+          cmd = CMD_SERIAL_TEST;
         } else {
           print_usage(argv[0]);
           return MXT_ERROR_BAD_INPUT;
@@ -952,6 +963,12 @@ int main (int argc, char *argv[])
 
 
   /* Initialization of chip, scan new device */
+  } else if (cmd == CMD_SERIAL_TEST) {
+    ret = mxt_scan(ctx, &conn, false);
+    if (ret)
+      goto free;
+    ret = serial_run_link_test(ctx, conn);
+    goto free;
   } else if (cmd != CMD_FLASH && cmd != CMD_BOOTLOADER_VERSION) {
     ret = mxt_init_chip(ctx, &mxt, &conn);
     if (ret && cmd != CMD_CRC_CHECK )
@@ -1164,6 +1181,11 @@ int main (int argc, char *argv[])
   }
 
 free:
+  if (ret != MXT_SUCCESS)
+    fprintf(stderr, "mxt-app 退出码 %d\n", ret);
+  else if (cmd == CMD_SERIAL_TEST)
+    fprintf(stdout, "SERIAL_TEST: done OK\n");
+
   mxt_free(ctx);
 
   return ret;

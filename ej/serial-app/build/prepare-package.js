@@ -54,7 +54,7 @@ function listPackageContents(xcfgSync) {
   } else {
     lines.push('- xcfg 说明配图（无或源目录为空）');
   }
-  lines.push('- libusb-1.0.dll（mxt-app 依赖）');
+  lines.push('- libusb-1.0.dll、libgcc_s_seh-1.dll、libstdc++-6.dll、libwinpthread-1.dll（mxt-app 运行时）');
   return lines;
 }
 
@@ -84,6 +84,8 @@ function generateUpgradeNotes(version, xcfgSync) {
     `  ${path.join('..', 'linux_driver_mxt_sys', 'xcfg-viewer')}`,
     '',
     '安装后路径:',
+    '  程序目录\\CLI\\mxt-app.exe（与 Serial Terminal.exe 同级，优先使用）',
+    '  程序目录\\resources\\CLI\\（备用）',
     '  程序目录\\resources\\UPGRADE_NOTES.txt',
     '  程序目录\\resources\\xcfg-viewer\\xcfg_viewer_metadata.json',
     '  程序目录\\resources\\xcfg-viewer\\metadata_images\\',
