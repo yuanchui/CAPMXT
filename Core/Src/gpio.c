@@ -107,25 +107,23 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /* PA9 SSN 推挽输出；PA10 MISO 输入监视 */
+  /* PA10 MISO 监视；PA9 由 MXT_SSN_PA9_GPIO_OUT 决定是否物理输出 */
   MXT_TIM1_SsnPinGpioEnable();
 
 }
 
 /* USER CODE BEGIN 2 */
 
-/* PA9 GPIO(BSRR); PA10 EXTI+DWT enter frame; DWT 6208us 帧内低电平；GAP 监听 TIM 停止 */
-#define SSN_GAP_POLL_US           100U
-#define SSN_LOW_PULL_US           20U
-#define SSN_SPI_IDLE_US           2500U
-#define SSN_HOLD_LOW_US           6210U
-#define SSN_STOP_PULLUP_US        250U
-#define SSN_GAP_MIN_US            500U
-#define SSN_PA10_LOW_MIN_US       1000U
+/* PA10 EXTI+DWT 进帧；帧内保持 TIM1(SsnActiveWindow)；PA9 见 MXT_SSN_PA9_GPIO_OUT */
 
 #define SSN_MISO_HIGH()           (((GPIOA->IDR) & CLK_MON_Pin) != 0U)
+#if MXT_SSN_PA9_GPIO_OUT
 #define SSN_OUT_HIGH()            (GPIOA->BSRR = (uint32_t)SSN_OUT_Pin)
 #define SSN_OUT_LOW()             (GPIOA->BSRR = (uint32_t)SSN_OUT_Pin << 16U)
+#else
+#define SSN_OUT_HIGH()            ((void)0)
+#define SSN_OUT_LOW()             ((void)0)
+#endif
 
 static uint8_t MXT_SSN_UseStreamTiming(void)
 {
@@ -147,10 +145,9 @@ static volatile uint8_t  g_ssn_gap_seen_high;
 static volatile uint8_t  g_ssn_tim_running;
 static volatile uint8_t  g_ssn_frame_timer;
 static volatile uint32_t g_ssn_fall_cyc;
-static volatile uint32_t g_ssn_hold_end_cyc;
 static uint32_t          g_ssn_cyc_per_us;
 
-static void MXT_SSN_FrameHoldService(void);
+static void MXT_SSN_ArmFrameHold(void);
 
 static void MXT_SSN_DwtInit(void)
 {
@@ -168,7 +165,7 @@ static void MXT_SSN_MisoExtiEnable(uint8_t on)
   GPIO_InitTypeDef gpio = {0};
 
   gpio.Pin = CLK_MON_Pin;
-  gpio.Pull = GPIO_NOPULL;
+  gpio.Pull = GPIO_PULLDOWN;
   gpio.Speed = GPIO_SPEED_FREQ_HIGH;
   if (on != 0U) {
     gpio.Mode = GPIO_MODE_IT_RISING_FALLING;
@@ -181,6 +178,12 @@ static void MXT_SSN_MisoExtiEnable(uint8_t on)
     HAL_GPIO_Init(CLK_MON_GPIO_Port, &gpio);
     __HAL_GPIO_EXTI_CLEAR_IT(CLK_MON_Pin);
   }
+}
+
+static void MXT_SSN_ArmFrameHold(void)
+{
+  g_ssn_frame_timer = 1U;
+  MXT_TIM1_SsnActiveWindowStart(SSN_HOLD_LOW_US);
 }
 
 static void MXT_SSN_DelayUs(uint32_t us)
@@ -220,8 +223,9 @@ static void MXT_SSN_EndActive(void)
     return;
   }
 
-  SSN_OUT_HIGH();
+  MXT_TIM1_SsnActiveWindowStop();
   g_ssn_frame_timer = 0U;
+  SSN_OUT_HIGH();
   g_ssn_in_gap = 1U;
   g_ssn_low_us = 0U;
   g_ssn_no_spi_us = 0U;
@@ -283,8 +287,7 @@ static void MXT_SSN_StartFrameLow(void)
   }
   g_ssn_active_evt = 1U;
   g_ssn_frame_enter_cnt++;
-  g_ssn_frame_timer = 1U;
-  g_ssn_hold_end_cyc = DWT->CYCCNT + (uint32_t)SSN_HOLD_LOW_US * g_ssn_cyc_per_us;
+  MXT_SSN_ArmFrameHold();
 }
 
 void MXT_SSN_OnMisoEdge(void)
@@ -333,6 +336,9 @@ static void MXT_SSN_ActivePollTick(void)
   uint8_t miso;
 
   if (MXT_SSN_UseStreamTiming() != 0U) {
+    return;
+  }
+  if (g_ssn_frame_timer != 0U) {
     return;
   }
 
@@ -516,6 +522,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     return;
   }
 
+  if ((g_ssn_frame_timer != 0U) && (g_ssn_in_gap == 0U)) {
+    MXT_SSN_EndActive();
+    return;
+  }
+
   if (g_ssn_in_gap != 0U) {
     MXT_SSN_GapPollTick();
   } else {
@@ -523,23 +534,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   }
 }
 
-static void MXT_SSN_FrameHoldService(void)
-{
-  if (g_ssn_frame_timer == 0U) {
-    return;
-  }
-  if (g_ssn_in_gap != 0U) {
-    return;
-  }
-  if ((int32_t)(DWT->CYCCNT - g_ssn_hold_end_cyc) >= 0) {
-    MXT_SSN_EndActive();
-  }
-}
-
 void MXT_SSN_Poll(void)
 {
-  MXT_SSN_FrameHoldService();
-
   if (g_ssn_stop_pullup_armed == 0U) {
     return;
   }

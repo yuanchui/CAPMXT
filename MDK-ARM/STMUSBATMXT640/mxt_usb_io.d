@@ -1,13 +1,13 @@
 stmusbatmxt640\mxt_usb_io.o: ..\USB_DEVICE\App\mxt\mxt_usb_io.c
 stmusbatmxt640\mxt_usb_io.o: ..\USB_DEVICE\App\mxt\mxt_usb_io.h
-stmusbatmxt640\mxt_usb_io.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+stmusbatmxt640\mxt_usb_io.o: E:\rrr\ARM\ARMCC\Bin\..\include\stdint.h
 stmusbatmxt640\mxt_usb_io.o: ../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc/usbd_cdc.h
 stmusbatmxt640\mxt_usb_io.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h
 stmusbatmxt640\mxt_usb_io.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h
 stmusbatmxt640\mxt_usb_io.o: ../USB_DEVICE/Target/usbd_conf.h
-stmusbatmxt640\mxt_usb_io.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
-stmusbatmxt640\mxt_usb_io.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
-stmusbatmxt640\mxt_usb_io.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+stmusbatmxt640\mxt_usb_io.o: E:\rrr\ARM\ARMCC\Bin\..\include\stdio.h
+stmusbatmxt640\mxt_usb_io.o: E:\rrr\ARM\ARMCC\Bin\..\include\stdlib.h
+stmusbatmxt640\mxt_usb_io.o: E:\rrr\ARM\ARMCC\Bin\..\include\string.h
 stmusbatmxt640\mxt_usb_io.o: ../Core/Inc/main.h
 stmusbatmxt640\mxt_usb_io.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 stmusbatmxt640\mxt_usb_io.o: ../Core/Inc/stm32f1xx_hal_conf.h
@@ -22,7 +22,7 @@ stmusbatmxt640\mxt_usb_io.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
 stmusbatmxt640\mxt_usb_io.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/system_stm32f1xx.h
 stmusbatmxt640\mxt_usb_io.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 stmusbatmxt640\mxt_usb_io.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
-stmusbatmxt640\mxt_usb_io.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
+stmusbatmxt640\mxt_usb_io.o: E:\rrr\ARM\ARMCC\Bin\..\include\stddef.h
 stmusbatmxt640\mxt_usb_io.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc_ex.h
 stmusbatmxt640\mxt_usb_io.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio.h
 stmusbatmxt640\mxt_usb_io.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio_ex.h
@@ -48,4 +48,4 @@ stmusbatmxt640\mxt_usb_io.o: ..\USB_DEVICE\App\mxt\mxt_config.h
 stmusbatmxt640\mxt_usb_io.o: ..\USB_DEVICE\App\mxt\mxt_work.h
 stmusbatmxt640\mxt_usb_io.o: ..\USB_DEVICE\App\mxt\mxt_i2c.h
 stmusbatmxt640\mxt_usb_io.o: ../USB_DEVICE/App/usbd_cdc_if.h
-stmusbatmxt640\mxt_usb_io.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
+stmusbatmxt640\mxt_usb_io.o: E:\rrr\ARM\ARMCC\Bin\..\include\stdarg.h

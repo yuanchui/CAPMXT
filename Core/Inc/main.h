@@ -92,6 +92,38 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 
+/*
+ * MXT_SSN_PA9_GPIO_OUT：PA9 虚拟 SSN 是否落脚到 GPIO
+ *   0（默认）：仅更新 g_ssn_in_gap 等软件变量，PA9 高阻输入
+ *   1：PA9 推挽输出，帧间高 / 帧内低（逻辑分析仪可抓波形）
+ */
+#ifndef MXT_SSN_PA9_GPIO_OUT
+#define MXT_SSN_PA9_GPIO_OUT  1
+#endif
+
+/* 虚拟 SSN 时序（us）；修改后需全量编译 gpio.o / tim.o */
+#ifndef SSN_HOLD_LOW_US
+#define SSN_HOLD_LOW_US         6251U  /* 帧内 active 宽度：SPISTART 流模式 PA10 进帧，TIM1 单次定时 */
+#endif
+#ifndef SSN_GAP_POLL_US
+#define SSN_GAP_POLL_US         100U   /* 帧间 GAP 轮询周期（非流模式） */
+#endif
+#ifndef SSN_LOW_PULL_US
+#define SSN_LOW_PULL_US         20U    /* 帧内 MISO 低过此值则提前结束（非流模式，无 TIM 保持时） */
+#endif
+#ifndef SSN_SPI_IDLE_US
+#define SSN_SPI_IDLE_US         2500U  /* 帧内 SPI 空闲过此值则结束（非流模式） */
+#endif
+#ifndef SSN_STOP_PULLUP_US
+#define SSN_STOP_PULLUP_US      250U   /* SPISTOP 队列排空后再等此时间拉高 */
+#endif
+#ifndef SSN_GAP_MIN_US
+#define SSN_GAP_MIN_US          500U   /* 帧间 MISO 低脉宽下限（非流模式进帧） */
+#endif
+#ifndef SSN_PA10_LOW_MIN_US
+#define SSN_PA10_LOW_MIN_US     1000U  /* PA10 低电平最短宽度才触发进帧（流模式） */
+#endif
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

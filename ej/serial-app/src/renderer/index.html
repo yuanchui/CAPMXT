@@ -4,7 +4,7 @@
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Serial Terminal - Custom Math Edition</title>
+    <title>Serial Terminal</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -740,7 +740,7 @@
     <div class="main-content">
         <div class="matrix-container" id="matrixContainer">
             <div class="matrix-header-row">
-                <div class="section-title">✨ 16x16矩阵显示</div>
+                <div class="section-title">16x16矩阵显示</div>
                 <div style="display:flex; align-items:center; gap:10px;">
                     <label class="custom-checkbox-wrapper" title="3D 曲面视图（可拖动/旋转/缩放）">
                         <input type="checkbox" id="matrix3dViewToggle" checked>
@@ -788,11 +788,11 @@
 
         <div class="serial-io-container" id="serialIoContainer">
             <div class="section-title-row">
-                <div class="section-title">📥 接收</div>
+                <div class="section-title">接收</div>
                 <button id="openMatrixCompareBtn" type="button" class="btn-secondary" style="padding:6px 10px;font-size:12px;">数据分析</button>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <label for="recvText" style="margin-bottom: 0;">接收内容（最近6W字符）</label>
+                <label for="recvText" style="margin-bottom: 0;">接收内容</label>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 13px; color: #6b7280;">显示模式:</span>
                     <select id="recvDisplayMode" style="border: 1px solid #d1d5db; border-radius: 6px; padding: 4px 8px; font-size: 13px; background: #fff; color: #111827;">
@@ -870,7 +870,7 @@
                         自动获取 Min/Max
                     </label>
                 </div>
-                <small style="color:#6b7280;display:block;margin-top:4px;">会随“颜色配置方案”一起切换并应用到 3D 渲染</small>
+                <small style="color:#6b7280;display:block;margin-top:4px;"></small>
             </div>
         </div>
         <div id="highlightRangeList" class="button-list"></div>
@@ -891,7 +891,7 @@
             </div>
             <div class="form-row" style="align-items: center;">
                 <div style="flex: 1;">
-                    <label for="highlightColorInput">目标颜色 (MUI Color Picker)</label>
+                    <label for="highlightColorInput">目标颜色</label>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <input id="highlightColorInput" type="text" value="#f44336" style="max-width: 120px;">
                         <span id="highlightColorPreview" class="color-preview"></span>
@@ -901,7 +901,7 @@
                     <div id="highlightGradientText" class="highlight-gradient-text"></div>
                     <label style="display:flex;align-items:center;gap:6px;margin-top:8px;">
                         <input type="checkbox" id="highlightReverseCheckbox">
-                        深浅颜色方向调换（仅当前分段）
+                        深浅颜色方向调换
                     </label>
                 </div>
             </div>
@@ -949,7 +949,7 @@
                         <option value="gradient">多色(起止)</option>
                     </select>
                     <button id="cpResetPointsBtn" type="button" class="btn-secondary" style="padding:4px 8px;font-size:12px;">清除两点</button>
-                    <small>依次点两处，取中点颜色</small>
+                    <small>依次点两处</small>
                 </div>
                 <div id="colorPickerSwatches" class="cp-swatches"></div>
             </div>
@@ -1131,7 +1131,7 @@
             </div>
             <div class="form-row" style="align-items: center; gap: 12px; flex-wrap: wrap;">
                 <button type="button" id="matrix3dPerfApplyBtn" class="btn-primary">应用 3D 性能设置</button>
-                <small style="color: #6b7280;">写入本地缓存，随「导出全部缓存与配置」备份，「从备份恢复」可导入。</small>
+                <small style="color: #6b7280;"></small>
             </div>
         </div>
         
@@ -1141,7 +1141,7 @@
             <button id="importManageCacheBtn" type="button" class="btn-secondary">从备份恢复</button>
             <input type="file" id="importManageCacheFileInput" accept=".json,application/json" style="display:none;" />
             <button id="clearManageCacheBtn" type="button" class="btn-danger">清除缓存</button>
-            <small style="color:#6b7280;display:flex;align-items:center;flex:1;min-width:200px;">导出：生成 JSON 备份；从备份恢复：写入备份中的 localStorage 并刷新页面（与导出文件配对使用）；清除：删除格式/按钮/显示等缓存并恢复默认。</small>
+            <small style="color:#6b7280;display:flex;align-items:center;flex:1;min-width:200px;"></small>
         </div>
         <!-- <div id="buttonList" class="button-list"></div>
         <form id="buttonForm" class="data-format-form">
@@ -1192,22 +1192,17 @@
     </div>
     <div class="modal-content">
         <div class="data-format-docs" style="margin-bottom:8px;">
-            上传 xcfg / 已处理 bin / enc 固件。xcfg/bin 走配置升级；enc 走 Bootloader 流式烧录（hex→切帧→USB→MCU→I2C@0x27）。
+        
         </div>
         <div id="xcfgCurrentDir" style="font-size:12px;color:#6b7280;margin-bottom:6px;">当前目录: -</div>
         <input id="xcfgFileInput" type="file" accept=".xcfg,.bin,.enc" style="display:none;" />
         <div class="send-controls" style="gap:8px;">
-            <button id="selectXcfgBtn" class="btn-secondary">选择 XCFG/BIN/ENC</button>
+            <button id="selectXcfgBtn" class="btn-secondary">选择 BIN/ENC</button>
             <button id="readChipInfoBtn" class="btn-secondary" disabled="disabled">读取芯片信息</button>
-            <button id="readXcfgFromDeviceBtn" class="btn-secondary" disabled="disabled">从设备读取 cfg</button>
-            <label class="custom-checkbox-wrapper" title="设备连接后自动从芯片读取 xcfg 并用于上传" style="margin:0;">
-                <input type="checkbox" id="xcfgAutoReadCheckbox">
-                <label for="xcfgAutoReadCheckbox">自动读取 cfg 上传</label>
-            </label>
-            <button id="writeXcfgBtn" class="btn-primary" disabled="disabled">写入 test-V1 并自动备份</button>
-            <button id="flashEncBtn" class="btn-primary" disabled="disabled" style="display:none;">上传 ENC 固件</button>
+
+            <button id="writeXcfgBtn" class="btn-primary" disabled="disabled">写入</button>
+            <button id="flashEncBtn" class="btn-primary" disabled="disabled" style="display:none;">上传</button>
             <button id="stopXcfgBtn" class="btn-danger" disabled="disabled">停止传输</button>
-            <button id="exportPreparedTxtBtn" class="btn-secondary" disabled="disabled">导出 TXT</button>
             <button id="exportXcfgBtn" class="btn-secondary" disabled="disabled">导出 XCFG</button>
             <button id="openXcfgViewerFromModalBtn" type="button" class="btn-secondary">打开配置查看器</button>
         </div>
@@ -1805,7 +1800,7 @@
         },
         {
             id: 'frame0-mode3-binary', label: 'FRAME0 Delta (Mode3 二进制)', type: 'binary',
-            description: 'Mode3 互容差值(0x10): AA 10 33 | LEN=40(0x28) | FRAME_ID | ROW_ID(0~15) | DATA[16×int16 有符号大端] | CRC16-CCITT-FALSE(大端,计[0..37])。int16 直显，不缩放。',
+            description: 'Mode3 互容差值(0x10): AA 10 33 | LEN=40(0x28) | FRAME_ID | ROW_ID(0~15) | DATA[16×int16 有符号大端] | CRC16-CCITT-FALSE(大端,计[0..37])',
             valueRange: 32767
         }
     ];

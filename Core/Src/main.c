@@ -110,7 +110,7 @@ int main(void)
   HAL_Delay(40);
   HAL_GPIO_WritePin(RST_GPIO_Port, RST_Pin, GPIO_PIN_SET);
 
-  /* PA10 监视 MISO，合成虚拟 SSN 输出到 PA9 */
+  /* PA10 监视 MISO；PA9 虚拟 SSN（MXT_SSN_PA9_GPIO_OUT 控制是否落脚） */
   MXT_SSN_Init();
 
   /* SPI 软件持续接收（不依赖 SSN 片选） */

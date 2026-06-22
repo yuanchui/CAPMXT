@@ -4,9 +4,9 @@ stmusbatmxt640\usbd_cdc_if.o: ../Middlewares/ST/STM32_USB_Device_Library/Class/C
 stmusbatmxt640\usbd_cdc_if.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ioreq.h
 stmusbatmxt640\usbd_cdc_if.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def.h
 stmusbatmxt640\usbd_cdc_if.o: ../USB_DEVICE/Target/usbd_conf.h
-stmusbatmxt640\usbd_cdc_if.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
-stmusbatmxt640\usbd_cdc_if.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
-stmusbatmxt640\usbd_cdc_if.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+stmusbatmxt640\usbd_cdc_if.o: E:\rrr\ARM\ARMCC\Bin\..\include\stdio.h
+stmusbatmxt640\usbd_cdc_if.o: E:\rrr\ARM\ARMCC\Bin\..\include\stdlib.h
+stmusbatmxt640\usbd_cdc_if.o: E:\rrr\ARM\ARMCC\Bin\..\include\string.h
 stmusbatmxt640\usbd_cdc_if.o: ../Core/Inc/main.h
 stmusbatmxt640\usbd_cdc_if.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 stmusbatmxt640\usbd_cdc_if.o: ../Core/Inc/stm32f1xx_hal_conf.h
@@ -15,14 +15,14 @@ stmusbatmxt640\usbd_cdc_if.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_
 stmusbatmxt640\usbd_cdc_if.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 stmusbatmxt640\usbd_cdc_if.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h
 stmusbatmxt640\usbd_cdc_if.o: ../Drivers/CMSIS/Include/core_cm3.h
-stmusbatmxt640\usbd_cdc_if.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+stmusbatmxt640\usbd_cdc_if.o: E:\rrr\ARM\ARMCC\Bin\..\include\stdint.h
 stmusbatmxt640\usbd_cdc_if.o: ../Drivers/CMSIS/Include/cmsis_version.h
 stmusbatmxt640\usbd_cdc_if.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
 stmusbatmxt640\usbd_cdc_if.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
 stmusbatmxt640\usbd_cdc_if.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/system_stm32f1xx.h
 stmusbatmxt640\usbd_cdc_if.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 stmusbatmxt640\usbd_cdc_if.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
-stmusbatmxt640\usbd_cdc_if.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
+stmusbatmxt640\usbd_cdc_if.o: E:\rrr\ARM\ARMCC\Bin\..\include\stddef.h
 stmusbatmxt640\usbd_cdc_if.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc_ex.h
 stmusbatmxt640\usbd_cdc_if.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio.h
 stmusbatmxt640\usbd_cdc_if.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio_ex.h
@@ -51,4 +51,3 @@ stmusbatmxt640\usbd_cdc_if.o: ../USB_DEVICE/App/mxt/mxt_bridge.h
 stmusbatmxt640\usbd_cdc_if.o: ../USB_DEVICE/App/mxt/mxt_cmd.h
 stmusbatmxt640\usbd_cdc_if.o: ../USB_DEVICE/App/mxt/mxt_touch.h
 stmusbatmxt640\usbd_cdc_if.o: ../USB_DEVICE/App/mxt/mxt_work.h
-stmusbatmxt640\usbd_cdc_if.o: ../USB_DEVICE/App/mxt/mxt_msg.h

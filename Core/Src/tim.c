@@ -1,8 +1,5 @@
 #include "tim.h"
 
-/* TIM1 1MHz：仅用于 SSN 采样/帧定时；PA9 由普通 GPIO 推拉 */
-#define SSN_GAP_POLL_US        100U
-
 TIM_HandleTypeDef htim1;
 
 static TIM_IC_InitTypeDef s_ic3;
@@ -96,16 +93,24 @@ void MXT_TIM1_SsnPinGpioEnable(void)
   GPIO_InitTypeDef gpio = {0};
 
   __HAL_RCC_GPIOA_CLK_ENABLE();
+
+#if MXT_SSN_PA9_GPIO_OUT
   HAL_GPIO_WritePin(SSN_OUT_GPIO_Port, SSN_OUT_Pin, GPIO_PIN_SET);
   gpio.Pin = SSN_OUT_Pin;
   gpio.Mode = GPIO_MODE_OUTPUT_PP;
-  gpio.Pull = GPIO_NOPULL;
+  gpio.Pull = GPIO_PULLDOWN;
   gpio.Speed = GPIO_SPEED_FREQ_HIGH;
+#else
+  gpio.Pin = SSN_OUT_Pin;
+  gpio.Mode = GPIO_MODE_INPUT;
+  gpio.Pull = GPIO_PULLDOWN;
+  gpio.Speed = GPIO_SPEED_FREQ_LOW;
+#endif
   HAL_GPIO_Init(SSN_OUT_GPIO_Port, &gpio);
 
   gpio.Pin = CLK_MON_Pin;
   gpio.Mode = GPIO_MODE_INPUT;
-  gpio.Pull = GPIO_NOPULL;
+  gpio.Pull = GPIO_PULLDOWN;
   gpio.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(CLK_MON_GPIO_Port, &gpio);
 }
