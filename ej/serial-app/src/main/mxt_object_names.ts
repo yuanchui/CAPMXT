@@ -42,3 +42,8 @@ export function getMxtObjectName(type: number): string | null {
 export function isVolatileMxtObject(type: number): boolean {
   return [3, 4, 5, 6, 37, 44, 53, 160].includes(type);
 }
+
+/** T117 等为运行时数据容器，Studio format-4 备份不含此类对象 */
+export function isRuntimeDataContainerObject(type: number): boolean {
+  return type === 117;
+}

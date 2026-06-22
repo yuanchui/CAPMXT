@@ -51,3 +51,4 @@ stmusbatmxt640\usbd_cdc_if.o: ../USB_DEVICE/App/mxt/mxt_bridge.h
 stmusbatmxt640\usbd_cdc_if.o: ../USB_DEVICE/App/mxt/mxt_cmd.h
 stmusbatmxt640\usbd_cdc_if.o: ../USB_DEVICE/App/mxt/mxt_touch.h
 stmusbatmxt640\usbd_cdc_if.o: ../USB_DEVICE/App/mxt/mxt_work.h
+stmusbatmxt640\usbd_cdc_if.o: ../USB_DEVICE/App/mxt/mxt_msg.h

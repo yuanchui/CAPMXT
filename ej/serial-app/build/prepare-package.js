@@ -4,6 +4,11 @@
 const fs = require('fs');
 const path = require('path');
 const { syncXcfgViewerResources } = require('./sync-xcfg-viewer-resources');
+const {
+  summarizeGitChanges,
+  formatUpgradeNotesSection,
+  stripPlaceholder,
+} = require('./git-changelog');
 
 const ROOT = path.join(__dirname, '..');
 const VERSION_STATE = path.join(__dirname, 'version-state.json');
@@ -28,6 +33,7 @@ function bumpVersion(options = {}) {
   const noBump = Boolean(options.noBump);
   const state = readJson(VERSION_STATE, { major: 1, minor: 0, build: 0 });
   const pkg = readJson(PACKAGE_JSON, { version: '1.0.0' });
+  const previousVersion = `${state.major}.${state.minor}.${state.build}`;
 
   if (!noBump) {
     state.build = (Number(state.build) || 0) + 1;
@@ -39,7 +45,7 @@ function bumpVersion(options = {}) {
   writeJson(PACKAGE_JSON, pkg);
 
   console.log(`[prepare-package] 版本号: ${version}${noBump ? ' (未递增)' : ' (build+1)'}`);
-  return { version, state };
+  return { version, state, previousVersion };
 }
 
 function listPackageContents(xcfgSync) {
@@ -58,13 +64,25 @@ function listPackageContents(xcfgSync) {
   return lines;
 }
 
-function generateUpgradeNotes(version, xcfgSync) {
+function generateUpgradeNotes(version, xcfgSync, meta = {}) {
   const now = new Date();
   const ts = now.toISOString().replace('T', ' ').slice(0, 19);
   let userNotes = '';
   try {
     userNotes = fs.readFileSync(UPGRADE_NOTES_SRC, 'utf-8').trim();
   } catch (_) {}
+
+  const gitSummary = summarizeGitChanges({
+    lastPackCommit: meta.lastPackCommit,
+    sinceVersion: meta.sinceVersion,
+    currentVersion: version,
+  });
+  const updateSection = formatUpgradeNotesSection(userNotes, gitSummary, version);
+  if (gitSummary.commitCount > 0) {
+    console.log(`[prepare-package] Git 摘要: ${gitSummary.commitCount} 条提交（基准: ${gitSummary.baseLabel}）`);
+  } else {
+    console.log(`[prepare-package] Git 摘要: 无新提交（基准: ${gitSummary.baseLabel}）`);
+  }
 
   const contents = listPackageContents(xcfgSync);
   const parts = [
@@ -78,7 +96,7 @@ function generateUpgradeNotes(version, xcfgSync) {
     ...contents.map((l) => l),
     '',
     '【更新说明】',
-    userNotes || '（未填写 build/UPGRADE_NOTES.txt）',
+    updateSection || '（未填写 build/UPGRADE_NOTES.txt，且无 git 变更）',
     '',
     '【xcfg 资源来源】',
     `  ${path.join('..', 'linux_driver_mxt_sys', 'xcfg-viewer')}`,
@@ -99,7 +117,8 @@ function generateUpgradeNotes(version, xcfgSync) {
 
   const historyBlock = [
     `--- ${version} @ ${ts} ---`,
-    userNotes || '（无补充说明）',
+    stripPlaceholder(userNotes) || '（无手动补充说明）',
+    ...gitSummary.lines,
     '包含: ' + contents.join('; '),
     ''
   ].join('\n');
@@ -110,9 +129,20 @@ function generateUpgradeNotes(version, xcfgSync) {
 }
 
 function preparePackage(options = {}) {
+  const noBump = Boolean(options.noBump);
+  const stateBefore = readJson(VERSION_STATE, { major: 1, minor: 0, build: 0 });
+  const sinceVersion = noBump
+    ? (stateBefore.build > 0
+        ? `${stateBefore.major}.${stateBefore.minor}.${stateBefore.build - 1}`
+        : undefined)
+    : `${stateBefore.major}.${stateBefore.minor}.${stateBefore.build}`;
+
   const { version } = bumpVersion(options);
   const xcfgSync = syncXcfgViewerResources();
-  generateUpgradeNotes(version, xcfgSync);
+  generateUpgradeNotes(version, xcfgSync, {
+    lastPackCommit: stateBefore.lastPackCommit,
+    sinceVersion,
+  });
   return { version, xcfgSync };
 }
 

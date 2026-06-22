@@ -3,7 +3,7 @@
  * 串口场景请优先走 runMxtAppShared → mxt-app → 串口代理，勿在业务层直接调用本模块。
  */
 import type { SerialPort } from 'serialport';
-import { getMxtObjectName, isVolatileMxtObject } from './mxt_object_names';
+import { getMxtObjectName, isVolatileMxtObject, isRuntimeDataContainerObject } from './mxt_object_names';
 
 const REPORT_ID = 0x01;
 const IIC_DATA_1 = 0x51;
@@ -46,6 +46,19 @@ interface MxtConfigBlock {
   address: number;
   size: number;
   data: Buffer;
+}
+
+export interface DeviceConfigSnapshot {
+  family: number;
+  variant: number;
+  version: number;
+  build: number;
+  matrixX: number;
+  matrixY: number;
+  numObjects: number;
+  infoCrc: number;
+  configCrc?: number;
+  objects: MxtConfigBlock[];
 }
 
 function instancesFromRaw(sizeMinusOne: number, instancesMinusOne: number) {
@@ -203,6 +216,7 @@ function buildXcfgFormat3(id: MxtIdHeader, infoCrc: number, configs: MxtConfigBl
   lines.push('NAME=serial-app');
   lines.push('VERSION=1.0');
   for (const cfg of configs) {
+    if (isRuntimeDataContainerObject(cfg.type)) continue;
     const objName = getMxtObjectName(cfg.type);
     lines.push(`[${objName || `UNKNOWN_T${cfg.type}`} INSTANCE ${cfg.instance}]`);
     lines.push(`OBJECT_ADDRESS=${cfg.address}`);
@@ -215,7 +229,7 @@ function buildXcfgFormat3(id: MxtIdHeader, infoCrc: number, configs: MxtConfigBl
   return lines.join('\n').replace(/\n+$/, '\n');
 }
 
-export async function readXcfgViaSerialBridge(accessor: SerialPortAccessor): Promise<string> {
+export async function readDeviceConfigViaSerialBridge(accessor: SerialPortAccessor): Promise<DeviceConfigSnapshot> {
   await accessor.drainRx(200);
   await switchMode0(accessor);
   await findI2cAddress(accessor);
@@ -240,14 +254,38 @@ export async function readXcfgViaSerialBridge(accessor: SerialPortAccessor): Pro
 
   const configs: MxtConfigBlock[] = [];
   for (const obj of objects) {
-    if (isVolatileMxtObject(obj.type)) continue;
+    if (isVolatileMxtObject(obj.type) || isRuntimeDataContainerObject(obj.type)) continue;
     for (let instance = 0; instance < obj.instances; instance++) {
       const address = startPosition(obj, instance);
       const data = await readRegisterAll(accessor, address, obj.size);
       configs.push({ type: obj.type, instance, address, size: obj.size, data });
     }
   }
-  return buildXcfgFormat3(id, infoCrc, configs);
+  return {
+    family: id.family,
+    variant: id.variant,
+    version: id.version,
+    build: id.build,
+    matrixX: id.matrixX,
+    matrixY: id.matrixY,
+    numObjects: id.numObjects,
+    infoCrc,
+    objects: configs
+  };
+}
+
+export async function readXcfgViaSerialBridge(accessor: SerialPortAccessor): Promise<string> {
+  const snap = await readDeviceConfigViaSerialBridge(accessor);
+  const id: MxtIdHeader = {
+    family: snap.family,
+    variant: snap.variant,
+    version: snap.version,
+    build: snap.build,
+    matrixX: snap.matrixX,
+    matrixY: snap.matrixY,
+    numObjects: snap.numObjects
+  };
+  return buildXcfgFormat3(id, snap.infoCrc, snap.objects);
 }
 
 async function resolveT6Address(accessor: SerialPortAccessor) {

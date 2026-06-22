@@ -302,3 +302,167 @@
 - 桥接模式切换改为 mode0/mode1 文本命令
 - 安装包自动递增版本号并附带本升级说明文件
 包含: - Serial Terminal 主程序; - mxt-app CLI（WinUSB / 虚拟串口）; - xcfg 配置查看器; - xcfg 字段说明元数据（xcfg_viewer_metadata.json）; - xcfg 说明配图（6 个文件）; - libusb-1.0.dll、libgcc_s_seh-1.dll、libstdc++-6.dll、libwinpthread-1.dll（mxt-app 运行时）
+--- 1.0.38 @ 2026-06-21 16:42:00 ---
+（打包前请在此填写本版本更新说明，留空则仅显示版本号与打包内容清单）
+
+- xcfg 配置查看器：同步最新字段说明与配图
+- mxt-app：支持 WinUSB 与 STM32 虚拟串口双驱动
+- 桥接模式切换改为 mode0/mode1 文本命令
+- 安装包自动递增版本号并附带本升级说明文件
+包含: - Serial Terminal 主程序; - mxt-app CLI（WinUSB / 虚拟串口）; - xcfg 配置查看器; - xcfg 字段说明元数据（xcfg_viewer_metadata.json）; - xcfg 说明配图（6 个文件）; - libusb-1.0.dll、libgcc_s_seh-1.dll、libstdc++-6.dll、libwinpthread-1.dll（mxt-app 运行时）
+--- 1.0.39 @ 2026-06-21 17:05:06 ---
+（打包前请在此填写本版本更新说明，留空则仅显示版本号与打包内容清单）
+
+- xcfg 配置查看器：同步最新字段说明与配图
+- mxt-app：支持 WinUSB 与 STM32 虚拟串口双驱动
+- 桥接模式切换改为 mode0/mode1 文本命令
+- 安装包自动递增版本号并附带本升级说明文件
+包含: - Serial Terminal 主程序; - mxt-app CLI（WinUSB / 虚拟串口）; - xcfg 配置查看器; - xcfg 字段说明元数据（xcfg_viewer_metadata.json）; - xcfg 说明配图（6 个文件）; - libusb-1.0.dll、libgcc_s_seh-1.dll、libstdc++-6.dll、libwinpthread-1.dll（mxt-app 运行时）
+--- 1.0.40 @ 2026-06-21 17:06:34 ---
+（打包前请在此填写本版本更新说明，留空则仅显示版本号与打包内容清单）
+
+- xcfg 配置查看器：同步最新字段说明与配图
+- mxt-app：支持 WinUSB 与 STM32 虚拟串口双驱动
+- 桥接模式切换改为 mode0/mode1 文本命令
+- 安装包自动递增版本号并附带本升级说明文件
+包含: - Serial Terminal 主程序; - mxt-app CLI（WinUSB / 虚拟串口）; - xcfg 配置查看器; - xcfg 字段说明元数据（xcfg_viewer_metadata.json）; - xcfg 说明配图（6 个文件）; - libusb-1.0.dll、libgcc_s_seh-1.dll、libstdc++-6.dll、libwinpthread-1.dll（mxt-app 运行时）
+--- 1.0.41 @ 2026-06-21 17:21:02 ---
+（打包前请在此填写本版本更新说明，留空则仅显示版本号与打包内容清单）
+
+- xcfg 配置查看器：同步最新字段说明与配图
+- mxt-app：支持 WinUSB 与 STM32 虚拟串口双驱动
+- 桥接模式切换改为 mode0/mode1 文本命令
+- 安装包自动递增版本号并附带本升级说明文件
+包含: - Serial Terminal 主程序; - mxt-app CLI（WinUSB / 虚拟串口）; - xcfg 配置查看器; - xcfg 字段说明元数据（xcfg_viewer_metadata.json）; - xcfg 说明配图（6 个文件）; - libusb-1.0.dll、libgcc_s_seh-1.dll、libstdc++-6.dll、libwinpthread-1.dll（mxt-app 运行时）
+--- 1.0.42 @ 2026-06-21 17:31:56 ---
+（打包前请在此填写本版本更新说明，留空则仅显示版本号与打包内容清单）
+
+- xcfg 配置查看器：同步最新字段说明与配图
+- mxt-app：支持 WinUSB 与 STM32 虚拟串口双驱动
+- 桥接模式切换改为 mode0/mode1 文本命令
+- 安装包自动递增版本号并附带本升级说明文件
+包含: - Serial Terminal 主程序; - mxt-app CLI（WinUSB / 虚拟串口）; - xcfg 配置查看器; - xcfg 字段说明元数据（xcfg_viewer_metadata.json）; - xcfg 说明配图（6 个文件）; - libusb-1.0.dll、libgcc_s_seh-1.dll、libstdc++-6.dll、libwinpthread-1.dll（mxt-app 运行时）
+--- 1.0.43 @ 2026-06-22 03:07:14 ---
+（打包前请在此填写本版本更新说明，留空则仅显示版本号与打包内容清单）
+
+- xcfg 配置查看器：同步最新字段说明与配图
+- mxt-app：支持 WinUSB 与 STM32 虚拟串口双驱动
+- 桥接模式切换改为 mode0/mode1 文本命令
+- 安装包自动递增版本号并附带本升级说明文件
+包含: - Serial Terminal 主程序; - mxt-app CLI（WinUSB / 虚拟串口）; - xcfg 配置查看器; - xcfg 字段说明元数据（xcfg_viewer_metadata.json）; - xcfg 说明配图（6 个文件）; - libusb-1.0.dll、libgcc_s_seh-1.dll、libstdc++-6.dll、libwinpthread-1.dll（mxt-app 运行时）
+--- 1.0.44 @ 2026-06-22 03:09:07 ---
+（打包前请在此填写本版本更新说明，留空则仅显示版本号与打包内容清单）
+
+- xcfg 配置查看器：同步最新字段说明与配图
+- mxt-app：支持 WinUSB 与 STM32 虚拟串口双驱动
+- 桥接模式切换改为 mode0/mode1 文本命令
+- 安装包自动递增版本号并附带本升级说明文件
+包含: - Serial Terminal 主程序; - mxt-app CLI（WinUSB / 虚拟串口）; - xcfg 配置查看器; - xcfg 字段说明元数据（xcfg_viewer_metadata.json）; - xcfg 说明配图（6 个文件）; - libusb-1.0.dll、libgcc_s_seh-1.dll、libstdc++-6.dll、libwinpthread-1.dll（mxt-app 运行时）
+--- 1.0.45 @ 2026-06-22 03:09:58 ---
+（打包前请在此填写本版本更新说明，留空则仅显示版本号与打包内容清单）
+
+- xcfg 配置查看器：同步最新字段说明与配图
+- mxt-app：支持 WinUSB 与 STM32 虚拟串口双驱动
+- 桥接模式切换改为 mode0/mode1 文本命令
+- 安装包自动递增版本号并附带本升级说明文件
+包含: - Serial Terminal 主程序; - mxt-app CLI（WinUSB / 虚拟串口）; - xcfg 配置查看器; - xcfg 字段说明元数据（xcfg_viewer_metadata.json）; - xcfg 说明配图（6 个文件）; - libusb-1.0.dll、libgcc_s_seh-1.dll、libstdc++-6.dll、libwinpthread-1.dll（mxt-app 运行时）
+--- 1.0.46 @ 2026-06-22 03:10:22 ---
+（打包前请在此填写本版本更新说明，留空则仅显示版本号与打包内容清单）
+
+- xcfg 配置查看器：同步最新字段说明与配图
+- mxt-app：支持 WinUSB 与 STM32 虚拟串口双驱动
+- 桥接模式切换改为 mode0/mode1 文本命令
+- 安装包自动递增版本号并附带本升级说明文件
+包含: - Serial Terminal 主程序; - mxt-app CLI（WinUSB / 虚拟串口）; - xcfg 配置查看器; - xcfg 字段说明元数据（xcfg_viewer_metadata.json）; - xcfg 说明配图（6 个文件）; - libusb-1.0.dll、libgcc_s_seh-1.dll、libstdc++-6.dll、libwinpthread-1.dll（mxt-app 运行时）
+--- 1.0.47 @ 2026-06-22 03:11:35 ---
+（打包前请在此填写本版本更新说明，留空则仅显示版本号与打包内容清单）
+
+- xcfg 配置查看器：同步最新字段说明与配图
+- mxt-app：支持 WinUSB 与 STM32 虚拟串口双驱动
+- 桥接模式切换改为 mode0/mode1 文本命令
+- 安装包自动递增版本号并附带本升级说明文件
+包含: - Serial Terminal 主程序; - mxt-app CLI（WinUSB / 虚拟串口）; - xcfg 配置查看器; - xcfg 字段说明元数据（xcfg_viewer_metadata.json）; - xcfg 说明配图（6 个文件）; - libusb-1.0.dll、libgcc_s_seh-1.dll、libstdc++-6.dll、libwinpthread-1.dll（mxt-app 运行时）
+--- 1.0.48 @ 2026-06-22 03:12:28 ---
+（打包前请在此填写本版本更新说明，留空则仅显示版本号与打包内容清单）
+
+- xcfg 配置查看器：同步最新字段说明与配图
+- mxt-app：支持 WinUSB 与 STM32 虚拟串口双驱动
+- 桥接模式切换改为 mode0/mode1 文本命令
+- 安装包自动递增版本号并附带本升级说明文件
+包含: - Serial Terminal 主程序; - mxt-app CLI（WinUSB / 虚拟串口）; - xcfg 配置查看器; - xcfg 字段说明元数据（xcfg_viewer_metadata.json）; - xcfg 说明配图（6 个文件）; - libusb-1.0.dll、libgcc_s_seh-1.dll、libstdc++-6.dll、libwinpthread-1.dll（mxt-app 运行时）
+--- 1.0.48 @ 2026-06-22 03:17:27 ---
+（打包前请在此填写本版本更新说明，留空则仅显示版本号与打包内容清单）
+
+- xcfg 配置查看器：同步最新字段说明与配图
+- mxt-app：支持 WinUSB 与 STM32 虚拟串口双驱动
+- 桥接模式切换改为 mode0/mode1 文本命令
+- 安装包自动递增版本号并附带本升级说明文件
+包含: - Serial Terminal 主程序; - mxt-app CLI（WinUSB / 虚拟串口）; - xcfg 配置查看器; - xcfg 字段说明元数据（xcfg_viewer_metadata.json）; - xcfg 说明配图（6 个文件）; - libusb-1.0.dll、libgcc_s_seh-1.dll、libstdc++-6.dll、libwinpthread-1.dll（mxt-app 运行时）
+--- 1.0.49 @ 2026-06-22 03:18:53 ---
+（打包前请在此填写本版本更新说明，留空则仅显示版本号与打包内容清单）
+
+- xcfg 配置查看器：同步最新字段说明与配图
+- mxt-app：支持 WinUSB 与 STM32 虚拟串口双驱动
+- 桥接模式切换改为 mode0/mode1 文本命令
+- 安装包自动递增版本号并附带本升级说明文件
+包含: - Serial Terminal 主程序; - mxt-app CLI（WinUSB / 虚拟串口）; - xcfg 配置查看器; - xcfg 字段说明元数据（xcfg_viewer_metadata.json）; - xcfg 说明配图（6 个文件）; - libusb-1.0.dll、libgcc_s_seh-1.dll、libstdc++-6.dll、libwinpthread-1.dll（mxt-app 运行时）
+--- 1.0.49 @ 2026-06-22 03:25:41 ---
+- xcfg 配置查看器：同步最新字段说明与配图
+- mxt-app：支持 WinUSB 与 STM32 虚拟串口双驱动
+- 桥接模式切换改为 mode0/mode1 文本命令
+- 安装包自动递增版本号并附带本升级说明文件
+（自 v1.0.48 打包时间 (2026-06-22 03:17:27) 以来）
+
+- 无新的 git 提交（或变更不在跟踪目录内）
+包含: - Serial Terminal 主程序; - mxt-app CLI（WinUSB / 虚拟串口）; - xcfg 配置查看器; - xcfg 字段说明元数据（xcfg_viewer_metadata.json）; - xcfg 说明配图（6 个文件）; - libusb-1.0.dll、libgcc_s_seh-1.dll、libstdc++-6.dll、libwinpthread-1.dll（mxt-app 运行时）
+--- 1.0.49 @ 2026-06-22 03:25:55 ---
+- xcfg 配置查看器：同步最新字段说明与配图
+- mxt-app：支持 WinUSB 与 STM32 虚拟串口双驱动
+- 桥接模式切换改为 mode0/mode1 文本命令
+- 安装包自动递增版本号并附带本升级说明文件
+（自 近期相关提交（自 v1.0.48 打包时间 (2026-06-22 03:17:27) 以来无新提交） 以来）
+
+提交记录:
+- [f2ef1e7] 更新文档，优化 SPI 数据处理与 GPIO 初始化，新增 MCBSTM32E 相关文档路径。调整 GPIO 时序参数，修复 I2C 和 SPI 配置，确保兼容性与性能提升。
+- [c166e39] 上位机
+- [bdd8dcc] 修复 SPISTART3 路由并新增 ENC 上位机工具。
+- [eb5824b] 优化 SPI 数据处理，将 SPISTART 模式 0 输出由 HEX 文本改为二进制格式，更新文档并调整 GPIO 时序参数，重构命令处理以简化 USB 传输。
+- [5ce01b2] 重构 GPIO 与定时器管理，优化 SSN 处理以提升时序精度，清理废弃变量并精简中断处理。
+- [b282a08] 重构 GPIO 与 SPI 处理，新增 DMA 支持与定时器初始化，引入 MISO 边沿检测并优化 SSN 时序。
+- [f5ef29c] 删除无用诊断输出文件，补充 Mode3 输出协议与字符串命令文档，新增 CHGNO 触摸点数据功能。
+- [19ddaae] 初始化，以实现ssn，spi读取第一个字节
+包含: - Serial Terminal 主程序; - mxt-app CLI（WinUSB / 虚拟串口）; - xcfg 配置查看器; - xcfg 字段说明元数据（xcfg_viewer_metadata.json）; - xcfg 说明配图（6 个文件）; - libusb-1.0.dll、libgcc_s_seh-1.dll、libstdc++-6.dll、libwinpthread-1.dll（mxt-app 运行时）
+--- 1.0.49 @ 2026-06-22 03:26:09 ---
+- xcfg 配置查看器：同步最新字段说明与配图
+- mxt-app：支持 WinUSB 与 STM32 虚拟串口双驱动
+- 桥接模式切换改为 mode0/mode1 文本命令
+- 安装包自动递增版本号并附带本升级说明文件
+（自 近期相关提交（自 commit f2ef1e7 以来无新提交） 以来）
+
+提交记录:
+- [f2ef1e7] 更新文档，优化 SPI 数据处理与 GPIO 初始化，新增 MCBSTM32E 相关文档路径。调整 GPIO 时序参数，修复 I2C 和 SPI 配置，确保兼容性与性能提升。
+- [c166e39] 上位机
+- [bdd8dcc] 修复 SPISTART3 路由并新增 ENC 上位机工具。
+- [eb5824b] 优化 SPI 数据处理，将 SPISTART 模式 0 输出由 HEX 文本改为二进制格式，更新文档并调整 GPIO 时序参数，重构命令处理以简化 USB 传输。
+- [5ce01b2] 重构 GPIO 与定时器管理，优化 SSN 处理以提升时序精度，清理废弃变量并精简中断处理。
+- [b282a08] 重构 GPIO 与 SPI 处理，新增 DMA 支持与定时器初始化，引入 MISO 边沿检测并优化 SSN 时序。
+- [f5ef29c] 删除无用诊断输出文件，补充 Mode3 输出协议与字符串命令文档，新增 CHGNO 触摸点数据功能。
+- [19ddaae] 初始化，以实现ssn，spi读取第一个字节
+包含: - Serial Terminal 主程序; - mxt-app CLI（WinUSB / 虚拟串口）; - xcfg 配置查看器; - xcfg 字段说明元数据（xcfg_viewer_metadata.json）; - xcfg 说明配图（6 个文件）; - libusb-1.0.dll、libgcc_s_seh-1.dll、libstdc++-6.dll、libwinpthread-1.dll（mxt-app 运行时）
+--- 1.0.49 @ 2026-06-22 03:26:20 ---
+- xcfg 配置查看器：同步最新字段说明与配图
+- mxt-app：支持 WinUSB 与 STM32 虚拟串口双驱动
+- 桥接模式切换改为 mode0/mode1 文本命令
+- 安装包自动递增版本号并附带本升级说明文件
+（commit f2ef1e7 以来无新提交，展示近期相关提交）
+
+提交记录:
+- [f2ef1e7] 更新文档，优化 SPI 数据处理与 GPIO 初始化，新增 MCBSTM32E 相关文档路径。调整 GPIO 时序参数，修复 I2C 和 SPI 配置，确保兼容性与性能提升。
+- [c166e39] 上位机
+- [bdd8dcc] 修复 SPISTART3 路由并新增 ENC 上位机工具。
+- [eb5824b] 优化 SPI 数据处理，将 SPISTART 模式 0 输出由 HEX 文本改为二进制格式，更新文档并调整 GPIO 时序参数，重构命令处理以简化 USB 传输。
+- [5ce01b2] 重构 GPIO 与定时器管理，优化 SSN 处理以提升时序精度，清理废弃变量并精简中断处理。
+- [b282a08] 重构 GPIO 与 SPI 处理，新增 DMA 支持与定时器初始化，引入 MISO 边沿检测并优化 SSN 时序。
+- [f5ef29c] 删除无用诊断输出文件，补充 Mode3 输出协议与字符串命令文档，新增 CHGNO 触摸点数据功能。
+- [19ddaae] 初始化，以实现ssn，spi读取第一个字节
+包含: - Serial Terminal 主程序; - mxt-app CLI（WinUSB / 虚拟串口）; - xcfg 配置查看器; - xcfg 字段说明元数据（xcfg_viewer_metadata.json）; - xcfg 说明配图（6 个文件）; - libusb-1.0.dll、libgcc_s_seh-1.dll、libstdc++-6.dll、libwinpthread-1.dll（mxt-app 运行时）

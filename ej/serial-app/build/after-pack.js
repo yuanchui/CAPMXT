@@ -3,6 +3,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { recordPackCommit } = require('./git-changelog');
 
 module.exports = async function afterPack(context) {
   const root = path.join(__dirname, '..');
@@ -19,6 +20,8 @@ module.exports = async function afterPack(context) {
   } else {
     console.warn('[after-pack] 未找到 resources/UPGRADE_NOTES.txt');
   }
+
+  recordPackCommit(path.join(__dirname, 'version-state.json'));
 
   const { CLI_BUNDLE_FILES } = require('./prepare-cli');
   const appOutDir = context?.appOutDir;

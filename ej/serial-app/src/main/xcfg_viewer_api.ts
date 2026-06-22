@@ -12,6 +12,7 @@ export interface XcfgViewerDeps {
   getMxtAppPath: () => string | null;
   runMxtApp: MxtAppRunner;
   getDefaultMxtDevice?: () => string | undefined;
+  resolveConnectedPortPath?: (portPath?: string) => string | null;
   readChipInfoFromPort?: (portPath: string) => Promise<{
     success: boolean;
     chipInfo?: {
@@ -27,6 +28,13 @@ export interface XcfgViewerDeps {
     } | null;
     formatted?: string;
     iicAddr?: number | null;
+    error?: string;
+  }>;
+  readXcfgFormat4FromPort?: (portPath?: string) => Promise<{
+    success: boolean;
+    content?: string;
+    fileName?: string;
+    format?: string;
     error?: string;
   }>;
 }
@@ -51,6 +59,17 @@ let diagLatest: { content: string; ts: number; params: Record<string, unknown> }
 
 function getViewerBaseDir(): string {
   return path.join(app.getPath('userData'), 'xcfg-viewer');
+}
+
+/** xcfg 配置查看器根目录启用标记（存在才显示 XCFG 入口，应用不会自动创建） */
+const CXFGDATA_MARKER = '.cxfgdata';
+
+function getCxfgdataMarkerCandidates(): string[] {
+  return [
+    path.join(process.resourcesPath || '', 'xcfg-viewer', CXFGDATA_MARKER),
+    path.join(app.getAppPath(), 'resources', 'xcfg-viewer', CXFGDATA_MARKER),
+    path.join(getViewerBaseDir(), CXFGDATA_MARKER)
+  ];
 }
 
 function getMetadataFile(): string {
@@ -485,6 +504,28 @@ export async function handleXcfgViewerRequest(
 
   if (pathname === '/api/read-device' && method === 'POST') {
     const body = req.body || {};
+    if (deps.readXcfgFormat4FromPort) {
+      let portPath = String(body.portPath || '').trim();
+      if (!portPath && deps.resolveConnectedPortPath) {
+        const device = String(body.device || '').trim() || deps.getDefaultMxtDevice?.() || '';
+        if (device.toLowerCase().startsWith('serial:')) {
+          portPath = device.slice('serial:'.length).trim();
+        } else if (device.toLowerCase().startsWith('winusb:')) {
+          portPath = device;
+        } else {
+          portPath = deps.resolveConnectedPortPath() || '';
+        }
+      }
+      try {
+        const result = await deps.readXcfgFormat4FromPort(portPath);
+        if (!result.success || !result.content) {
+          return apiErr(result.error || '从 MCU 读取失败', 500);
+        }
+        return apiOk({ success: true, data: parseXcfg(result.content), content: result.content, format: result.format || '4' });
+      } catch (e: any) {
+        return apiErr(e?.message || String(e), 500);
+      }
+    }
     const tmpPath = path.join(os.tmpdir(), `mxt_read_${Date.now()}.xcfg`);
     try {
       let device = String(body.device || '').trim() || undefined;
@@ -700,4 +741,14 @@ export function registerXcfgViewerIpc(deps: XcfgViewerDeps): void {
 
 export function setXcfgViewerInitialPayload(payload: { content?: string; fileName?: string } | null): void {
   (global as any).__xcfgViewerPendingInitial = payload;
+}
+
+/** xcfg 配置查看器根目录是否存在 .cxfgdata 标记（仅检测，不自动创建） */
+export function hasXcfgViewerRootConfigFile(): boolean {
+  for (const fp of getCxfgdataMarkerCandidates()) {
+    try {
+      if (fp && fs.existsSync(fp) && fs.statSync(fp).isFile()) return true;
+    } catch (_) {}
+  }
+  return false;
 }

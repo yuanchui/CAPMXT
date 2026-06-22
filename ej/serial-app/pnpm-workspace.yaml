@@ -4,3 +4,6 @@ allowBuilds:
   electron-winstaller: true
   esbuild: true
   usb: true
+
+overrides:
+  '@electron/get': ^4.0.0

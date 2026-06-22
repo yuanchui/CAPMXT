@@ -1,0 +1,118 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: ¶ÃVision V5.15
+Copyright (C) 2015 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: 231 yuanchu, 213, LIC=PE7DL-08A1V-74SS0-B1S6P-3XTR3-CAUMD
+ 
+Tool Versions:
+Toolchain:       MDK-ARM Standard  Version: 5.15.0
+Toolchain Path:  D:\Keil_v5\ARM\ARMCC\Bin
+C Compiler:      Armcc.exe V5.05 update 2 (build 169)
+Assembler:       Armasm.exe V5.05 update 2 (build 169)
+Linker/Locator:  ArmLink.exe V5.05 update 2 (build 169)
+Library Manager: ArmAr.exe V5.05 update 2 (build 169)
+Hex Converter:   FromElf.exe V5.05 update 2 (build 169)
+CPU DLL:         SARMCM3.DLL V5.15.0
+Dialog DLL:      DCM.DLL V1.13.2.0
+Target DLL:      STLink\ST-LINKIII-KEIL_SWO.dll V2.0.15.0_KEIL
+Dialog DLL:      TCM.DLL V1.14.5.0
+ 
+<h2>Project:</h2>
+C:\Users\yuanchu\Desktop\µÁ»›atmxt\test-V1.7\MDK-ARM\STMUSBATMXT640.uvprojx
+Project File Date:  04/30/2026
+
+<h2>Output:</h2>
+*** Using Compiler 'V5.05 update 2 (build 169)', folder: 'D:\Keil_v5\ARM\ARMCC\Bin'
+Build target 'STMUSBATMXT640'
+assembling startup_stm32f103xb.s...
+compiling main.c...
+../Core/Src/main.c(120): warning:  #223-D: function "MXT_ProcessCommand" declared implicitly
+      MXT_ProcessCommand();
+../Core/Src/main.c(121): warning:  #223-D: function "MXT_ProcessControlPending" declared implicitly
+      MXT_ProcessControlPending();
+../Core/Src/main.c(122): warning:  #223-D: function "MXT_ProcessSPICheck" declared implicitly
+      MXT_ProcessSPICheck();
+../Core/Src/main.c(123): warning:  #223-D: function "MXT_FlushMessageBuffer" declared implicitly
+      MXT_FlushMessageBuffer();
+../Core/Src/main.c(126): warning:  #223-D: function "MXT_CheckAndProcessMessages" declared implicitly
+      MXT_CheckAndProcessMessages();
+../Core/Src/main.c(130): warning:  #223-D: function "MXT_TimerDiagnosticRead" declared implicitly
+      MXT_TimerDiagnosticRead();
+../Core/Src/main.c: 6 warnings, 0 errors
+compiling gpio.c...
+compiling i2c.c...
+compiling spi.c...
+compiling stm32f1xx_it.c...
+compiling stm32f1xx_hal_msp.c...
+compiling usb_device.c...
+compiling usbd_desc.c...
+compiling usbd_cdc_if.c...
+../USB_DEVICE/App/usbd_cdc_if.c(206): warning:  #550-D: variable "g_spi_in_frame" was set but never used
+  static uint8_t g_spi_in_frame = 0;
+../USB_DEVICE/App/usbd_cdc_if.c(329): warning:  #550-D: variable "g_menu_state" was set but never used
+  static MenuState_t g_menu_state = MENU_IDLE;
+../USB_DEVICE/App/usbd_cdc_if.c(3754): warning:  #177-D: function "MXT_SPI_USBFlush" was declared but never referenced
+  static void MXT_SPI_USBFlush(void)
+../USB_DEVICE/App/usbd_cdc_if.c(3936): warning:  #177-D: function "SPIUSB_HexEnqueueBytesWithNewline" was declared but never referenced
+  static void SPIUSB_HexEnqueueBytesWithNewline(const uint8_t *data, uint16_t len)
+../USB_DEVICE/App/usbd_cdc_if.c(400): warning:  #177-D: function "MXT_ShowMainMenu" was declared but never referenced
+  static void MXT_ShowMainMenu(void);
+../USB_DEVICE/App/usbd_cdc_if.c(401): warning:  #177-D: function "MXT_ShowDumpTypeMenu" was declared but never referenced
+  static void MXT_ShowDumpTypeMenu(void);
+../USB_DEVICE/App/usbd_cdc_if.c(402): warning:  #177-D: function "MXT_ShowMutualCapMenu" was declared but never referenced
+  static void MXT_ShowMutualCapMenu(void);
+../USB_DEVICE/App/usbd_cdc_if.c(403): warning:  #177-D: function "MXT_ShowSelfCapMenu" was declared but never referenced
+  static void MXT_ShowSelfCapMenu(void);
+../USB_DEVICE/App/usbd_cdc_if.c: 8 warnings, 0 errors
+compiling usbd_conf.c...
+compiling stm32f1xx_hal_gpio_ex.c...
+compiling stm32f1xx_hal_pcd.c...
+compiling stm32f1xx_hal_pcd_ex.c...
+compiling stm32f1xx_ll_usb.c...
+compiling stm32f1xx_hal.c...
+compiling stm32f1xx_hal_rcc.c...
+compiling stm32f1xx_hal_rcc_ex.c...
+compiling stm32f1xx_hal_gpio.c...
+compiling stm32f1xx_hal_dma.c...
+compiling stm32f1xx_hal_cortex.c...
+compiling stm32f1xx_hal_pwr.c...
+compiling stm32f1xx_hal_flash.c...
+compiling stm32f1xx_hal_flash_ex.c...
+compiling stm32f1xx_hal_exti.c...
+compiling stm32f1xx_hal_i2c.c...
+compiling stm32f1xx_hal_spi.c...
+compiling system_stm32f1xx.c...
+compiling usbd_core.c...
+compiling usbd_ctlreq.c...
+compiling usbd_ioreq.c...
+compiling usbd_cdc.c...
+linking...
+Program Size: Code=42416 RO-data=1264 RW-data=520 ZI-data=19952  
+FromELF: creating hex file...
+"STMUSBATMXT640\STMUSBATMXT640.axf" - 0 Error(s), 14 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: ARM
+                http://www.keil.com/pack/ARM.CMSIS.5.9.0.pack
+                ARM::CMSIS:CORE:5.6.0
+                CMSIS (Common Microcontroller Software Interface Standard)
+   * Component: CORE Version: 5.6.0
+
+<h2>Collection of Component include folders:</h2>
+  C:\Users\yuanchu\Desktop\µÁ»›atmxt\test-V1.7\MDK-ARM\RTE
+  D:\Keil_v5\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include
+  D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include
+
+<h2>Collection of Component Files used:</h2>
+
+   * Component: ARM::CMSIS:CORE:5.6.0
+      Include file:  CMSIS\Core\Include\tz_context.h
+      Source file:   CMSIS\Core\Template\ARMv8-M\tz_context.c
+      Source file:   CMSIS\Core\Template\ARMv8-M\main_s.c
+</pre>
+</body>
+</html>

@@ -24,7 +24,7 @@ npm run package:all
 3. 生成 `resources/UPGRADE_NOTES.txt`（安装目录 `resources\` 下）及 `release/UPGRADE_NOTES-<版本>.txt`
 4. 安装完成后自动打开升级说明（NSIS）
 
-打包前请编辑 **`build/UPGRADE_NOTES.txt`** 填写本版更新说明。
+打包前请编辑 **`build/UPGRADE_NOTES.txt`** 填写补充说明（可选）；**Git 变更摘要**会在打包时自动从仓库提交记录生成，并写入 `release/UPGRADE_NOTES-<版本>.txt`。
 
 或直接运行脚本：
 

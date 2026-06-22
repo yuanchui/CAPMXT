@@ -1,5 +1,7 @@
 {
   "major": 1,
   "minor": 0,
-  "build": 37
+  "build": 49,
+  "lastPackCommit": "f2ef1e767c499d8daf1591829e04f516e8c3a899",
+  "lastPackVersion": "1.0.49"
 }

@@ -37,12 +37,18 @@ function syncXcfgViewerResources() {
   const imgSrc = path.join(XCFG_SOURCE, 'metadata_images');
   const metaDest = path.join(DEST, 'xcfg_viewer_metadata.json');
   const imgDest = path.join(DEST, 'metadata_images');
+  const cxfgdataSrc = path.join(XCFG_SOURCE, '.cxfgdata');
+  const cxfgdataDest = path.join(DEST, '.cxfgdata');
 
   if (!fs.existsSync(metaSrc)) {
     throw new Error(`缺少元数据源文件: ${metaSrc}`);
   }
 
   copyFileEnsureDir(metaSrc, metaDest);
+  if (fs.existsSync(cxfgdataSrc)) {
+    copyFileEnsureDir(cxfgdataSrc, cxfgdataDest);
+    console.log('[sync-xcfg] 已同步:', cxfgdataDest);
+  }
   const imgResult = copyDirRecursive(imgSrc, imgDest);
 
   console.log('[sync-xcfg] 已同步:', metaDest);

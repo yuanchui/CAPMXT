@@ -58,10 +58,15 @@ import {
 } from './enc_mcu_strings';
 import {
   createBridgeAccessorFromHandlers,
-  readXcfgViaSerialBridge,
+  readDeviceConfigViaSerialBridge,
   withSerialBridgeRestore
 } from './mxt_serial_bridge';
-import { registerXcfgViewerIpc, setXcfgViewerInitialPayload } from './xcfg_viewer_api';
+import {
+  buildFormat4XcfgFromDevice,
+  loadXcfgFormat4Template,
+  type DeviceConfigSnapshot
+} from './xcfg_format4';
+import { registerXcfgViewerIpc, setXcfgViewerInitialPayload, hasXcfgViewerRootConfigFile } from './xcfg_viewer_api';
 import {
   createCoordinatedMxtAppRunner,
   getDefaultMxtDeviceFromSessions,
@@ -1387,37 +1392,33 @@ async function withExclusivePortBridgeAccessor<T>(
   }
 }
 
-async function readXcfgFromConnectedPort(portPath: string): Promise<{
+async function readDeviceConfigFromConnectedPort(portPath: string): Promise<DeviceConfigSnapshot> {
+  const resolved = resolveConnectedPortPath(portPath);
+  if (!resolved) throw new Error('设备未连接');
+  return await withExclusivePortBridgeAccessor(resolved, async (accessor) =>
+    withSerialBridgeRestore(accessor, () => readDeviceConfigViaSerialBridge(accessor))
+  );
+}
+
+async function readXcfgFromConnectedPort(portPath?: string): Promise<{
   success: boolean;
   content?: string;
   fileName?: string;
+  format?: string;
   error?: string;
 }> {
-  const resolved = resolveConnectedPortPath(portPath);
-  if (!resolved) return { success: false, error: '设备未连接' };
-  const fileName = 'device-read.xcfg';
-
-  if (!isWinUsbPath(resolved)) {
-    const tmpPath = path.join(getLocalTempDir(), `serial-app-read-xcfg-${Date.now()}.xcfg`);
-    try {
-      const result = await runMxtAppThroughSerialProxy(resolved, ['--save', tmpPath, '--format', '3'], 120000);
-      if (!result.success) {
-        return { success: false, error: (result.stderr || result.stdout || '读取失败').trim() };
-      }
-      const content = fs.readFileSync(tmpPath, 'utf-8');
-      return { success: true, content, fileName };
-    } catch (error: any) {
-      return { success: false, error: error?.message || String(error) };
-    } finally {
-      try { if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath); } catch (_) {}
-    }
-  }
-
   try {
-    const content = await withExclusivePortBridgeAccessor(resolved, async (accessor) =>
-      withSerialBridgeRestore(accessor, () => readXcfgViaSerialBridge(accessor))
-    );
-    return { success: true, content, fileName };
+    const resolved = resolveConnectedPortPath(portPath);
+    if (!resolved) return { success: false, error: '设备未连接' };
+    const device = await readDeviceConfigFromConnectedPort(resolved);
+    const templateContent = loadXcfgFormat4Template();
+    const content = buildFormat4XcfgFromDevice(templateContent, device, {
+      commentTitle: 'Read from device via MCU bridge (format 4)'
+    });
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const fileName = `device-read-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}.xcfg`;
+    return { success: true, content, fileName, format: '4' };
   } catch (error: any) {
     return { success: false, error: error?.message || String(error) };
   }
@@ -3793,7 +3794,9 @@ registerXcfgViewerIpc({
   getMxtAppPath,
   runMxtApp: runMxtAppShared,
   getDefaultMxtDevice: getDefaultMxtDeviceFromSerialApp,
-  readChipInfoFromPort: readChipInfoFromConnectedPort
+  resolveConnectedPortPath,
+  readChipInfoFromPort: readChipInfoFromConnectedPort,
+  readXcfgFormat4FromPort: readXcfgFromConnectedPort
 });
 
 ipcMain.handle('open-xcfg-viewer-window', async (_event: Electron.IpcMainInvokeEvent, payload?: {
@@ -3806,6 +3809,10 @@ ipcMain.handle('open-xcfg-viewer-window', async (_event: Electron.IpcMainInvokeE
   } catch (error: any) {
     return { success: false, error: error?.message || String(error) };
   }
+});
+
+ipcMain.handle('check-xcfg-viewer-available', async () => {
+  return { success: true, available: hasXcfgViewerRootConfigFile() };
 });
 
 app.whenReady().then(bootWithSplash);

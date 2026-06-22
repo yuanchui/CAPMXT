@@ -7,7 +7,6 @@ ej/serial-app/node_modules/
 ej/serial-app/dist/
 ej/serial-app/release/
 ej/serial-app/build/dev-signing.pfx
-ej/serial-app/.trae/
 
 # --- ej/linux_driver_mxt_sys/mxt-app (autotools / MinGW) ---
 ej/linux_driver_mxt_sys/mxt-app/.libs/

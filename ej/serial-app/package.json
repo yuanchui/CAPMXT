@@ -1,6 +1,6 @@
 {
   "name": "serial-terminal",
-  "version": "1.0.37",
+  "version": "1.0.49",
   "description": "Serial Terminal - 串口通信终端应用程序",
   "author": {
     "name": "Yuanchu",
@@ -52,7 +52,7 @@
     "@types/web": "^0.0.294",
     "concurrently": "^8.0.0",
     "electron": "^39.2.4",
-    "electron-builder": "^26.0.12",
+    "electron-builder": "^26.15.3",
     "rimraf": "^6.1.2",
     "typescript": "^5.9.3",
     "vite": "^7.2.6",
@@ -92,6 +92,10 @@
       {
         "from": "resources/xcfg-viewer",
         "to": "xcfg-viewer"
+      },
+      {
+        "from": "resources/xcfg-templates",
+        "to": "xcfg-templates"
       },
       {
         "from": "resources/UPGRADE_NOTES.txt",

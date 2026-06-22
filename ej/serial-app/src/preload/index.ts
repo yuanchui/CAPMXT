@@ -130,6 +130,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 打开 xcfg-viewer 配置查看器（独立窗口，支持加载/编辑/导出 xcfg 与 MD 元数据）
   openXcfgViewerWindow: (payload?: { page?: string; xcfgContent?: string; fileName?: string }) =>
     ipcRenderer.invoke('open-xcfg-viewer-window', payload),
+  // xcfg 配置查看器根目录是否存在 .cxfgdata 标记（决定是否显示 XCFG 相关入口）
+  checkXcfgViewerAvailable: () => ipcRenderer.invoke('check-xcfg-viewer-available'),
 
   // 监听 xcfg 传输进度
   onXcfgTransferProgress: (callback: (progress: {
