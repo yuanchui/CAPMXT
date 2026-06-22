@@ -37,29 +37,74 @@ export class MatrixCanvas2D {
   }
 
   resize(): void {
-    const rect = this.anchorGrid.getBoundingClientRect();
-    const totalCols = 17;
-    const totalRows = 17;
-    const cellW = rect.width / totalCols;
-    const cellH = rect.height / totalRows;
-    const w = Math.max(1, Math.floor(cellW * 16));
-    const h = Math.max(1, Math.floor(cellH * 16));
-    const left = cellW;
-    const top = cellH;
-
     const container = this.anchorGrid.parentElement;
-    if (container) {
-      const cRect = container.getBoundingClientRect();
-      this.canvas.style.position = 'absolute';
-      this.canvas.style.left = `${rect.left - cRect.left + left}px`;
-      this.canvas.style.top = `${rect.top - cRect.top + top}px`;
-      this.canvas.style.width = `${w}px`;
-      this.canvas.style.height = `${h}px`;
-      this.canvas.style.pointerEvents = 'none';
-      this.canvas.style.zIndex = '5';
-    }
+    if (!container) return;
+
+    const content = this.measureContentRect(container);
+    const w = Math.max(1, Math.round(content.width));
+    const h = Math.max(1, Math.round(content.height));
+
+    this.canvas.style.position = 'absolute';
+    this.canvas.style.left = `${content.left}px`;
+    this.canvas.style.top = `${content.top}px`;
+    this.canvas.style.width = `${w}px`;
+    this.canvas.style.height = `${h}px`;
+    this.canvas.style.pointerEvents = 'none';
+    this.canvas.style.zIndex = '5';
+
     this.canvas.width = w;
     this.canvas.height = h;
+  }
+
+  /** 16×16 数据区相对 matrix-container 的位置（与 DOM 标签格对齐） */
+  private measureContentRect(container: HTMLElement): {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } {
+    const cRect = container.getBoundingClientRect();
+    const lastIdx = MATRIX_SIZE - 1;
+    const firstCell = this.anchorGrid.querySelector(
+      `.matrix-cell[data-row="0"][data-col="0"]`
+    ) as HTMLElement | null;
+    const lastCell = this.anchorGrid.querySelector(
+      `.matrix-cell[data-row="${lastIdx}"][data-col="${lastIdx}"]`
+    ) as HTMLElement | null;
+
+    if (firstCell && lastCell) {
+      const firstRect = firstCell.getBoundingClientRect();
+      const lastRect = lastCell.getBoundingClientRect();
+      return {
+        left: firstRect.left - cRect.left,
+        top: firstRect.top - cRect.top,
+        width: lastRect.right - firstRect.left,
+        height: lastRect.bottom - firstRect.top,
+      };
+    }
+
+    // 回退：grid 为 0.5fr 标签 + 16×1fr 数据，不能用 17 等分
+    const gridStyle = getComputedStyle(this.anchorGrid);
+    const gap =
+      parseFloat(gridStyle.columnGap) ||
+      parseFloat(gridStyle.gap) ||
+      parseFloat(gridStyle.rowGap) ||
+      0;
+    const rect = this.anchorGrid.getBoundingClientRect();
+    const totalFr = 0.5 + MATRIX_SIZE;
+    const availW = rect.width - MATRIX_SIZE * gap;
+    const availH = rect.height - MATRIX_SIZE * gap;
+    const dataUnitW = availW / totalFr;
+    const dataUnitH = availH / totalFr;
+    const labelW = dataUnitW * 0.5;
+    const labelH = dataUnitH * 0.5;
+
+    return {
+      left: rect.left - cRect.left + labelW + gap,
+      top: rect.top - cRect.top + labelH + gap,
+      width: dataUnitW * MATRIX_SIZE + (MATRIX_SIZE - 1) * gap,
+      height: dataUnitH * MATRIX_SIZE + (MATRIX_SIZE - 1) * gap,
+    };
   }
 
   /** 从 16×16 数值矩阵绘制 */

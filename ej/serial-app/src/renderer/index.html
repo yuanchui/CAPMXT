@@ -215,6 +215,11 @@
         .matrix-cell:hover { background: #e0f2fe; }
         .matrix-cell.has-modal { border-width: 2px; border-style: solid; }
         .matrix-label-cell { background: #f0f0f0; font-weight: bold; color: #555; cursor: default; border: none; }
+        /* Canvas 2D 热力图覆盖数据区时，保留 DOM 行列标签可见 */
+        .matrix-grid.canvas-overlay-mode .matrix-cell {
+            visibility: hidden;
+            pointer-events: none;
+        }
 
         .matrix-header-row {
             display: flex;
@@ -2115,7 +2120,6 @@
         matrixRenderLoop.stop();
         recvDisplayBuffer.pause();
         matrixStreamPipeline?.pause();
-        matrixCanvas2d?.clear();
         lastMatrixCompute = null;
         mode3Buffer = new Uint8Array(0);
         partialLineBuffer = "";
@@ -2549,6 +2553,19 @@
         firstCellChangeFreqDisplay.title = '双击查看趋势图';
     }
 
+    function syncMatrixGridCanvasOverlayMode() {
+        if (!matrixGrid) return;
+        if (matrixCanvas2d) {
+            matrixGrid.classList.add('canvas-overlay-mode');
+            matrixGrid.style.visibility = '';
+            matrixGrid.style.pointerEvents = 'none';
+        } else {
+            matrixGrid.classList.remove('canvas-overlay-mode');
+            matrixGrid.style.visibility = '';
+            matrixGrid.style.pointerEvents = '';
+        }
+    }
+
     function initMatrixVisualizationPipeline() {
         const heatCanvas = document.getElementById('matrixHeatmapCanvas');
         if (heatCanvas && matrixGrid) {
@@ -2566,6 +2583,7 @@
                     }
                 });
                 matrixCanvas2d.drawMatrix(createEmptyMatrix(0), { min: 0, max: 1 });
+                syncMatrixGridCanvasOverlayMode();
             } catch (err) {
                 console.warn('[matrix2d] Canvas 初始化失败', err);
             }
@@ -2582,21 +2600,49 @@
     const matrixOverlayCanvas = document.getElementById("matrixOverlayCanvas");
     let overlayCtx = matrixOverlayCanvas && matrixOverlayCanvas.getContext ? matrixOverlayCanvas.getContext('2d') : null;
 
+    function getMatrixContentRect() {
+        if (!matrixGrid || !matrixContainer) return null;
+        const containerRect = matrixContainer.getBoundingClientRect();
+        const lastIdx = MATRIX_SIZE - 1;
+        const firstCell = matrixGrid.querySelector('.matrix-cell[data-row="0"][data-col="0"]');
+        const lastCell = matrixGrid.querySelector(`.matrix-cell[data-row="${lastIdx}"][data-col="${lastIdx}"]`);
+        if (firstCell && lastCell) {
+            const firstRect = firstCell.getBoundingClientRect();
+            const lastRect = lastCell.getBoundingClientRect();
+            return {
+                left: firstRect.left - containerRect.left,
+                top: firstRect.top - containerRect.top,
+                width: lastRect.right - firstRect.left,
+                height: lastRect.bottom - firstRect.top,
+            };
+        }
+        const gridStyle = getComputedStyle(matrixGrid);
+        const gap = parseFloat(gridStyle.columnGap) || parseFloat(gridStyle.gap) || parseFloat(gridStyle.rowGap) || 0;
+        const matrixRect = matrixGrid.getBoundingClientRect();
+        const totalFr = 0.5 + MATRIX_SIZE;
+        const availW = matrixRect.width - MATRIX_SIZE * gap;
+        const availH = matrixRect.height - MATRIX_SIZE * gap;
+        const dataUnitW = availW / totalFr;
+        const dataUnitH = availH / totalFr;
+        const labelW = dataUnitW * 0.5;
+        const labelH = dataUnitH * 0.5;
+        return {
+            left: matrixRect.left - containerRect.left + labelW + gap,
+            top: matrixRect.top - containerRect.top + labelH + gap,
+            width: dataUnitW * MATRIX_SIZE + (MATRIX_SIZE - 1) * gap,
+            height: dataUnitH * MATRIX_SIZE + (MATRIX_SIZE - 1) * gap,
+        };
+    }
+
     function resizeTraceCanvas() {
         if (!traceCanvas || !matrixGrid || !matrixContainer || !traceCtx) return;
-        const matrixRect = matrixGrid.getBoundingClientRect();
-        const containerRect = matrixContainer.getBoundingClientRect();
+        const content = getMatrixContentRect();
+        if (!content) return;
 
-        // matrixGrid 为 17x17（含行列标签），轨迹只覆盖 16x16 主内容区
-        const totalCols = 17;
-        const totalRows = 17;
-        const cellWidth = matrixRect.width / totalCols;
-        const cellHeight = matrixRect.height / totalRows;
-
-        const contentLeft = matrixRect.left - containerRect.left + cellWidth;   // 跳过左侧标签列
-        const contentTop = matrixRect.top - containerRect.top + cellHeight;     // 跳过顶部标签行
-        const contentWidth = cellWidth * 16;
-        const contentHeight = cellHeight * 16;
+        const contentLeft = content.left;
+        const contentTop = content.top;
+        const contentWidth = content.width;
+        const contentHeight = content.height;
 
         traceCanvas.style.top = `${contentTop}px`;
         traceCanvas.style.left = `${contentLeft}px`;
@@ -5099,10 +5145,9 @@
             matrix3dCanvas.style.display = 'block';
             matrix3dCanvas.style.pointerEvents = 'auto';
             resizeMatrix3DCanvas();
-            // 2D Canvas 热力图始终可见；DOM 网格仅用于交互层
+            // 2D Canvas 热力图始终可见；DOM 网格保留行列标签
             if (matrixHeatmapCanvas) matrixHeatmapCanvas.style.display = 'block';
-            matrixGrid.style.visibility = 'hidden';
-            matrixGrid.style.pointerEvents = 'none';
+            syncMatrixGridCanvasOverlayMode();
             traceCanvas.style.display = 'none';
             if (matrixOverlayCanvasEl) matrixOverlayCanvasEl.style.display = 'none';
 
@@ -5123,8 +5168,7 @@
                     statusText.textContent = `3D初始化失败，已回退2D：${m}`;
                 }
                 stopMatrix3DLoop();
-                matrixGrid.style.visibility = 'hidden';
-                matrixGrid.style.pointerEvents = 'none';
+                syncMatrixGridCanvasOverlayMode();
                 if (matrixHeatmapCanvas) matrixHeatmapCanvas.style.display = 'block';
                 traceCanvas.style.display = '';
                 if (matrixOverlayCanvasEl) matrixOverlayCanvasEl.style.display = '';
@@ -5136,8 +5180,7 @@
         } else {
             stopMatrix3DLoop();
             if (matrixHeatmapCanvas) matrixHeatmapCanvas.style.display = 'block';
-            matrixGrid.style.visibility = 'hidden';
-            matrixGrid.style.pointerEvents = 'none';
+            syncMatrixGridCanvasOverlayMode();
             traceCanvas.style.display = '';
             if (matrixOverlayCanvasEl) matrixOverlayCanvasEl.style.display = '';
             if (matrix3dCanvas) {
