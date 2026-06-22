@@ -25,7 +25,14 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "usbd_cdc_if.h"
+#include "mxt/mxt_spi_stream.h"
+#include "mxt/mxt_state.h"
+#include "mxt/mxt_usb_io.h"
+#include "mxt/mxt_cmd.h"
+#include "mxt/mxt_bridge.h"
+#include "mxt/mxt_msg.h"
+#include "mxt/mxt_touch.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -119,17 +126,20 @@ int main(void)
     /* 处理USB接收的命令 */
     MXT_ProcessCommand();
     MXT_ProcessControlPending();
-    MXT_ProcessSPICheck();
-    MXT_FlushMessageBuffer();
-    
-    /* 检查并处理CHG引脚消息 */
-    MXT_CheckAndProcessMessages();
-    MXT_FlushMessageBuffer();
-    
-    /* 定时读取诊断数据 (在START命令后启用) */
-    MXT_TimerDiagnosticRead();
-    /* 多次刷新确保缓冲区结尾数据发送完成（避免尾数据残留在缓冲器） */
-    MXT_FlushMessageBuffer();
+
+    if (g_spi_stream_enabled != 0U) {
+      MXT_ProcessSPICheck();
+      MXT_USB_ServiceTx();
+    } else {
+      MXT_ProcessSPICheck();
+      MXT_FlushMessageBuffer();
+
+      MXT_CheckAndProcessMessages();
+      MXT_FlushMessageBuffer();
+
+      MXT_TimerDiagnosticRead();
+      MXT_FlushMessageBuffer();
+    }
   }
   /* USER CODE END 3 */
 }

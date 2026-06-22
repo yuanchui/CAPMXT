@@ -9,6 +9,14 @@
 "stmusbatmxt640\usb_device.o"
 "stmusbatmxt640\usbd_desc.o"
 "stmusbatmxt640\usbd_cdc_if.o"
+"stmusbatmxt640\mxt_bridge.o"
+"stmusbatmxt640\mxt_cmd.o"
+"stmusbatmxt640\mxt_i2c.o"
+"stmusbatmxt640\mxt_msg.o"
+"stmusbatmxt640\mxt_spi_stream.o"
+"stmusbatmxt640\mxt_state.o"
+"stmusbatmxt640\mxt_touch.o"
+"stmusbatmxt640\mxt_usb_io.o"
 "stmusbatmxt640\usbd_conf.o"
 "stmusbatmxt640\stm32f1xx_hal_gpio_ex.o"
 "stmusbatmxt640\stm32f1xx_hal_pcd.o"
@@ -32,6 +40,6 @@
 "stmusbatmxt640\usbd_ioreq.o"
 "stmusbatmxt640\usbd_cdc.o"
 --strict --scatter "STMUSBATMXT640\STMUSBATMXT640.sct"
---summary_stderr --info summarysizes --map --xref --callgraph --symbols
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
 --list "STMUSBATMXT640.map" -o STMUSBATMXT640\STMUSBATMXT640.axf
