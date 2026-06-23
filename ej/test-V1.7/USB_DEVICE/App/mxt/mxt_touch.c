@@ -815,20 +815,7 @@ void MXT_SendMode3Packets(uint8_t rot, uint8_t flip_mask, uint8_t frame_id)
     buffer[packet_len - 2] = (uint8_t)((crc >> 8) & 0xFF);
     buffer[packet_len - 1] = (uint8_t)(crc & 0xFF);
 
-    /* 直接二进制发送；忙则使用 us 级短延时反复等待，最多等待约 20ms */
-    uint32_t remaining_us = 20000; /* 每行最长等待时间，防止死等 */
-    while (remaining_us > 0) {
-      if (CDC_Transmit_FS(buffer, packet_len) == USBD_OK) {
-        break;
-      }
-      /* USB 正忙，等待一小段时间再试 */
-      MXT_DelayUs(50);
-      if (remaining_us > 50) {
-        remaining_us -= 50;
-      } else {
-        remaining_us = 0;
-      }
-    }
+    SendResponse(buffer, packet_len);
   }
 }
 
@@ -891,14 +878,7 @@ void MXT_SendSelfCapMode3Packets(uint8_t use_map16, uint8_t frame_id)
     buffer[packet_len - 2] = (uint8_t)((crc >> 8) & 0xFF);
     buffer[packet_len - 1] = (uint8_t)(crc & 0xFF);
 
-    uint32_t remaining_us = 20000;
-    while (remaining_us > 0) {
-      if (CDC_Transmit_FS(buffer, packet_len) == USBD_OK) {
-        break;
-      }
-      MXT_DelayUs(50);
-      remaining_us = (remaining_us > 50) ? (remaining_us - 50) : 0;
-    }
+    SendResponse(buffer, packet_len);
   }
 }
 

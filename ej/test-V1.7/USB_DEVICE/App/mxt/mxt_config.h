@@ -27,10 +27,14 @@
 /* SPI IT + 硬件 NSS（F103 20KB SRAM：SPI 独立 TX 缓冲，队列留 USB 背压余量） */
 #define SPI_IT_CHUNK_LEN          1U
 #define SPI_FRAME_PAYLOAD_BYTES   640U
-#define SPI_RX_QUEUE_DEPTH        1024U
-#define SPI_HEX_TX_BUF_SIZE       2048U   /* 独立 SPI 发送区，不与 msg 复用 */
+/* 640U 三次 SSN/帧约 640B，队列与 TX 须与 test-V1.7原 一致，否则 SPI 丢包 */
+#define SPI_RX_QUEUE_DEPTH        2048U
+#define SPI_HEX_TX_BUF_SIZE       4096U
+#define SPI_USB_PKT_SIZE          64U
+#define SPI_STREAM_STALL_MS       100U
+#define SPI_GAP_IDLE_STALL_MS     500U
 #define MSG_BUFFER_SIZE             1024U
-#define SPI_USB_FLUSH_CHUNK       512U    /* CDC 分包发送，缓解 USB 背压 */
+#define MSG_FLUSH_CHUNK_SPI       128U    /* SPI 流期间加大 USB 刷新块 */
 
 /* CFGWRITE/CFGREAD */
 #define CFG_PROTOCOL_VERSION       0x01

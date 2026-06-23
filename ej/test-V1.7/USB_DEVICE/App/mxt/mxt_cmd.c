@@ -87,22 +87,19 @@ void ProcessPendingCommand(void)
         USB_SendString("Type 'u' to enter diagnostic menu\r\n");
     }
     else if (strcmp(cmd_str, "SPISTART") == 0 || strcmp(cmd_str, "spistart") == 0) {
-        (void)MXT_ApplyStartupDebugCtrl();
         MXT_SPI_PrepareStream(0U);
         g_spi_stream_enabled = 1U;
         USB_SendString("INFO: SPI stream START (raw hex)\r\n");
     }
     else if (strcmp(cmd_str, "SPISTART1") == 0 || strcmp(cmd_str, "spistart1") == 0) {
-        (void)MXT_ApplyStartupDebugCtrl();
         MXT_SPI_PrepareStream(1U);
         g_spi_stream_enabled = 1U;
         USB_SendString("INFO: SPI stream START1 (16x16 text)\r\n");
     }
     else if (strcmp(cmd_str, "SPISTART3") == 0 || strcmp(cmd_str, "spistart3") == 0) {
-        (void)MXT_ApplyStartupDebugCtrl();
         MXT_SPI_PrepareStream(2U);
         g_spi_stream_enabled = 1U;
-        USB_SendString("INFO: SPI stream START3 (cropped packets)\r\n");
+        USB_SendString("INFO: SPI stream START3 (Mode3 AA 10 33 packets)\r\n");
     }
     else if (strcmp(cmd_str, "SPISTOP") == 0 || strcmp(cmd_str, "spistop") == 0) {
         g_spi_stream_enabled = 0U;
@@ -793,7 +790,6 @@ void ProcessPendingCommand(void)
     else if (strcmp(cmd_str, "SPI") == 0 || strcmp(cmd_str, "spi") == 0) {
         g_spi_stream_enabled = (uint8_t)!g_spi_stream_enabled;
         if (g_spi_stream_enabled) {
-            (void)MXT_ApplyStartupDebugCtrl();
             MXT_SPI_PrepareStream(0U);
             USB_SendString("INFO: SPI stream START (raw hex)\r\n");
         } else {

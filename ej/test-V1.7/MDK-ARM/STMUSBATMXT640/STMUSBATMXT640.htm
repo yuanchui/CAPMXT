@@ -3,7 +3,7 @@
 <title>Static Call Graph - [STMUSBATMXT640\STMUSBATMXT640.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image STMUSBATMXT640\STMUSBATMXT640.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060960: Last Updated: Mon Jun 22 16:31:26 2026
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060960: Last Updated: Mon Jun 22 17:58:50 2026
 <BR><P>
 <H3>Maximum Stack Usage =        456 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -442,7 +442,6 @@ Global Symbols
 <LI><a href="#[111]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_CheckAndProcessMessages
 <LI><a href="#[12d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadT37Page
 <LI><a href="#[12c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadCompleteDiagnosticFrameInternal
-<LI><a href="#[129]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_HexEnqueueByte
 <LI><a href="#[113]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadObjectTable
 <LI><a href="#[12e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadT100UnknownFields
 <LI><a href="#[116]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ParseMessage
@@ -578,8 +577,7 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[a5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessStringCommand
 <LI><a href="#[a4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessBridgePacket
 <LI><a href="#[122]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessCommand
-<LI><a href="#[14a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_Start3_EmitRowPacket
-<LI><a href="#[129]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_HexEnqueueByte
+<LI><a href="#[12a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_TryFlush
 <LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__rt_memmove
 </UL>
 
@@ -848,8 +846,6 @@ Global Symbols
 </UL>
 <BR>[Called By]<UL><LI><a href="#[10c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MSG_BufferFlush
 <LI><a href="#[12a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_TryFlush
-<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SendSelfCapMode3Packets
-<LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SendMode3Packets
 <LI><a href="#[ac]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SendResponse
 </UL>
 
@@ -1389,6 +1385,7 @@ Global Symbols
 <LI><a href="#[10d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USB_SendString
 </UL>
 <BR>[Called By]<UL><LI><a href="#[a0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MSG_BufferWrite
+<LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_USB_ServiceTx
 <LI><a href="#[119]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FlushMessageBuffer
 </UL>
 
@@ -1416,7 +1413,7 @@ Global Symbols
 <LI><a href="#[110]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_Write
 </UL>
 <BR>[Called By]<UL><LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_InitTouchScreen
-<LI><a href="#[123]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
+<LI><a href="#[130]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_PrepareStream
 </UL>
 
 <P><STRONG><a name="[111]"></a>MXT_CheckAndProcessMessages</STRONG> (Thumb, 422 bytes, Stack size 88 bytes, mxt_msg.o(i.MXT_CheckAndProcessMessages))
@@ -1440,8 +1437,6 @@ Global Symbols
 
 <P><STRONG><a name="[12f]"></a>MXT_DelayUs</STRONG> (Thumb, 28 bytes, Stack size 0 bytes, mxt_i2c.o(i.MXT_DelayUs))
 <BR><BR>[Called By]<UL><LI><a href="#[12d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadT37Page
-<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SendSelfCapMode3Packets
-<LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SendMode3Packets
 <LI><a href="#[ac]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SendResponse
 </UL>
 
@@ -1581,9 +1576,9 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[114]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_I2C_Read
 <LI><a href="#[a0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MSG_BufferWrite
+<LI><a href="#[10f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ApplyStartupDebugCtrl
 <LI><a href="#[113]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadObjectTable
 <LI><a href="#[11b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FormatInfoBlockLine
-<LI><a href="#[10f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ApplyStartupDebugCtrl
 </UL>
 <BR>[Called By]<UL><LI><a href="#[118]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsTxt
 <LI><a href="#[117]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsBin
@@ -1591,6 +1586,7 @@ Global Symbols
 <LI><a href="#[b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CDC_Init_FS
 <LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_TimerDiagnosticRead
 <LI><a href="#[124]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessControlPending
+<LI><a href="#[130]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_PrepareStream
 <LI><a href="#[123]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
@@ -1683,9 +1679,8 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[125]"></a>MXT_ProcessSPICheck</STRONG> (Thumb, 238 bytes, Stack size 40 bytes, mxt_spi_stream.o(i.MXT_ProcessSPICheck))
-<BR><BR>[Stack]<UL><LI>Max Depth = 248 + Unknown Stack Size
-<LI>Call Chain = MXT_ProcessSPICheck &rArr; SPIUSB_Start1_ProcessPayloadByte &rArr; SPIUSB_Start3_EmitRowPacket &rArr; SPIUSB_EnsureSpace &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
+<P><STRONG><a name="[125]"></a>MXT_ProcessSPICheck</STRONG> (Thumb, 246 bytes, Stack size 40 bytes, mxt_spi_stream.o(i.MXT_ProcessSPICheck))
+<BR><BR>[Stack]<UL><LI>Max Depth = 264<LI>Call Chain = MXT_ProcessSPICheck &rArr; SPIUSB_Start1_ProcessPayloadByte &rArr; SPIUSB_Start3_EmitRowPacket &rArr; SPIUSB_ByteEnqueue &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
 <BR>[Calls]<UL><LI><a href="#[b1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 <LI><a href="#[126]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_StopIT
@@ -1734,10 +1729,13 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[123]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
-<P><STRONG><a name="[130]"></a>MXT_SPI_PrepareStream</STRONG> (Thumb, 34 bytes, Stack size 8 bytes, mxt_spi_stream.o(i.MXT_SPI_PrepareStream))
-<BR><BR>[Stack]<UL><LI>Max Depth = 128<LI>Call Chain = MXT_SPI_PrepareStream &rArr; MXT_WaitUsbIdle &rArr; MXT_FlushMessageBuffer &rArr; MSG_BufferFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
+<P><STRONG><a name="[130]"></a>MXT_SPI_PrepareStream</STRONG> (Thumb, 48 bytes, Stack size 8 bytes, mxt_spi_stream.o(i.MXT_SPI_PrepareStream))
+<BR><BR>[Stack]<UL><LI>Max Depth = 240 + Unknown Stack Size
+<LI>Call Chain = MXT_SPI_PrepareStream &rArr; MXT_InitTouchScreen &rArr; MXT_ReadObjectTable &rArr; MXT_I2C_Read &rArr; HAL_I2C_Mem_Read &rArr; I2C_RequestMemoryRead &rArr; I2C_WaitOnMasterAddressFlagUntilTimeout
 </UL>
-<BR>[Calls]<UL><LI><a href="#[119]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FlushMessageBuffer
+<BR>[Calls]<UL><LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_InitTouchScreen
+<LI><a href="#[119]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FlushMessageBuffer
+<LI><a href="#[10f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ApplyStartupDebugCtrl
 <LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_ResetState
 <LI><a href="#[102]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_StartIT
 <LI><a href="#[131]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_WaitUsbIdle
@@ -1765,25 +1763,23 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[125]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
 </UL>
 
-<P><STRONG><a name="[133]"></a>MXT_SendMode3Packets</STRONG> (Thumb, 482 bytes, Stack size 120 bytes, mxt_touch.o(i.MXT_SendMode3Packets))
-<BR><BR>[Stack]<UL><LI>Max Depth = 192<LI>Call Chain = MXT_SendMode3Packets &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
+<P><STRONG><a name="[133]"></a>MXT_SendMode3Packets</STRONG> (Thumb, 474 bytes, Stack size 120 bytes, mxt_touch.o(i.MXT_SendMode3Packets))
+<BR><BR>[Stack]<UL><LI>Max Depth = 216<LI>Call Chain = MXT_SendMode3Packets &rArr; SendResponse &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
-<BR>[Calls]<UL><LI><a href="#[a7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CDC_Transmit_FS
-<LI><a href="#[135]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_TouchQueuePop
+<BR>[Calls]<UL><LI><a href="#[135]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_TouchQueuePop
 <LI><a href="#[136]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CRC16_CCITT_FALSE
-<LI><a href="#[12f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_DelayUs
+<LI><a href="#[ac]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SendResponse
 <LI><a href="#[134]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memclr4
 </UL>
 <BR>[Called By]<UL><LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_TimerDiagnosticRead
 <LI><a href="#[123]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
-<P><STRONG><a name="[137]"></a>MXT_SendSelfCapMode3Packets</STRONG> (Thumb, 254 bytes, Stack size 136 bytes, mxt_touch.o(i.MXT_SendSelfCapMode3Packets))
-<BR><BR>[Stack]<UL><LI>Max Depth = 208<LI>Call Chain = MXT_SendSelfCapMode3Packets &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
+<P><STRONG><a name="[137]"></a>MXT_SendSelfCapMode3Packets</STRONG> (Thumb, 234 bytes, Stack size 128 bytes, mxt_touch.o(i.MXT_SendSelfCapMode3Packets))
+<BR><BR>[Stack]<UL><LI>Max Depth = 224<LI>Call Chain = MXT_SendSelfCapMode3Packets &rArr; SendResponse &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
-<BR>[Calls]<UL><LI><a href="#[a7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CDC_Transmit_FS
-<LI><a href="#[136]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CRC16_CCITT_FALSE
-<LI><a href="#[12f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_DelayUs
+<BR>[Calls]<UL><LI><a href="#[136]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CRC16_CCITT_FALSE
+<LI><a href="#[ac]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SendResponse
 </UL>
 <BR>[Called By]<UL><LI><a href="#[123]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
@@ -1819,10 +1815,11 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[111]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_CheckAndProcessMessages
 </UL>
 
-<P><STRONG><a name="[139]"></a>MXT_USB_ServiceTx</STRONG> (Thumb, 28 bytes, Stack size 16 bytes, mxt_spi_stream.o(i.MXT_USB_ServiceTx))
-<BR><BR>[Stack]<UL><LI>Max Depth = 104<LI>Call Chain = MXT_USB_ServiceTx &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
+<P><STRONG><a name="[139]"></a>MXT_USB_ServiceTx</STRONG> (Thumb, 50 bytes, Stack size 16 bytes, mxt_spi_stream.o(i.MXT_USB_ServiceTx))
+<BR><BR>[Stack]<UL><LI>Max Depth = 120<LI>Call Chain = MXT_USB_ServiceTx &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
-<BR>[Calls]<UL><LI><a href="#[12a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_TryFlush
+<BR>[Calls]<UL><LI><a href="#[10c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MSG_BufferFlush
+<LI><a href="#[12a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_TryFlush
 </UL>
 <BR>[Called By]<UL><LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
@@ -1932,7 +1929,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CDC_Receive_FS
 </UL>
 
-<P><STRONG><a name="[123]"></a>ProcessPendingCommand</STRONG> (Thumb, 8638 bytes, Stack size 64 bytes, mxt_cmd.o(i.ProcessPendingCommand))
+<P><STRONG><a name="[123]"></a>ProcessPendingCommand</STRONG> (Thumb, 8634 bytes, Stack size 64 bytes, mxt_cmd.o(i.ProcessPendingCommand))
 <BR><BR>[Stack]<UL><LI>Max Depth = 440 + Unknown Stack Size
 <LI>Call Chain = ProcessPendingCommand &rArr; MXT_ReadCompleteDiagnosticFrame &rArr; MXT_ReadCompleteDiagnosticFrameInternal &rArr; MXT_CheckAndProcessMessages &rArr; MXT_GetObjectAddr &rArr; MXT_ReadObjectTable &rArr; MXT_I2C_Read &rArr; HAL_I2C_Mem_Read &rArr; I2C_RequestMemoryRead &rArr; I2C_WaitOnMasterAddressFlagUntilTimeout
 </UL>
@@ -1958,7 +1955,6 @@ Global Symbols
 <LI><a href="#[11e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputDiagnosticData
 <LI><a href="#[112]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_GetObjectAddr
 <LI><a href="#[11b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_FormatInfoBlockLine
-<LI><a href="#[10f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ApplyStartupDebugCtrl
 <LI><a href="#[10d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USB_SendString
 <LI><a href="#[ac]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SendResponse
 <LI><a href="#[131]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_WaitUsbIdle
@@ -1996,7 +1992,7 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f103xb.o(RESET)
 </UL>
-<P><STRONG><a name="[132]"></a>SPIUSB_ResetState</STRONG> (Thumb, 88 bytes, Stack size 8 bytes, mxt_spi_stream.o(i.SPIUSB_ResetState))
+<P><STRONG><a name="[132]"></a>SPIUSB_ResetState</STRONG> (Thumb, 92 bytes, Stack size 8 bytes, mxt_spi_stream.o(i.SPIUSB_ResetState))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = SPIUSB_ResetState
 </UL>
 <BR>[Calls]<UL><LI><a href="#[ad]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_ReadPin
@@ -2004,16 +2000,18 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[130]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SPI_PrepareStream
 </UL>
 
-<P><STRONG><a name="[12a]"></a>SPIUSB_TryFlush</STRONG> (Thumb, 70 bytes, Stack size 16 bytes, mxt_spi_stream.o(i.SPIUSB_TryFlush))
-<BR><BR>[Stack]<UL><LI>Max Depth = 88<LI>Call Chain = SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
+<P><STRONG><a name="[12a]"></a>SPIUSB_TryFlush</STRONG> (Thumb, 134 bytes, Stack size 32 bytes, mxt_spi_stream.o(i.SPIUSB_TryFlush))
+<BR><BR>[Stack]<UL><LI>Max Depth = 104<LI>Call Chain = SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
 <BR>[Calls]<UL><LI><a href="#[a7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CDC_Transmit_FS
 <LI><a href="#[142]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memmove
+<LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memcpy
 </UL>
 <BR>[Called By]<UL><LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_USB_ServiceTx
 <LI><a href="#[125]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
 <LI><a href="#[128]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_Start1_ProcessPayloadByte
-<LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_EnsureSpace
+<LI><a href="#[129]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_HexEnqueueByte
+<LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_ByteEnqueue
 <LI><a href="#[123]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
@@ -2029,6 +2027,8 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[117]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsBin
 <LI><a href="#[ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CFG_SendResp
 <LI><a href="#[a4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessBridgePacket
+<LI><a href="#[137]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SendSelfCapMode3Packets
+<LI><a href="#[133]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_SendMode3Packets
 <LI><a href="#[123]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
@@ -2543,13 +2543,13 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[118]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsTxt
 <LI><a href="#[117]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ExportConfigAsBin
 <LI><a href="#[a4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessBridgePacket
-<LI><a href="#[10c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MSG_BufferFlush
 <LI><a href="#[12d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadT37Page
 <LI><a href="#[12c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadCompleteDiagnosticFrameInternal
+<LI><a href="#[10f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ApplyStartupDebugCtrl
+<LI><a href="#[10c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MSG_BufferFlush
 <LI><a href="#[113]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadObjectTable
 <LI><a href="#[12e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ReadT100UnknownFields
 <LI><a href="#[11e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_OutputDiagnosticData
-<LI><a href="#[10f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ApplyStartupDebugCtrl
 <LI><a href="#[123]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ProcessPendingCommand
 </UL>
 
@@ -2669,41 +2669,33 @@ Local Symbols
 <LI><a href="#[124]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessControlPending
 </UL>
 
-<P><STRONG><a name="[148]"></a>SPIUSB_EnsureSpace</STRONG> (Thumb, 50 bytes, Stack size 24 bytes, mxt_spi_stream.o(i.SPIUSB_EnsureSpace))
-<BR><BR>[Stack]<UL><LI>Max Depth = 112<LI>Call Chain = SPIUSB_EnsureSpace &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
+<P><STRONG><a name="[148]"></a>SPIUSB_ByteEnqueue</STRONG> (Thumb, 90 bytes, Stack size 32 bytes, mxt_spi_stream.o(i.SPIUSB_ByteEnqueue))
+<BR><BR>[Stack]<UL><LI>Max Depth = 136<LI>Call Chain = SPIUSB_ByteEnqueue &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
 <BR>[Calls]<UL><LI><a href="#[12a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_TryFlush
 </UL>
 <BR>[Called By]<UL><LI><a href="#[14a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_Start3_EmitRowPacket
-<LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_LineEnqueue
-<LI><a href="#[129]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_HexEnqueueByte
 </UL>
 
-<P><STRONG><a name="[129]"></a>SPIUSB_HexEnqueueByte</STRONG> (Thumb, 68 bytes, Stack size 16 bytes, mxt_spi_stream.o(i.SPIUSB_HexEnqueueByte))
-<BR><BR>[Stack]<UL><LI>Max Depth = 160 + Unknown Stack Size
-<LI>Call Chain = SPIUSB_HexEnqueueByte &rArr; __2snprintf &rArr; _printf_char_common &rArr; __printf
+<P><STRONG><a name="[129]"></a>SPIUSB_HexEnqueueByte</STRONG> (Thumb, 82 bytes, Stack size 24 bytes, mxt_spi_stream.o(i.SPIUSB_HexEnqueueByte))
+<BR><BR>[Stack]<UL><LI>Max Depth = 128<LI>Call Chain = SPIUSB_HexEnqueueByte &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
-<BR>[Calls]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_EnsureSpace
-<LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memcpy
-<LI><a href="#[75]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2snprintf
+<BR>[Calls]<UL><LI><a href="#[12a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_TryFlush
 </UL>
 <BR>[Called By]<UL><LI><a href="#[125]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
 <LI><a href="#[128]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_Start1_ProcessPayloadByte
 <LI><a href="#[127]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_Start1_HandlePageMarker
 </UL>
 
-<P><STRONG><a name="[149]"></a>SPIUSB_LineEnqueue</STRONG> (Thumb, 58 bytes, Stack size 24 bytes, mxt_spi_stream.o(i.SPIUSB_LineEnqueue))
-<BR><BR>[Stack]<UL><LI>Max Depth = 136<LI>Call Chain = SPIUSB_LineEnqueue &rArr; SPIUSB_EnsureSpace &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
-</UL>
-<BR>[Calls]<UL><LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_EnsureSpace
+<P><STRONG><a name="[149]"></a>SPIUSB_LineEnqueue</STRONG> (Thumb, 34 bytes, Stack size 12 bytes, mxt_spi_stream.o(i.SPIUSB_LineEnqueue))
+<BR><BR>[Stack]<UL><LI>Max Depth = 12<LI>Call Chain = SPIUSB_LineEnqueue
 </UL>
 <BR>[Called By]<UL><LI><a href="#[128]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_Start1_ProcessPayloadByte
 <LI><a href="#[127]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_Start1_HandlePageMarker
 </UL>
 
 <P><STRONG><a name="[127]"></a>SPIUSB_Start1_HandlePageMarker</STRONG> (Thumb, 92 bytes, Stack size 16 bytes, mxt_spi_stream.o(i.SPIUSB_Start1_HandlePageMarker))
-<BR><BR>[Stack]<UL><LI>Max Depth = 176 + Unknown Stack Size
-<LI>Call Chain = SPIUSB_Start1_HandlePageMarker &rArr; SPIUSB_HexEnqueueByte &rArr; __2snprintf &rArr; _printf_char_common &rArr; __printf
+<BR><BR>[Stack]<UL><LI>Max Depth = 144<LI>Call Chain = SPIUSB_Start1_HandlePageMarker &rArr; SPIUSB_HexEnqueueByte &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
 <BR>[Calls]<UL><LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_LineEnqueue
 <LI><a href="#[129]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_HexEnqueueByte
@@ -2712,8 +2704,7 @@ Local Symbols
 </UL>
 
 <P><STRONG><a name="[128]"></a>SPIUSB_Start1_ProcessPayloadByte</STRONG> (Thumb, 198 bytes, Stack size 40 bytes, mxt_spi_stream.o(i.SPIUSB_Start1_ProcessPayloadByte))
-<BR><BR>[Stack]<UL><LI>Max Depth = 208 + Unknown Stack Size
-<LI>Call Chain = SPIUSB_Start1_ProcessPayloadByte &rArr; SPIUSB_Start3_EmitRowPacket &rArr; SPIUSB_EnsureSpace &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
+<BR><BR>[Stack]<UL><LI>Max Depth = 224<LI>Call Chain = SPIUSB_Start1_ProcessPayloadByte &rArr; SPIUSB_Start3_EmitRowPacket &rArr; SPIUSB_ByteEnqueue &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
 <BR>[Calls]<UL><LI><a href="#[14a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_Start3_EmitRowPacket
 <LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_LineEnqueue
@@ -2723,12 +2714,11 @@ Local Symbols
 <BR>[Called By]<UL><LI><a href="#[125]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MXT_ProcessSPICheck
 </UL>
 
-<P><STRONG><a name="[14a]"></a>SPIUSB_Start3_EmitRowPacket</STRONG> (Thumb, 148 bytes, Stack size 56 bytes, mxt_spi_stream.o(i.SPIUSB_Start3_EmitRowPacket))
-<BR><BR>[Stack]<UL><LI>Max Depth = 168<LI>Call Chain = SPIUSB_Start3_EmitRowPacket &rArr; SPIUSB_EnsureSpace &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
+<P><STRONG><a name="[14a]"></a>SPIUSB_Start3_EmitRowPacket</STRONG> (Thumb, 104 bytes, Stack size 48 bytes, mxt_spi_stream.o(i.SPIUSB_Start3_EmitRowPacket))
+<BR><BR>[Stack]<UL><LI>Max Depth = 184<LI>Call Chain = SPIUSB_Start3_EmitRowPacket &rArr; SPIUSB_ByteEnqueue &rArr; SPIUSB_TryFlush &rArr; CDC_Transmit_FS &rArr; USBD_CDC_TransmitPacket &rArr; USBD_LL_Transmit &rArr; HAL_PCD_EP_Transmit &rArr; USB_EPStartXfer &rArr; USB_WritePMA
 </UL>
 <BR>[Calls]<UL><LI><a href="#[136]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;CRC16_CCITT_FALSE
-<LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_EnsureSpace
-<LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memcpy
+<LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_ByteEnqueue
 </UL>
 <BR>[Called By]<UL><LI><a href="#[128]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPIUSB_Start1_ProcessPayloadByte
 </UL>
