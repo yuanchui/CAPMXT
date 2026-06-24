@@ -85,7 +85,6 @@ char g_msg_buffer[MSG_BUFFER_SIZE];
 volatile uint16_t g_msg_buffer_head = 0;
 volatile uint16_t g_msg_buffer_tail = 0;
 volatile uint8_t g_msg_buffer_overflow = 0;
-uint8_t g_msg_tx_chunk[MSG_FLUSH_CHUNK];
 
 uint32_t g_diag_interval_ms = 1000;
 uint8_t g_stream_rot = 0;

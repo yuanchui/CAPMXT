@@ -84,7 +84,6 @@ extern char g_msg_buffer[MSG_BUFFER_SIZE];
 extern volatile uint16_t g_msg_buffer_head;
 extern volatile uint16_t g_msg_buffer_tail;
 extern volatile uint8_t g_msg_buffer_overflow;
-extern uint8_t g_msg_tx_chunk[MSG_FLUSH_CHUNK];
 extern uint32_t g_diag_interval_ms;
 extern uint8_t g_stream_rot;
 extern uint8_t g_stream_flip;

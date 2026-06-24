@@ -1,0 +1,165 @@
+{
+  "name": "serial-terminal",
+  "version": "1.0.53",
+  "description": "Serial Terminal - 串口通信终端应用程序",
+  "author": {
+    "name": "Yuanchu",
+    "email": "tom958@foxmail.com"
+  },
+  "homepage": "mailto:tom958@foxmail.com",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
+    "dev:vite": "vite",
+    "dev:electron": "wait-on http://localhost:5173 && tsc -p tsconfig.main.json && node build/prepare-cli.js && electron .",
+    "build": "tsc -p tsconfig.main.json && vite build",
+    "build:main": "tsc -p tsconfig.main.json",
+    "build:renderer": "vite build",
+    "prepare:cli": "node build/prepare-cli.js",
+    "prepare:cli:strict": "node build/prepare-cli.js --strict",
+    "prepare:package": "node build/prepare-package.js",
+    "sync:xcfg-resources": "node build/sync-xcfg-viewer-resources.js",
+    "build:mxt-app": "node build/build-mxt-app.js",
+    "build:all": "node build/build-all.js",
+    "package:all": "node build/build-all.js --package",
+    "package": "npm run package:user:nsis:fast",
+    "package:user:fast": "npm run package:user:nsis:fast",
+    "package:user:small": "npm run package:user:nsis:small",
+    "package:user:nsis:fast": "node build/run-package.js --win --nsis --compression=store --buildMode=user",
+    "package:user:nsis:small": "node build/run-package.js --win --nsis --compression=normal --buildMode=user",
+    "package:user:nsis:fast:online": "node build/run-package.js --win --nsis --compression=store --buildMode=user --online",
+    "package:user:nsis:small:online": "node build/run-package.js --win --nsis --compression=normal --buildMode=user --online",
+    "package:user:portable:fast": "node build/run-package.js --win --portable --compression=store --buildMode=user",
+    "package:user:portable:small": "node build/run-package.js --win --portable --compression=normal --buildMode=user",
+    "package:user:dir:fast": "node build/run-package.js --win --dir --compression=store --buildMode=user",
+    "package:user:dir:small": "node build/run-package.js --win --dir --compression=normal --buildMode=user",
+    "package:debug:fast": "npm run package:debug:nsis:fast",
+    "package:debug:small": "npm run package:debug:nsis:small",
+    "package:debug:nsis:fast": "node build/run-package.js --win --nsis --compression=store --buildMode=debug",
+    "package:debug:nsis:small": "node build/run-package.js --win --nsis --compression=normal --buildMode=debug",
+    "package:debug:portable:fast": "node build/run-package.js --win --portable --compression=store --buildMode=debug",
+    "package:debug:portable:small": "node build/run-package.js --win --portable --compression=normal --buildMode=debug",
+    "package:debug:dir:fast": "node build/run-package.js --win --dir --compression=store --buildMode=debug",
+    "package:debug:dir:small": "node build/run-package.js --win --dir --compression=normal --buildMode=debug",
+    "clean": "rimraf dist release",
+    "cert:dev": "powershell -NoProfile -ExecutionPolicy Bypass -File build/generate-dev-signing-cert.ps1",
+    "install:electron": "powershell -NoProfile -ExecutionPolicy Bypass -File build/install-electron.ps1",
+    "deploy:runtime-window": "node build/generate-runtime-window.js && node build/deploy-runtime-window/upload.js",
+    "setup:runtime-server": "node build/deploy-runtime-window/upload.js --setup-remote"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/web": "^0.0.294",
+    "concurrently": "^8.0.0",
+    "electron": "^39.2.4",
+    "electron-builder": "^26.15.3",
+    "rimraf": "^6.1.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.6",
+    "wait-on": "^9.0.3"
+  },
+  "build": {
+    "appId": "com.yuanchu.serialterminal",
+    "productName": "Serial Terminal",
+    "copyright": "Copyright (c) 2026 Yuanchu; tom958@foxmail.com",
+    "beforePack": "build/before-pack.js",
+    "afterPack": "build/after-pack.js",
+    "compression": "store",
+    "asar": false,
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json",
+      "node_modules/**/*"
+    ],
+    "asarUnpack": [
+      "node_modules/@serialport/bindings-cpp/**/*",
+      "node_modules/serialport/**/*",
+      "node_modules/usb/**/*"
+    ],
+    "electronLanguages": [
+      "zh-CN"
+    ],
+    "forceCodeSigning": false,
+    "extraResources": [
+      {
+        "from": "build/icon.ico",
+        "to": "icon.ico"
+      },
+      {
+        "from": "resources/xcfg-viewer",
+        "to": "xcfg-viewer"
+      },
+      {
+        "from": "resources/xcfg-templates",
+        "to": "xcfg-templates"
+      },
+      {
+        "from": "resources/UPGRADE_NOTES.txt",
+        "to": "UPGRADE_NOTES.txt"
+      },
+      {
+        "from": "build/runtime-window.config.json",
+        "to": "runtime-window.config.json"
+      },
+      {
+        "from": "CLI",
+        "to": "CLI",
+        "filter": [
+          "**/*",
+          "!**/.git*"
+        ]
+      }
+    ],
+    "extraFiles": [
+      {
+        "from": "CLI",
+        "to": "CLI",
+        "filter": [
+          "**/*",
+          "!**/.git*"
+        ]
+      }
+    ],
+    "electronDownload": {
+      "mirror": "https://npmmirror.com/mirrors/electron/"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable",
+        "dir"
+      ],
+      "icon": "icon.ico",
+      "signtoolOptions": {
+        "timeStampServer": "http://timestamp.acs.microsoft.com",
+        "rfc3161TimeStampServer": "http://timestamp.acs.microsoft.com"
+      }
+    },
+    "nsis": {
+      "include": "installer.nsh",
+      "menuCategory": "原初",
+      "installerIcon": "icon.ico",
+      "uninstallerIcon": "icon.ico",
+      "installerHeaderIcon": "icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "icon.png"
+    }
+  },
+  "dependencies": {
+    "chart.js": "^4.5.1",
+    "pnpm": "^10.26.2",
+    "serialport": "^13.0.0",
+    "three": "^0.160.0",
+    "usb": "^2.11.0"
+  }
+}

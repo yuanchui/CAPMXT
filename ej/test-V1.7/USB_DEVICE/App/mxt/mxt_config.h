@@ -30,7 +30,6 @@
 /* 640U 三次 SSN/帧约 640B，队列与 TX 须与 test-V1.7原 一致，否则 SPI 丢包 */
 #define SPI_RX_QUEUE_DEPTH        2048U
 #define SPI_HEX_TX_BUF_SIZE       4096U
-#define SPI_USB_PKT_SIZE          64U
 #define SPI_STREAM_STALL_MS       100U
 #define SPI_GAP_IDLE_STALL_MS     500U
 #define MSG_BUFFER_SIZE             1024U

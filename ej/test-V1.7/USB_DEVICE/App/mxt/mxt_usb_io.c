@@ -150,23 +150,23 @@ uint8_t MSG_BufferFlush(void)
     return 0;
   }
   
-  // 计算可发送的数据量 (最多 MSG_FLUSH_CHUNK 字节)
+  uint16_t flush_chunk = (g_spi_stream_enabled != 0U) ? MSG_FLUSH_CHUNK_SPI : MSG_FLUSH_CHUNK;
   uint16_t to_send = 0;
   if (g_msg_buffer_head > g_msg_buffer_tail) {
     to_send = g_msg_buffer_head - g_msg_buffer_tail;
   } else {
     to_send = MSG_BUFFER_SIZE - g_msg_buffer_tail;
   }
-  
-  if (to_send > MSG_FLUSH_CHUNK) {
-    to_send = MSG_FLUSH_CHUNK;
+
+  if (to_send > flush_chunk) {
+    to_send = flush_chunk;
   }
   
   // 拷贝到专用 TX 缓冲再发送，避免 CDC 异步发送时环形缓冲被后续写入覆盖
-  for (uint16_t i = 0; i < to_send; i++) {
-    g_msg_tx_chunk[i] = (uint8_t)g_msg_buffer[(g_msg_buffer_tail + i) % MSG_BUFFER_SIZE];
+  for (uint16_t i = 0U; i < to_send; i++) {
+    UserTxBufferFS[i] = (uint8_t)g_msg_buffer[(g_msg_buffer_tail + i) % MSG_BUFFER_SIZE];
   }
-  if (CDC_Transmit_FS(g_msg_tx_chunk, to_send) == USBD_OK) {
+  if (CDC_Transmit_FS(UserTxBufferFS, to_send) == USBD_OK) {
     g_msg_buffer_tail = (g_msg_buffer_tail + to_send) % MSG_BUFFER_SIZE;
   }
 

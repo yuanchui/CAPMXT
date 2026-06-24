@@ -13,10 +13,6 @@
 extern SPI_HandleTypeDef hspi1;
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
-static const char g_hex_digits[] = "0123456789ABCDEF";
-static uint8_t g_spi_usb_buf[2][SPI_USB_PKT_SIZE];
-static volatile uint8_t g_spi_usb_buf_idx;
-
 static void SPIUSB_LineEnqueue(const char *s);
 static void SPIUSB_HexEnqueueByte(uint8_t b);
 static void SPIUSB_ByteEnqueue(const uint8_t *data, uint16_t len);
@@ -44,7 +40,6 @@ void SPIUSB_ResetState(uint8_t mode)
   g_spi_rx_q_tail = 0U;
   g_spi_rx_overflow = 0U;
   g_spi_last_irq_ms = 0U;
-  g_spi_usb_buf_idx = 0U;
 }
 
 void MXT_SPI_PrepareStream(uint8_t mode)
@@ -91,9 +86,9 @@ void MXT_SPI_StopIT(void)
 
 void MXT_USB_ServiceTx(void)
 {
-  uint8_t budget = 32U;
+  uint8_t budget = 128U;
 
-  while ((g_spi_hex_tx_len > 0U) && (budget-- > 0U)) {
+  while ((budget-- > 0U) && (g_spi_hex_tx_len > 0U)) {
     SPIUSB_TryFlush();
     if (g_spi_hex_tx_len > 0U) {
       if (hUsbDeviceFS.pClassData != NULL) {
@@ -104,7 +99,6 @@ void MXT_USB_ServiceTx(void)
       }
     }
   }
-  (void)MSG_BufferFlush();
 }
 
 void MXT_ProcessSPICheck(void)
@@ -114,16 +108,13 @@ void MXT_ProcessSPICheck(void)
   uint8_t *chunk;
   uint8_t nss_sample;
   uint8_t b;
-  uint16_t drained = 0U;
-  uint32_t stall_ms;
 
   if (!g_spi_it_active) {
     MXT_SPI_StartIT();
     if (!g_spi_it_active) return;
   }
 
-  stall_ms = (g_spi_stream_enabled != 0U) ? SPI_GAP_IDLE_STALL_MS : SPI_STREAM_STALL_MS;
-  if ((HAL_GetTick() - g_spi_last_irq_ms) > stall_ms) {
+  if ((HAL_GetTick() - g_spi_last_irq_ms) > SPI_STREAM_STALL_MS) {
     MXT_SPI_StopIT();
     MXT_SPI_StartIT();
   }
@@ -159,10 +150,6 @@ void MXT_ProcessSPICheck(void)
         SPIUSB_Start1_ProcessPayloadByte(b);
       }
       g_spi_frame_bytes++;
-      drained++;
-      if ((drained & 0x3FU) == 0U) {
-        SPIUSB_TryFlush();
-      }
     }
 
     local_tail = (uint16_t)((local_tail + 1U) % SPI_RX_QUEUE_DEPTH);
@@ -233,49 +220,41 @@ static void SPIUSB_LineEnqueue(const char *s)
 
 static void SPIUSB_HexEnqueueByte(uint8_t b)
 {
-  uint16_t pos;
-  uint8_t retries;
+  int n;
+  char tmp[4];
 
-  for (retries = 0U; retries < 8U; retries++) {
-    if (g_spi_hex_tx_len < (uint16_t)(sizeof(g_spi_hex_tx_buf) - 3U)) {
-      break;
-    }
-    SPIUSB_TryFlush();
-  }
-
-  pos = g_spi_hex_tx_len;
-  if (pos >= (uint16_t)(sizeof(g_spi_hex_tx_buf) - 3U)) {
-    g_spi_tx_drop++;
+  n = snprintf(tmp, sizeof(tmp), "%02X ", b);
+  if (n <= 0) {
     return;
   }
 
-  g_spi_hex_tx_buf[pos] = (uint8_t)g_hex_digits[(b >> 4) & 0x0FU];
-  g_spi_hex_tx_buf[pos + 1U] = (uint8_t)g_hex_digits[b & 0x0FU];
-  g_spi_hex_tx_buf[pos + 2U] = (uint8_t)' ';
-  g_spi_hex_tx_len = (uint16_t)(pos + 3U);
+  if ((g_spi_hex_tx_len + (uint16_t)n) >= (uint16_t)(sizeof(g_spi_hex_tx_buf) - 2U)) {
+    SPIUSB_TryFlush();
+  }
+
+  if ((g_spi_hex_tx_len + (uint16_t)n) < (uint16_t)sizeof(g_spi_hex_tx_buf)) {
+    memcpy(&g_spi_hex_tx_buf[g_spi_hex_tx_len], tmp, (size_t)n);
+    g_spi_hex_tx_len += (uint16_t)n;
+  } else {
+    g_spi_tx_drop++;
+  }
 }
 
 static void SPIUSB_ByteEnqueue(const uint8_t *data, uint16_t len)
 {
-  uint16_t i;
-  uint8_t retries;
-
   if ((data == NULL) || (len == 0U)) {
     return;
   }
 
-  for (i = 0U; i < len; i++) {
-    for (retries = 0U; retries < 8U; retries++) {
-      if (g_spi_hex_tx_len < (uint16_t)(sizeof(g_spi_hex_tx_buf) - 1U)) {
-        break;
-      }
-      SPIUSB_TryFlush();
-    }
-    if (g_spi_hex_tx_len >= (uint16_t)(sizeof(g_spi_hex_tx_buf) - 1U)) {
-      g_spi_tx_drop++;
-      return;
-    }
-    g_spi_hex_tx_buf[g_spi_hex_tx_len++] = data[i];
+  if ((g_spi_hex_tx_len + len) >= (uint16_t)(sizeof(g_spi_hex_tx_buf) - 2U)) {
+    SPIUSB_TryFlush();
+  }
+
+  if ((g_spi_hex_tx_len + len) < (uint16_t)sizeof(g_spi_hex_tx_buf)) {
+    memcpy(&g_spi_hex_tx_buf[g_spi_hex_tx_len], data, len);
+    g_spi_hex_tx_len = (uint16_t)(g_spi_hex_tx_len + len);
+  } else {
+    g_spi_tx_drop++;
   }
 }
 
@@ -285,7 +264,6 @@ static void SPIUSB_Start1_HandlePageMarker(void)
     if (g_spi_stream_mode == 1U) {
       g_spi_start3_frame_id++;
       SPIUSB_HexEnqueueByte(g_spi_start3_frame_id);
-      SPIUSB_LineEnqueue("\r\n");
     } else if (g_spi_stream_mode == 2U) {
       g_spi_start3_frame_id++;
       g_spi_start3_row_id = 0U;
@@ -321,11 +299,6 @@ static void SPIUSB_Start1_ProcessPayloadByte(uint8_t b)
   if ((g_spi_start1_src_row_bytes > 1U) && (g_spi_start1_src_row_bytes <= 33U)) {
     if (g_spi_stream_mode == 1U) {
       SPIUSB_HexEnqueueByte(b);
-      g_spi_start1_row_bytes++;
-      if (g_spi_start1_row_bytes >= 32U) {
-        SPIUSB_LineEnqueue("\r\n");
-        g_spi_start1_row_bytes = 0U;
-      }
     } else if (g_spi_stream_mode == 2U) {
       SPIUSB_Start3_ProcessCroppedByte(b);
     }
@@ -337,9 +310,8 @@ static void SPIUSB_Start1_ProcessPayloadByte(uint8_t b)
 
   if (g_spi_start1_payload_bytes >= SPI_FRAME_PAYLOAD_BYTES) {
     g_spi_start1_collecting = 0U;
-    if ((g_spi_stream_mode == 1U) && (g_spi_start1_row_bytes != 0U)) {
+    if (g_spi_stream_mode == 1U) {
       SPIUSB_LineEnqueue("\r\n");
-      g_spi_start1_row_bytes = 0U;
     }
     SPIUSB_TryFlush();
   }
@@ -384,10 +356,6 @@ static void SPIUSB_Start3_EmitRowPacket(void)
 
 void SPIUSB_TryFlush(void)
 {
-  USBD_CDC_HandleTypeDef *hcdc;
-  uint16_t send_len;
-  uint8_t pkt_idx;
-
   if (g_spi_hex_tx_len == 0U) {
     return;
   }
@@ -400,30 +368,7 @@ void SPIUSB_TryFlush(void)
     return;
   }
 
-  hcdc = (USBD_CDC_HandleTypeDef *)hUsbDeviceFS.pClassData;
-
-  while (g_spi_hex_tx_len > 0U) {
-    if (hcdc->TxState != 0U) {
-      return;
-    }
-
-    send_len = g_spi_hex_tx_len;
-    if (send_len > SPI_USB_PKT_SIZE) {
-      send_len = SPI_USB_PKT_SIZE;
-    }
-
-    pkt_idx = g_spi_usb_buf_idx;
-    memcpy(g_spi_usb_buf[pkt_idx], g_spi_hex_tx_buf, send_len);
-
-    if (CDC_Transmit_FS(g_spi_usb_buf[pkt_idx], send_len) != USBD_OK) {
-      return;
-    }
-
-    g_spi_usb_buf_idx = (uint8_t)(1U - pkt_idx);
-    if (send_len < g_spi_hex_tx_len) {
-      memmove(g_spi_hex_tx_buf, &g_spi_hex_tx_buf[send_len],
-              (size_t)(g_spi_hex_tx_len - send_len));
-    }
-    g_spi_hex_tx_len = (uint16_t)(g_spi_hex_tx_len - send_len);
+  if (CDC_Transmit_FS((uint8_t *)g_spi_hex_tx_buf, g_spi_hex_tx_len) == USBD_OK) {
+    g_spi_hex_tx_len = 0U;
   }
 }

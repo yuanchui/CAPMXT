@@ -127,16 +127,14 @@ int main(void)
     MXT_ProcessCommand();
     MXT_ProcessControlPending();
 
+    MXT_ProcessSPICheck();
     if (g_spi_stream_enabled != 0U) {
-      MXT_ProcessSPICheck();
+      /* SPI 流期间独占 USB TX，避免与 MSG 缓冲交错导致 hex 断字 */
       MXT_USB_ServiceTx();
     } else {
-      MXT_ProcessSPICheck();
       MXT_FlushMessageBuffer();
-
       MXT_CheckAndProcessMessages();
       MXT_FlushMessageBuffer();
-
       MXT_TimerDiagnosticRead();
       MXT_FlushMessageBuffer();
     }
