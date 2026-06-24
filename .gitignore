@@ -32,3 +32,4 @@ ej/linux_driver_mxt_sys/mxt-app/lt-*
 
 # --- Syncthing merge leftovers ---
 *.sync-conflict-*
+ej/电容2.7.zip
